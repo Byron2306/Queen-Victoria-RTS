@@ -1,6 +1,5 @@
 import { advanceTick } from './clock';
 import { validateMoveGeometry } from './geometry';
-import { validateMoveGeometry } from './geometry';
 import type { SimCommand, SimEvent, StepResult, WorldState } from './types';
 import { coordKey, isInBounds } from './world';
 
