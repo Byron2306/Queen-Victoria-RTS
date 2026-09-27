@@ -3,12 +3,45 @@ import { validateMoveGeometry } from './geometry';
 import type { SimCommand, SimEvent, StepResult, WorldState } from './types';
 import { coordKey, isInBounds } from './world';
 
+function resolveAttackOrder(world: WorldState, command: Extract<SimCommand, { type: 'attack' }>): { state: WorldState; event: SimEvent } {
+  const unit = world.units[command.unitId];
+  if (!unit) {
+    return { state: world, event: { type: 'attack.order.rejected', tick: world.tick, sequence: command.sequence, unitId: command.unitId, targetId: command.targetId, reason: 'missing_unit' } };
+  }
+  const target = world.units[command.targetId];
+  if (!target) {
+    return { state: world, event: { type: 'attack.order.rejected', tick: world.tick, sequence: command.sequence, unitId: command.unitId, targetId: command.targetId, reason: 'missing_target' } };
+  }
+  if (command.targetId === command.unitId) {
+    return { state: world, event: { type: 'attack.order.rejected', tick: world.tick, sequence: command.sequence, unitId: command.unitId, targetId: command.targetId, reason: 'self_target' } };
+  }
+  if (target.faction === unit.faction) {
+    return { state: world, event: { type: 'attack.order.rejected', tick: world.tick, sequence: command.sequence, unitId: command.unitId, targetId: command.targetId, reason: 'friendly_target' } };
+  }
+  const targetCombat = world.combat[command.targetId];
+  if (!targetCombat || targetCombat.health <= 0) {
+    return { state: world, event: { type: 'attack.order.rejected', tick: world.tick, sequence: command.sequence, unitId: command.unitId, targetId: command.targetId, reason: 'dead_target' } };
+  }
+  const unitCombat = world.combat[command.unitId];
+  const state = unitCombat
+    ? { ...world, combat: { ...world.combat, [command.unitId]: { ...unitCombat, targetId: command.targetId } } }
+    : world;
+  return { state, event: { type: 'attack.order.accepted', tick: world.tick, sequence: command.sequence, unitId: command.unitId, targetId: command.targetId } };
+}
+
 export function stepWorld(world: WorldState, commands: readonly SimCommand[]): StepResult {
   let working = world;
   const events: SimEvent[] = [];
   const ordered = [...commands].sort((a, b) => a.sequence - b.sequence || a.unitId.localeCompare(b.unitId));
 
   for (const command of ordered) {
+    if (command.type === 'attack') {
+      const result = resolveAttackOrder(working, command);
+      working = result.state;
+      events.push(result.event);
+      continue;
+    }
+
     const unit = working.units[command.unitId];
     if (!unit) {
       events.push({ type: 'move.rejected', tick: world.tick, sequence: command.sequence, unitId: command.unitId, to: command.to, reason: 'missing_unit' });
