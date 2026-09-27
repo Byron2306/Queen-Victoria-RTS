@@ -17,7 +17,7 @@ describe('Phase 2 combat resolution', () => {
     expect(blocked.events).toEqual([]);
     expect(blocked.state.combat.o!.health).toBe(60);
 
-    let near = createWorld([unit('b', 'bishop', 'victoria', 0, 0), unit('o', 'pawn', 'obsidian', 4, 4)]);
+    let near = createWorld([unit('b', 'bishop', 'victoria', 0, 0), unit('o', 'pawn', 'obsidian', 4, 3)]);
     near = withCombat(near, 'b', { targetId: 'o' });
     const fired = resolveCombatTick(near);
     expect(fired.events[0]).toMatchObject({ type: 'attack.fired', unitId: 'b', targetId: 'o', damage: 12 });
