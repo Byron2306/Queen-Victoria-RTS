@@ -15,10 +15,12 @@ export function runReplay(initial: WorldState, frames: readonly (readonly SimCom
 export function canonicalSnapshot(result: ReplayResult): string {
   const unitIds = Object.keys(result.state.units).sort();
   const occupancyKeys = Object.keys(result.state.occupancy).sort();
+  const combatIds = Object.keys(result.state.combat).sort();
   const units = Object.fromEntries(unitIds.map((id) => [id, result.state.units[id]]));
   const occupancy = Object.fromEntries(occupancyKeys.map((key) => [key, result.state.occupancy[key]]));
+  const combat = Object.fromEntries(combatIds.map((id) => [id, result.state.combat[id]]));
   return JSON.stringify({
-    state: { tick: result.state.tick, width: result.state.width, height: result.state.height, units, occupancy },
+    state: { tick: result.state.tick, width: result.state.width, height: result.state.height, units, occupancy, combat },
     eventsByTick: result.eventsByTick,
   });
 }
