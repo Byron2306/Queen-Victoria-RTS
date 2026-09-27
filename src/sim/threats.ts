@@ -102,8 +102,8 @@ export function buildThreatMap(world: WorldState, faction: Faction): ThreatMap {
   }
 
   const ordered: Record<string, readonly string[]> = {};
-  for (const key of Object.keys(mutable).sort()) {
-    ordered[key] = [...mutable[key]].sort();
+  for (const [key, sources] of Object.entries(mutable).sort(([a], [b]) => a.localeCompare(b))) {
+    ordered[key] = [...sources].sort();
   }
   return ordered;
 }
