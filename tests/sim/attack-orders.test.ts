@@ -13,8 +13,8 @@ describe('Phase 2 explicit attack orders', () => {
     const world = createWorld([unit('v', 'victoria', 1, 1), unit('o', 'obsidian', 1, 2)]);
     const result = stepWorld(world, [attack(1, 'v', 'o')]);
     expect(result.events[0]).toMatchObject({ type: 'attack.order.accepted', unitId: 'v', targetId: 'o' });
-    expect(result.state.combat.v.targetId).toBe('o');
-    expect(result.state.combat.o.health).toBe(60);
+    expect(result.state.combat.v!.targetId).toBe('o');
+    expect(result.state.combat.o!.health).toBe(60);
   });
 
   it.each([
@@ -29,7 +29,7 @@ describe('Phase 2 explicit attack orders', () => {
     ]);
     const result = stepWorld(world, [attack(1, 'v', targetId)]);
     expect(result.events[0]).toMatchObject({ type: 'attack.order.rejected', unitId: 'v', targetId, reason });
-    expect(result.state.combat.v.targetId).toBeNull();
+    expect(result.state.combat.v!.targetId).toBeNull();
   });
 
   it('rejects an already-dead target and a missing attacker', () => {
@@ -40,6 +40,6 @@ describe('Phase 2 explicit attack orders', () => {
       { type: 'attack.order.rejected', reason: 'dead_target' },
       { type: 'attack.order.rejected', reason: 'missing_unit' },
     ]);
-    expect(result.state.combat.v.targetId).toBeNull();
+    expect(result.state.combat.v!.targetId).toBeNull();
   });
 });
