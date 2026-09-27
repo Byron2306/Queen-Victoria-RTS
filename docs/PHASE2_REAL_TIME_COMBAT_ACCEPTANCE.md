@@ -3,9 +3,9 @@
 **Status:** VERIFIED
 
 **Branch:** `agent/phase2-real-time-combat`  
-**Verified code head before this receipt:** `5fc8faaaf58725349d41dc7330578d1fbe4aeec7`  
-**GitHub Actions run:** `36353226042` / run #100  
-**Verification job:** `108715776073`
+**Verified code head before this receipt:** `6d2807683772eea03fd08921b688734275aeced9`  
+**GitHub Actions run:** `36353411481` / run #106  
+**Verification job:** `108716311815`
 
 ## Verification evidence
 
@@ -21,7 +21,7 @@ Vitest result:
 
 ```text
 Test Files  9 passed (9)
-Tests      55 passed (55)
+Tests      56 passed (56)
 ```
 
 ## Accepted combat slice
@@ -29,7 +29,7 @@ Tests      55 passed (55)
 Phase 2 now verifies:
 
 - deterministic combat profiles for Pawn, Knight, Bishop, Rook, Queen and King;
-- per-unit health, cooldown, target, Guard stance and immutable guard anchor state;
+- per-unit health, cooldown, target, Guard stance and guard-post state;
 - explicit attack orders with deterministic missing/self/friendly/dead target rejection;
 - Chebyshev RTS attack-range gating independent of chess movement geometry;
 - fixed-tick attack cooldown countdown and reload;
@@ -40,6 +40,7 @@ Phase 2 now verifies:
 - deterministic Guard acquisition by nearest living enemy with enemy-id tie-breaking;
 - Guard target retention within the acquisition-plus-leash pursuit envelope;
 - deterministic target clearing/reacquisition when a retained target becomes invalid;
+- accepted player movement reassigning the unit's Guard anchor to its new defended post;
 - Pawn Chain, Knight Fork, Bishop Line and Rook Open File positional classifications;
 - one non-stacking +25% positional damage multiplier using integer floor arithmetic;
 - multi-tick replay equivalence across movement, Guard acquisition, explicit targeting, cooldown state, positional damage and death;
@@ -57,7 +58,7 @@ All ready attack intents are determined from the same pre-damage world snapshot.
 
 ### Guard leash meaning
 
-The Phase 2 Guard pursuit envelope is `acquisitionRange + leashRange`, measured from the immutable guard anchor to the retained target. The acquisition range defines the initial awareness zone; leash range defines allowed additional pursuit beyond that zone. Autonomous chase movement itself remains deferred.
+The Phase 2 Guard pursuit envelope is `acquisitionRange + leashRange`, measured from the current guard anchor to the retained target. The acquisition range defines the initial awareness zone; leash range defines allowed additional pursuit beyond that zone. A successful player movement order reassigns the guard anchor to the destination, so Guard defends the newly assigned post instead of remaining tethered to spawn. Autonomous chase movement itself remains deferred.
 
 ### Positional damage
 
@@ -81,7 +82,7 @@ Those systems remain layered above the deterministic combat simulation.
 
 ## Exit decision
 
-Phase 2 meets its exit gate. Health/cadence/range, explicit targeting, simultaneous deterministic damage and death, Guard acquisition/leash, positional attack bonuses and replay determinism are verified while Phase 0/1 geometry and threat-map invariants remain intact.
+Phase 2 meets its exit gate. Health/cadence/range, explicit targeting, simultaneous deterministic damage and death, Guard acquisition/leash, defended-post reassignment, positional attack bonuses and replay determinism are verified while Phase 0/1 geometry and threat-map invariants remain intact.
 
 ## Non-blocking observations
 
