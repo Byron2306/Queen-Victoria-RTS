@@ -1,3 +1,4 @@
+import { combatStateFor } from './combat';
 import type { Coord, UnitState, WorldState } from './types';
 
 export const BOARD_SIZE = 16 as const;
@@ -16,7 +17,7 @@ export const coordKey = ({ x, y }: Coord): string => `${x},${y}`;
 export const isInBounds = ({ x, y }: Coord): boolean => Number.isInteger(x) && Number.isInteger(y) && x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE;
 
 export function createWorld(units: readonly UnitState[] = []): WorldState {
-  let world: WorldState = { tick: 0, width: BOARD_SIZE, height: BOARD_SIZE, units: {}, occupancy: {} };
+  let world: WorldState = { tick: 0, width: BOARD_SIZE, height: BOARD_SIZE, units: {}, occupancy: {}, combat: {} };
   for (const unit of units) world = placeUnit(world, unit);
   return world;
 }
@@ -30,5 +31,6 @@ export function placeUnit(world: WorldState, unit: UnitState): WorldState {
     ...world,
     units: { ...world.units, [unit.id]: { ...unit, position: { ...unit.position } } },
     occupancy: { ...world.occupancy, [key]: unit.id },
+    combat: { ...world.combat, [unit.id]: combatStateFor(unit) },
   };
 }

@@ -5,3 +5,6 @@ export * from './step';
 export * from './replay';
 export * from './geometry';
 export * from './threats';
+export * from './combat';
+export * from './guard';
+export * from './position';
