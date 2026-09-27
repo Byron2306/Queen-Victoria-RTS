@@ -108,8 +108,8 @@
 - [x] Run CI and observe RED because `projectThreatCells` / `buildThreatMap` do not yet exist (run `36351851073`: 6 threat tests failed, existing 26 passed).
 - [x] Implement `projectThreatCells(world, unit)` with board-bounded piece-specific threat semantics.
 - [x] Implement `buildThreatMap(world, faction)` as deterministic `cell -> sorted source unit ids` provenance.
-- [ ] Run full CI and confirm all tests plus typecheck GREEN.
-- [ ] Update acceptance evidence to include threat maps and the final green run.
+- [x] Run full CI and confirm all tests plus typecheck GREEN (run `36351996507`: 32 tests passed, typecheck passed).
+- [x] Update acceptance evidence to include threat maps and the final green run.
 
 ## Phase 1 Exit Gate
 
