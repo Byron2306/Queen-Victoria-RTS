@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createWorld, validateMoveGeometry, type Faction, type UnitKind, type UnitState } from '../../src/sim';
 
-const unit = (kind: UnitKind, x = 7, y = 7, faction: Faction = 'victoria', id = kind): UnitState =>
+const unit = (kind: UnitKind, x = 7, y = 7, faction: Faction = 'victoria', id: string = kind): UnitState =>
   ({ id, faction, kind, position: { x, y } });
 
 describe('Phase 1 chess geometry', () => {
