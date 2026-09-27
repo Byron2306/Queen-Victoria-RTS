@@ -1,3 +1,4 @@
+import { evaluatePositionalAttack } from './position';
 import type { CombatProfile, CombatTickResult, SimEvent, UnitCombatState, UnitKind, UnitState, WorldState } from './types';
 import { coordKey } from './world';
 
@@ -53,7 +54,9 @@ export function resolveCombatTick(world: WorldState): CombatTickResult {
     if (nextState.cooldownTicks !== 0) continue;
     if (chebyshevDistance(attacker.position, target.position) > profile.range) continue;
 
-    intents.push({ unitId, targetId: target.id, damage: profile.damage });
+    const positional = evaluatePositionalAttack(world, unitId, target.id);
+    const damage = Math.floor((profile.damage * positional.multiplierBps) / 10000);
+    intents.push({ unitId, targetId: target.id, damage });
     nextCombat[unitId] = { ...nextState, cooldownTicks: profile.cooldownTicks };
   }
 
