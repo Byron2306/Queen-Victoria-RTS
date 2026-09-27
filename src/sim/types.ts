@@ -51,7 +51,10 @@ export type SimEvent =
   | Readonly<{ type: 'move.accepted'; tick: number; sequence: number; unitId: string; from: Coord; to: Coord }>
   | Readonly<{ type: 'move.rejected'; tick: number; sequence: number; unitId: string; to: Coord; reason: MoveRejectReason }>
   | Readonly<{ type: 'attack.order.accepted'; tick: number; sequence: number; unitId: string; targetId: string }>
-  | Readonly<{ type: 'attack.order.rejected'; tick: number; sequence: number; unitId: string; targetId: string; reason: AttackRejectReason }>;
+  | Readonly<{ type: 'attack.order.rejected'; tick: number; sequence: number; unitId: string; targetId: string; reason: AttackRejectReason }>
+  | Readonly<{ type: 'attack.fired'; tick: number; unitId: string; targetId: string; damage: number }>
+  | Readonly<{ type: 'unit.damaged'; tick: number; unitId: string; damage: number; healthBefore: number; healthAfter: number }>
+  | Readonly<{ type: 'unit.killed'; tick: number; unitId: string; byUnitIds: readonly string[] }>;
 
 export type WorldState = Readonly<{
   tick: number;
@@ -63,4 +66,5 @@ export type WorldState = Readonly<{
 }>;
 
 export type StepResult = Readonly<{ state: WorldState; events: readonly SimEvent[] }>;
+export type CombatTickResult = Readonly<{ state: WorldState; events: readonly SimEvent[] }>;
 export type ReplayResult = Readonly<{ state: WorldState; eventsByTick: readonly (readonly SimEvent[])[] }>;
