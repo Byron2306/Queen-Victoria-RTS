@@ -1,12 +1,30 @@
 export type Coord = Readonly<{ x: number; y: number }>;
 export type Faction = 'victoria' | 'obsidian';
 export type UnitKind = 'pawn' | 'knight' | 'bishop' | 'rook' | 'queen' | 'king';
+export type CombatStance = 'guard';
 
 export type UnitState = Readonly<{
   id: string;
   faction: Faction;
   kind: UnitKind;
   position: Coord;
+}>;
+
+export type CombatProfile = Readonly<{
+  maxHealth: number;
+  damage: number;
+  cooldownTicks: number;
+  range: number;
+  acquisitionRange: number;
+  leashRange: number;
+}>;
+
+export type UnitCombatState = Readonly<{
+  health: number;
+  cooldownTicks: number;
+  targetId: string | null;
+  stance: CombatStance;
+  guardAnchor: Coord;
 }>;
 
 export type MoveCommand = Readonly<{
@@ -30,6 +48,7 @@ export type WorldState = Readonly<{
   height: 16;
   units: Readonly<Record<string, UnitState>>;
   occupancy: Readonly<Record<string, string>>;
+  combat: Readonly<Record<string, UnitCombatState>>;
 }>;
 
 export type StepResult = Readonly<{ state: WorldState; events: readonly SimEvent[] }>;
