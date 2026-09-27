@@ -4,3 +4,4 @@ export * from './clock';
 export * from './step';
 export * from './replay';
 export * from './geometry';
+export * from './threats';
