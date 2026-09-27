@@ -35,12 +35,23 @@ export type MoveCommand = Readonly<{
   to: Coord;
 }>;
 
-export type SimCommand = MoveCommand;
+export type AttackCommand = Readonly<{
+  type: 'attack';
+  sequence: number;
+  issuedTick: number;
+  unitId: string;
+  targetId: string;
+}>;
+
+export type SimCommand = MoveCommand | AttackCommand;
 export type MoveRejectReason = 'out_of_bounds' | 'illegal_geometry' | 'blocked' | 'missing_unit' | 'occupied';
+export type AttackRejectReason = 'missing_unit' | 'missing_target' | 'self_target' | 'friendly_target' | 'dead_target';
 
 export type SimEvent =
   | Readonly<{ type: 'move.accepted'; tick: number; sequence: number; unitId: string; from: Coord; to: Coord }>
-  | Readonly<{ type: 'move.rejected'; tick: number; sequence: number; unitId: string; to: Coord; reason: MoveRejectReason }>;
+  | Readonly<{ type: 'move.rejected'; tick: number; sequence: number; unitId: string; to: Coord; reason: MoveRejectReason }>
+  | Readonly<{ type: 'attack.order.accepted'; tick: number; sequence: number; unitId: string; targetId: string }>
+  | Readonly<{ type: 'attack.order.rejected'; tick: number; sequence: number; unitId: string; targetId: string; reason: AttackRejectReason }>;
 
 export type WorldState = Readonly<{
   tick: number;
