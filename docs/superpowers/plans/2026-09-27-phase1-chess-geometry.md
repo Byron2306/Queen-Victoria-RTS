@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace Phase 0's generic one-cell orthogonal movement rule with deterministic, piece-specific chess geometry for Pawn, Knight, Bishop, Rook, Queen and King on the 16×16 Royal Board, including blockers and explicit geometry rejection reasons.
+**Goal:** Replace Phase 0's generic one-cell orthogonal movement rule with deterministic, piece-specific chess geometry for Pawn, Knight, Bishop, Rook, Queen and King on the 16×16 Royal Board, including blockers, explicit geometry rejection reasons, and deterministic faction threat maps.
 
-**Architecture:** Keep geometry pure and renderer-independent. A dedicated `geometry.ts` owns piece movement shape and ray/blocker validation; `step.ts` remains the deterministic command arbiter and delegates legality to geometry before atomically mutating authoritative occupancy. Phase 1 changes movement legality only: captures, attack timing, check, combat, pathfinding, promotion and hero abilities remain deferred.
+**Architecture:** Keep geometry pure and renderer-independent. A dedicated `geometry.ts` owns piece movement shape and ray/blocker validation; `threats.ts` projects attack pressure independently from movement rules; `step.ts` remains the deterministic command arbiter and delegates legality to geometry before atomically mutating authoritative occupancy. Phase 1 changes movement and threat geometry only: captures, attack timing, check, combat, pathfinding, promotion and hero abilities remain deferred.
 
 **Tech Stack:** TypeScript, Vitest, existing deterministic simulation kernel.
 
@@ -20,17 +20,19 @@
 - No Phaser/rendering dependencies may enter `src/sim`.
 - Pawn geometry is faction-oriented: Victoria advances toward increasing `y`; Obsidian advances toward decreasing `y`.
 - Pawns receive one-cell forward movement only in Phase 1. Initial double-step, diagonal capture and en passant are explicitly deferred.
-- Knight movement ignores intermediate blockers but not occupied destinations.
-- Bishop, Rook and Queen rays must be clear at every intermediate cell.
+- Pawn threat geometry is diagonal-forward, intentionally distinct from Pawn movement geometry.
+- Knight movement and threat projection ignore intermediate blockers.
+- Bishop, Rook and Queen movement rays must be clear at every intermediate cell.
+- Bishop, Rook and Queen threat rays include the first occupied cell and stop beyond it.
 - King moves exactly one cell in any of eight directions; check safety is deferred to sovereign-rule work.
 
 ## Review Focus
 
-1. Ray pieces must reject a geometrically valid destination when any intermediate square is occupied.
-2. Knights must jump blockers while still rejecting an occupied destination.
-3. Pawn direction must be faction-correct and reject sideways/backward movement.
-4. A unit must never accept a zero-distance move or geometry belonging to another piece kind.
-5. Existing deterministic conflict ordering and replay equivalence must remain unchanged after geometry is introduced.
+1. Ray pieces must reject a geometrically valid movement destination when any intermediate square is occupied.
+2. Threat rays must include a blocker/target square but never project beyond it.
+3. Knights must jump blockers while still rejecting an occupied movement destination.
+4. Pawn movement and Pawn threat direction must both be faction-correct while remaining distinct.
+5. Existing deterministic conflict ordering, threat provenance ordering and replay equivalence must remain stable.
 
 ---
 
@@ -55,7 +57,7 @@
 - Modify: `src/sim/geometry.ts`
 - Modify: `tests/sim/geometry.test.ts`
 
-- [ ] Add failing tests proving bishop/rook/queen rays stop at the first occupied intermediate cell.
+- [ ] Add failing tests proving bishop/rook/queen movement rays stop at the first occupied intermediate cell.
 - [ ] Add tests proving a knight can cross occupied intermediate geometry because it does not traverse a ray.
 - [ ] Add edge/corner cases on the 16×16 boundary.
 - [ ] Run focused tests and confirm RED.
@@ -92,6 +94,23 @@
 - [ ] Record the exact verification commands and Phase 1 boundaries in the acceptance document.
 - [ ] Commit `phase1: verify deterministic chess geometry`.
 
+### Task 5: Deterministic threat maps
+
+**Why this task was added:** During final spec reconciliation, the canonical development sequence was re-read and found to define Phase 1 as **“chess geometry, blockers and threat maps.”** The initial implementation plan covered geometry/blockers but omitted threat maps. This task closes that spec gap before Phase 1 is accepted.
+
+**Files:**
+- Create: `src/sim/threats.ts`
+- Create: `tests/sim/threats.test.ts`
+- Modify: `src/sim/index.ts`
+- Modify: `docs/PHASE1_CHESS_GEOMETRY_ACCEPTANCE.md`
+
+- [x] Write tests first for Pawn diagonal threats, Knight/King edge projection, sliding blockers, faction filtering, overlapping pressure and deterministic source ordering.
+- [x] Run CI and observe RED because `projectThreatCells` / `buildThreatMap` do not yet exist (run `36351851073`: 6 threat tests failed, existing 26 passed).
+- [x] Implement `projectThreatCells(world, unit)` with board-bounded piece-specific threat semantics.
+- [x] Implement `buildThreatMap(world, faction)` as deterministic `cell -> sorted source unit ids` provenance.
+- [ ] Run full CI and confirm all tests plus typecheck GREEN.
+- [ ] Update acceptance evidence to include threat maps and the final green run.
+
 ## Phase 1 Exit Gate
 
 Phase 1 is complete only when:
@@ -99,8 +118,10 @@ Phase 1 is complete only when:
 - all six chess-derived unit kinds have deterministic movement geometry;
 - sliding blockers and knight jumps behave correctly;
 - pawn direction is faction-correct;
+- deterministic threat maps exist for both factions with blocker-aware ray projection;
+- Pawn attack threats remain distinct from Pawn forward movement;
 - occupied destinations still reject rather than capture;
 - illegal movement is atomic and inspectable through events;
 - replay equivalence survives mixed-piece commands;
 - the full test suite and typecheck pass in CI;
-- no renderer, combat, check/mate, economy, hero or AI semantics have leaked into the geometry layer.
+- no renderer, combat, check/mate, economy, hero or AI semantics have leaked into the geometry/threat layers.
