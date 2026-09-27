@@ -1,6 +1,7 @@
 import { advanceTick } from './clock';
 import { resolveCombatTick } from './combat';
 import { validateMoveGeometry } from './geometry';
+import { refreshGuardTargets } from './guard';
 import type { SimCommand, SimEvent, StepResult, WorldState } from './types';
 import { coordKey, isInBounds } from './world';
 
@@ -31,7 +32,8 @@ function resolveAttackOrder(world: WorldState, command: Extract<SimCommand, { ty
 }
 
 export function stepWorld(world: WorldState, commands: readonly SimCommand[]): StepResult {
-  const combatResult = resolveCombatTick(world);
+  const guarded = refreshGuardTargets(world);
+  const combatResult = resolveCombatTick(guarded);
   let working = combatResult.state;
   const events: SimEvent[] = [...combatResult.events];
   const ordered = [...commands].sort((a, b) => a.sequence - b.sequence || a.unitId.localeCompare(b.unitId));
