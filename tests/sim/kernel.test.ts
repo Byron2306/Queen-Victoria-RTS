@@ -5,7 +5,8 @@ import {
   type MoveCommand, type UnitState,
 } from '../../src/sim';
 
-const pawn = (id: string, x: number, y: number): UnitState => ({ id, faction: 'victoria', kind: 'pawn', position: { x, y } });
+const piece = (id: string, kind: UnitState['kind'], x: number, y: number, faction: UnitState['faction'] = 'victoria'): UnitState => ({ id, faction, kind, position: { x, y } });
+const pawn = (id: string, x: number, y: number): UnitState => piece(id, 'pawn', x, y);
 const move = (sequence: number, unitId: string, x: number, y: number, issuedTick = 0): MoveCommand => ({ type: 'move', sequence, issuedTick, unitId, to: { x, y } });
 
 describe('Phase 0 contracts', () => {
@@ -29,21 +30,21 @@ describe('Phase 0 contracts', () => {
 
   it('accepts one-cell orthogonal moves and rejects illegal commands atomically', () => {
     const initial = createWorld([pawn('p1', 1, 1)]);
-    const legal = stepWorld(initial, [move(1, 'p1', 2, 1)]);
-    expect(legal.state.units.p1?.position).toEqual({ x: 2, y: 1 });
+    const legal = stepWorld(initial, [move(1, 'p1', 1, 2)]);
+    expect(legal.state.units.p1?.position).toEqual({ x: 1, y: 2 });
     expect(legal.events[0]?.type).toBe('move.accepted');
     expect(initial.units.p1?.position).toEqual({ x: 1, y: 1 });
 
     const illegal = stepWorld(initial, [move(1, 'p1', 2, 2), move(2, 'missing', 1, 2)]);
     expect(illegal.state.units.p1?.position).toEqual({ x: 1, y: 1 });
     expect(illegal.events).toMatchObject([
-      { type: 'move.rejected', reason: 'illegal_step' },
+      { type: 'move.rejected', reason: 'illegal_geometry' },
       { type: 'move.rejected', reason: 'missing_unit' },
     ]);
   });
 
   it('resolves same-cell races by sequence', () => {
-    const initial = createWorld([pawn('a', 0, 1), pawn('b', 2, 1)]);
+    const initial = createWorld([piece('a', 'king', 0, 1), piece('b', 'king', 2, 1)]);
     const result = stepWorld(initial, [move(20, 'a', 1, 1), move(10, 'b', 1, 1)]);
     expect(result.state.occupancy['1,1']).toBe('b');
     expect(result.events).toMatchObject([
@@ -53,7 +54,7 @@ describe('Phase 0 contracts', () => {
   });
 
   it('produces byte-equivalent canonical replay snapshots', () => {
-    const initial = createWorld([pawn('z', 1, 1), pawn('a', 4, 4)]);
+    const initial = createWorld([piece('z', 'rook', 1, 1), piece('a', 'king', 4, 4)]);
     const frames = [
       [move(2, 'z', 2, 1)],
       [move(3, 'a', 4, 5, 1)],
