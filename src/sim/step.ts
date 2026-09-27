@@ -71,10 +71,14 @@ export function stepWorld(world: WorldState, commands: readonly SimCommand[]): S
     const nextOccupancy = { ...working.occupancy };
     delete nextOccupancy[fromKey];
     nextOccupancy[targetKey] = unit.id;
+    const combatState = working.combat[unit.id];
     working = {
       ...working,
       units: { ...working.units, [unit.id]: { ...unit, position: { ...command.to } } },
       occupancy: nextOccupancy,
+      combat: combatState
+        ? { ...working.combat, [unit.id]: { ...combatState, guardAnchor: { ...command.to } } }
+        : working.combat,
     };
     events.push({ type: 'move.accepted', tick: world.tick, sequence: command.sequence, unitId: unit.id, from, to: command.to });
   }
