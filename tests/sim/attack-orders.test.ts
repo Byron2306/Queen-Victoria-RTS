@@ -10,7 +10,7 @@ const attack = (sequence: number, unitId: string, targetId: string): AttackComma
 
 describe('Phase 2 explicit attack orders', () => {
   it('accepts an enemy target without applying damage during command validation', () => {
-    const world = createWorld([unit('v', 'victoria', 1, 1), unit('o', 'obsidian', 1, 2)]);
+    const world = createWorld([unit('v', 'victoria', 1, 1), unit('o', 'obsidian', 10, 10)]);
     const result = stepWorld(world, [attack(1, 'v', 'o')]);
     expect(result.events[0]).toMatchObject({ type: 'attack.order.accepted', unitId: 'v', targetId: 'o' });
     expect(result.state.combat.v!.targetId).toBe('o');
@@ -25,7 +25,7 @@ describe('Phase 2 explicit attack orders', () => {
     const world = createWorld([
       unit('v', 'victoria', 1, 1),
       unit('friend', 'victoria', 2, 1),
-      unit('o', 'obsidian', 1, 2),
+      unit('o', 'obsidian', 10, 10),
     ]);
     const result = stepWorld(world, [attack(1, 'v', targetId)]);
     expect(result.events[0]).toMatchObject({ type: 'attack.order.rejected', unitId: 'v', targetId, reason });
