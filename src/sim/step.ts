@@ -1,4 +1,5 @@
 import { advanceTick } from './clock';
+import { validateMoveGeometry } from './geometry';
 import type { SimCommand, SimEvent, StepResult, WorldState } from './types';
 import { coordKey, isInBounds } from './world';
 
@@ -17,10 +18,9 @@ export function stepWorld(world: WorldState, commands: readonly SimCommand[]): S
       events.push({ type: 'move.rejected', tick: world.tick, sequence: command.sequence, unitId: command.unitId, to: command.to, reason: 'out_of_bounds' });
       continue;
     }
-    const dx = Math.abs(command.to.x - unit.position.x);
-    const dy = Math.abs(command.to.y - unit.position.y);
-    if (dx + dy !== 1) {
-      events.push({ type: 'move.rejected', tick: world.tick, sequence: command.sequence, unitId: command.unitId, to: command.to, reason: 'illegal_step' });
+    const geometry = validateMoveGeometry(working, unit, command.to);
+    if (!geometry.legal) {
+      events.push({ type: 'move.rejected', tick: world.tick, sequence: command.sequence, unitId: command.unitId, to: command.to, reason: geometry.reason });
       continue;
     }
     const targetKey = coordKey(command.to);

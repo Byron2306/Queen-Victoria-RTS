@@ -18,7 +18,7 @@ export type MoveCommand = Readonly<{
 }>;
 
 export type SimCommand = MoveCommand;
-export type MoveRejectReason = 'out_of_bounds' | 'illegal_step' | 'missing_unit' | 'occupied';
+export type MoveRejectReason = 'out_of_bounds' | 'illegal_geometry' | 'blocked' | 'missing_unit' | 'occupied';
 
 export type SimEvent =
   | Readonly<{ type: 'move.accepted'; tick: number; sequence: number; unitId: string; from: Coord; to: Coord }>
