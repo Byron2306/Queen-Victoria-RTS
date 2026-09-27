@@ -1,327 +1,259 @@
 # Queen Victoria RTS — Canonical Design Specification
 
 **Date:** 2026-09-27  
-**Status:** Approved design baseline  
+**Status:** APPROVED / LOCKED  
 **Repository:** `Byron2306/Queen-Victoria-RTS`
 
-## 1. Product vision
+## Vision
 
-Queen Victoria RTS is a real-time strategy game built from the logic and visual grammar of chess, expanded into a living battlefield. The board is not a sequence of alternating turns. It is contested continuously: pieces move, threaten, screen, reinforce, withdraw, and collide under real-time command.
+A touch-first web **real-time chess RTS** with Warcraft III-style hero mechanics. Queen Victoria is the controllable hero/commander; the King is the fixed sovereign base/objective. The defining rule is:
 
-The design goal is not to make ordinary chess faster. It is to preserve chess's immediately legible unit identities and positional language while replacing turn order with time, manoeuvre, command pressure, terrain, formations, and battlefield-scale tactical decision making.
+> **The player does not win by producing the largest army. They win by constructing the strongest position.**
 
-The player should be able to look at the field and think in recognisably chess-like concepts — files, ranks, diagonals, forks, pins, screens, king safety, pawn structure and sacrifice — while commanding an army that behaves like an RTS force.
+Chess geometry is battlefield power. Files, ranks, diagonals, forks, pawn structure and territory shape combat, economy and deployment.
 
-## 2. Core design pillars
+## Core match loop
 
-### 2.1 Chess identity remains readable
+**Capture → earn → unlock → reinforce → construct geometry → win positional fights → annex more territory → break the enemy King.**
 
-Every major unit derives from a chess piece. Its battlefield behaviour should express the strategic personality of that piece rather than merely borrowing its silhouette.
+Units automatically defend through Guard/acquisition behaviour. The player concentrates on deployment, positioning, timing, hero control and strategic pushes rather than constant attack orders.
 
-- **Pawn:** inexpensive line infantry, formation mass, screening, territorial occupation and promotion potential.
-- **Knight:** mobile shock/cavalry unit able to bypass conventional blocking relationships and create sudden local threats.
-- **Bishop:** diagonal specialist with long attack lanes and strong positional control.
-- **Rook:** heavy straight-line power, defensive anchor and siege-oriented battlefield presence.
-- **Queen:** exceptionally powerful mobile command/combat asset whose flexibility makes commitment consequential.
-- **King:** sovereign command objective. The King is strategically indispensable rather than simply another high-stat unit.
+## The Royal Board
 
-### 2.2 Real time changes the grammar
+MVP uses one **16×16** battlefield with **7 capture nodes** in a symmetric royal-cross layout. The centre node is the **Crown Node**. Each King occupies a recessed **3×3 fortified home zone**. The back/far **two ranks** are home/promotion territory.
 
-There are no alternating chess turns. Orders, movement, attacks and reactions unfold concurrently.
+Node roles:
+- two flank nodes per half create alternate approaches;
+- one staging node per half supports central deployment;
+- the Crown Node is the strategic heart and grants **+1 Command Capacity while held**.
 
-The design must therefore make time itself strategically meaningful through concepts such as movement duration, attack cadence, recovery, formation changes, command latency where appropriate, interception and reinforcement timing.
+Captured territory visibly annexes into faction colour. Victoria uses **ivory, deep crimson and antique gold** with crown banners. The enemy uses **obsidian, deep violet and cold silver**. Neutral nodes have no banner; capture unfurls a standard; contested nodes visibly signal contention; loss replaces the standard and colour treatment.
 
-### 2.3 Position matters more than frantic clicking
+Active chess geometry is subtly traced on the board: rook files/ranks, bishop diagonals, knight fork targets and Victoria's Royal Alignment. It must read as heraldic/strategic illumination, not a neon laser grid.
 
-The game should reward anticipation, geometry, force concentration and timing rather than raw actions-per-minute. Controls may support rapid expert play, but the strategic layer should remain comprehensible to a player who thinks before issuing orders.
+## Units and chess identity
 
-### 2.4 The battlefield grows beyond 8×8 without losing chess
+- **Pawn:** cheap infantry and primary territory troop. Adjacent pawn structures gain formation value. Reaching enemy promotion territory may promote to Knight, Bishop or Rook for reduced Crown cost, while respecting unlocks and caps. Never promotes to Queen.
+- **Knight:** raider/disruptor. L-shaped leap ignores conventional blockers. Fork opportunities are mechanically rewarded.
+- **Bishop:** ranged diagonal specialist. Controlled/unbroken diagonals empower its attacks.
+- **Rook:** heavy defender/siege piece. Controlled straight files/ranks extend and strengthen its battlefield pressure.
+- **Queen Victoria:** unique hero/commander. Uses rook and bishop geometry, command abilities and hero progression.
+- **King:** fixed sovereign objective/base. Provides defensive presence but is not a front-line hero and is never produced.
 
-The world may use a larger tiled battlefield, sectors, objectives and terrain, but chess geometry remains visible and mechanically relevant. Straight lines, diagonals, adjacency, files and ranks should continue to matter.
+Normal units use readable RTS auto-attacks. Chess identity modifies positioning, mobility and empowered attacks rather than turning every attack into a literal chess capture.
 
-### 2.5 The Victorian theme is structural, not decorative
+## Combat feel
 
-The setting draws from the Victorian era's visual and technological vocabulary: ceremonial authority, industrial machinery, rail logistics, telegraphy, smoke, fortifications and the tension between old military forms and mechanised modernity.
+Reference feel: **Warcraft III**, not turn-based chess.
 
-Historical inspiration does not require a literal simulation of the British Empire. The game can inhabit a stylised alternate-Victorian world that supports the chess abstraction cleanly.
+Units have health, attack cadence, attack range, acquisition range and chase leash. Guard is the default defensive behaviour: units automatically acquire valid nearby threats but do not chase absurd distances away from assigned positions.
 
-## 3. Core match loop
+Positionally correct attacks receive combat and economic bonuses. Examples include Rook Open File, Bishop Line, Knight Fork, Pawn Chain and Victoria's Royal Alignment.
 
-A match follows this strategic rhythm:
+## Queen Victoria hero
 
-1. **Establish** — deploy the sovereign force, inspect terrain and establish an opening structure.
-2. **Probe** — use pawns and mobile pieces to reveal weaknesses, threaten lanes and contest objectives.
-3. **Develop** — bring specialised pieces into useful geometry and create mutually supporting formations.
-4. **Contest** — fight for positional anchors, supply/command infrastructure and battlefield sectors.
-5. **Break** — manufacture tactical overloads using forks, pins, discovered attacks, sacrifices, flanking pressure or concentrated force.
-6. **Exploit** — convert a local positional advantage into territory, material, promotion opportunities or access to the enemy sovereign.
-7. **Decide** — force checkmate-like sovereign defeat or satisfy another explicitly configured scenario victory condition.
+Victoria is unique, directly controllable and outside normal production spam. MVP progression is fixed at **5 levels**.
 
-## 4. Battlefield model
+1. **Level 1:** Royal Presence passive + Royal Decree.
+2. **Level 2:** Hold the Crown.
+3. **Level 3:** Royal Presence improves.
+4. **Level 4:** Sovereign Line.
+5. **Level 5:** Imperial Gambit ultimate.
 
-### 4.1 Grid
+XP comes from nearby kills, positional kills, node captures, defending the King and capturing the Crown Node.
 
-The battlefield uses discrete chess-derived cells even though units animate and move continuously between them. This preserves deterministic geometry and makes tactical state inspectable.
+Abilities:
+- **Royal Presence:** nearby allied morale/defence aura, strengthened by useful chess geometry.
+- **Royal Decree:** temporary nearby ally attack-speed/movement/capture-speed buff.
+- **Hold the Crown:** defensive burst improving armour/position-holding/Guard behaviour.
+- **Sovereign Line:** channels power through a valid straight or diagonal chess line.
+- **Imperial Gambit:** temporarily amplifies active friendly chess geometry around Victoria.
 
-The initial prototype should favour a rectangular grid substantially larger than 8×8. Exact dimensions are a balance parameter rather than a foundational rule.
+If defeated, Victoria returns through a meaningful cooldown plus Crown cost. Exact balance values remain tuning data.
 
-### 4.2 Occupancy
+## Crown Power economy
 
-Cells may contain units or terrain according to explicit occupancy rules. The simulation must own authoritative cell state so visual interpolation cannot change tactical truth.
+There is no conventional worker/resource-harvesting economy.
 
-### 4.3 Terrain
+Crown Power comes from:
+- enemy kills;
+- **bonus rewards for positional kills**;
+- steady ticks from controlled nodes.
 
-Terrain can alter movement, visibility, defence or line-of-effect while respecting piece identity. Candidate terrain includes:
+Node income is the stable backbone; kills accelerate the economy. This prevents passive kill-farming from replacing territorial play.
 
-- open ground;
-- roads;
-- rail lines;
-- woods;
-- ridges;
-- urban blocks;
-- trenches or fortifications;
-- bridges and rivers;
-- industrial structures.
+Initial balance anchors, explicitly tunable:
+- Pawn kill: 5 Crown;
+- Knight/Bishop kill: 10;
+- Rook kill: 14;
+- major/hero target: 25;
+- positional bonus: approximately +25% to +50%;
+- minor node: 1 Crown / 3 sec;
+- major/Crown economic tuning may be higher if playtesting requires it.
 
-Terrain should create meaningful geometry rather than random statistical noise.
+## Territory progression
 
-## 5. Piece behaviour
+Territory is also the technology tree.
 
-### Pawns
+- **0–1 nodes:** Pawns.
+- **2 nodes:** Knights unlock.
+- **3 nodes:** Bishops unlock.
+- **4 nodes:** Rooks unlock.
+- **5+ nodes:** advanced upgrades / stronger Queen capability space.
 
-Pawns form the army's structural fabric. They occupy ground, screen valuable pieces and create fronts. Their weakness individually should be offset by formation utility and numbers.
+Losing nodes removes the ability to recruit now-locked advanced pieces but never deletes pieces already fielded. MVP unlocks depend on **node count**, not node type.
 
-Promotion is retained as a major strategic mechanism. A pawn reaching an eligible promotion zone can transform into a higher-order piece subject to scenario and economy rules.
+## Production and reinforcement
 
-### Knights
+The King/base is the primary production point. The player chooses units to queue with Crown Power. Production resolves on a **reinforcement pulse**, initially targeted at roughly **15 seconds** and tuned through playtesting.
 
-Knights specialise in discontinuous manoeuvre. Their defining property is the ability to bypass ordinary blocking geometry. In real time this makes them natural raiders, interceptors and flank attackers.
+Initial cost/timing anchors:
+- Pawn: 20 Crown / 3 sec production weight;
+- Knight: 45 / 6 sec;
+- Bishop: 50 / 7 sec;
+- Rook: 70 / 10 sec;
+- Victoria return: roughly 100 Crown + 20 sec cooldown.
 
-Their movement must remain visibly derived from the chess knight rather than becoming generic cavalry pathfinding.
+Owned nodes may become forward reinforcement anchors subject to unit restrictions. Pawns may use ordinary owned anchors; higher pieces require stronger/major anchors; Rooks remain deliberately constrained.
 
-### Bishops
+A wave containing multiple units may receive a brief **Muster Bonus**. This rewards timed reinforcement composition rather than spam.
 
-Bishops dominate diagonal geometry. Their effectiveness depends on establishing and preserving lanes. Terrain and friendly formations can therefore create powerful or poor bishop positions.
+A losing player at 0–1 nodes may receive a modest emergency Pawn defence mechanism, tuned so it prevents trivial snowballing without winning the match automatically.
 
-### Rooks
+## Command Capacity and anti-spam
 
-Rooks dominate orthogonal lanes and act as heavy anchors. They are natural candidates for fortification interaction, siege pressure and strong defensive zones.
+Crown limits affordability; territory limits unlocks; **Command Capacity limits fielded army size**.
 
-### Queen
+Initial hard caps:
+- Pawns: max 6;
+- Knights: max 2;
+- Bishops: max 2;
+- Rooks: max 2;
+- Queen Victoria: exactly 1;
+- King: exactly 1 fixed.
 
-The Queen combines orthogonal and diagonal power and should be the most tactically flexible conventional piece. Her strength is balanced by scarcity, commitment risk and the strategic cost of losing her.
+Capacity weights:
+- Pawn 1;
+- Knight 2;
+- Bishop 2;
+- Rook 3;
+- Victoria is a fixed hero outside ordinary capacity accounting.
 
-### King
+Territory expands available command capacity up to the hard ceiling; the Crown Node grants +1 while held. Death immediately frees capacity, but replacement still waits for reinforcement rules. The game must not permit a late-game mass-heavy-unit rush.
 
-The King represents sovereign command. King safety is a central strategic concern. A King may provide a command influence or morale/coordination function, but such systems must never make the King an optimal front-line damage sponge.
+## AI commanders
 
-## 6. Combat and threat
+MVP ships one balanced commander using three strategic priorities: **Expand, Exploit, Protect**. It should contest weak nodes, recognise chess geometry opportunities, protect its King and important territory, and coordinate pushes without cheating.
 
-Combat should be deterministic enough that the player can understand why an engagement was won or lost.
+Four personality archetypes are canonical for subsequent implementation:
+- **The Tactician:** geometry-heavy, patient positional play.
+- **The Raider:** Knight-heavy disruption and weak-node attacks.
+- **The Fortress:** defensive Rook/node control.
+- **The Gambler:** aggressive Queen pressure and material-for-momentum play.
 
-The engine distinguishes at minimum:
+## Information and victory
 
-- movement legality;
-- attack eligibility;
-- line of effect;
-- attack timing;
-- damage or capture resolution;
-- interruption/death state;
-- sovereign threat state.
+MVP uses **full-board visibility**. Fog of war is deferred unless testing proves it improves the game.
 
-Traditional instantaneous chess capture may be adapted into short real-time combat resolution, but the tactical relationship must remain crisp. A player should not need to decipher opaque RPG stat soup to understand a bishop threatening a diagonal.
+Primary victory is breaking/defeating the enemy King. Real-time sovereign threat/check semantics may be layered into later simulation phases, but the King remains the non-negotiable objective.
 
-## 7. Check and checkmate in real time
+## Touch-first web controls
 
-The game retains the conceptual heart of check.
+- **Double tap** selects units/group intent.
+- **Single tap** on valid ground issues movement for the active selection.
+- Unit/hero actions use touch-sized controls.
+- Victoria portrait: tap selects her; double tap centres camera on her.
+- King/base receives a similar quick-access affordance.
 
-A **check** occurs when the King is under a legally resolvable enemy sovereign threat according to the current authoritative simulation state.
+Mouse input maps through the same input abstraction.
 
-Because movement is simultaneous, the engine must continuously evaluate King threat rather than waiting for turn boundaries.
+## HUD
 
-A **mate** occurs when the King is under decisive threat and no valid defensive resolution remains within the game's response model. Defensive resolutions can include moving the King, removing the attacker, blocking a blockable line, or another explicitly legal intervention.
+Battlefield remains dominant.
 
-The exact grace/timing model for real-time mate is a prototype question and must be tested carefully. The system should avoid both instantaneous unreadable defeat and exploitable indefinite escape windows.
+- **Top-left:** Victoria portrait, level, XP, health/respawn.
+- **Top-centre:** Crown Power, Command Capacity, node count, reinforcement pulse timer.
+- **Top-right:** enemy King health, tactical overview/minimap toggle, pause/settings.
+- **Bottom-left:** selected unit panel, health, stance, cap information.
+- **Bottom-centre:** Victoria/selected-unit abilities and Guard control.
+- **Bottom-right:** production queue and reinforcement controls.
 
-## 8. Orders and control
+Small contextual ribbons communicate positional state, e.g. `OPEN FILE +25%`, `BISHOP LINE ACTIVE`, `KNIGHT FORK`, `ROYAL ALIGNMENT x2`. Reinforcement pulse has a visible royal bell/marching-drum countdown.
 
-The player selects one or more pieces and issues orders using familiar RTS interactions.
+## Visual asset bible
 
-Initial order vocabulary:
+Pixel art, integer scaled.
 
-- move;
-- attack;
-- attack-move;
-- hold;
-- stop;
-- guard/protect;
-- formation move where applicable.
+- terrain tiles: 32×32;
+- Pawn: 32×32;
+- Knight/Bishop/Rook: up to 48×48 frame;
+- Victoria: 48×48;
+- King/base composite: approximately 96×96;
+- portraits: 128×128;
+- ability icons: 32×32 or 48×48;
+- FX: 32×32 / 64×64 as appropriate.
 
-Queued orders may be supported, but excessive automation should not erase tactical commitment.
+Normal animation targets: idle 4, move 6, attack 6, hit 2, death 6 frames. Victoria receives a larger animation budget: idle 6, move 8, attack 6, cast 8, hit 3, death 8, victory 8, named ability animations 8 frames, Imperial Gambit 10–12.
 
-Multi-selection must respect heterogeneous movement. A formation containing pawns, bishops and knights should not silently turn every piece into a generic pathfinding blob.
+First art batch is deliberately small: Victoria portrait/idle, Pawn idle+move, Rook idle, light/dark/annexed tiles, crown banner, selection ring, Crown icon, one hit FX and one HUD mock. Assemble a fake gameplay screenshot before mass-producing spritesheets.
 
-## 9. Formations
+## Web technology
 
-Formations are a bridge between chess structure and RTS army control.
+MVP stack is **Phaser 3 + TypeScript + Vite**, rendered through browser Canvas/WebGL.
 
-Candidate formation concepts include pawn walls, files, diagonal screens, rook-backed lines, royal defensive shells and marching columns.
+The game simulation is independent of Phaser. Simulation entities own state such as position, health, stance, target, cooldowns and geometry bonuses; Phaser sprites only display authoritative state. Unit stats, costs, unlocks, abilities and AI personalities are data-driven JSON/configuration.
 
-Formation logic should preserve relative tactical roles rather than merely arranging units prettily. When terrain or combat breaks a formation, the system must have explicit rules for whether pieces maintain, reform or abandon it.
+Use deterministic/fixed simulation ticks. Pathfinding is simple grid A* where appropriate, but Phase 1 chess geometry may impose piece-specific movement semantics. Local settings/save only for v1. No backend required.
 
-## 10. Economy and reinforcement
+## MVP scope
 
-The first playable prototype should avoid a sprawling conventional RTS economy. The core game must prove that real-time chess combat is compelling before adding economic complexity.
+Version 1 contains:
+- one Royal Board map;
+- seven capture nodes;
+- Victoria faction vs one enemy faction;
+- Queen Victoria hero;
+- Pawn, Knight, Bishop and Rook combat units;
+- King fixed base/objective;
+- one balanced AI commander;
+- Crown economy;
+- territory unlock progression;
+- positional combat bonuses;
+- Guard behaviour;
+- reinforcement pulses;
+- Command Capacity and per-piece caps;
+- Pawn promotion;
+- Victoria 5-level progression;
+- victory/defeat presentation;
+- touch-first browser controls.
 
-A limited reinforcement/resource system may later support:
+No multiplayer, campaign, accounts, server backend or procedural maps in v1.
 
-- pawn recruitment;
-- replacement forces;
-- promotion costs;
-- fortification;
-- logistics infrastructure;
-- scenario-specific technology.
+## Simulation architecture invariants
 
-Any economy must reinforce positional warfare rather than becoming a separate base-building game glued onto chess.
+1. The **16×16** grid/cell truth is owned by the simulation.
+2. Rendering interpolates authoritative state and never determines legality.
+3. Orders are explicit immutable-ish data records/events.
+4. Fixed simulation ticks make game speed independent of render frame rate.
+5. Equivalent initial state plus equivalent ordered commands must produce equivalent state/event output.
+6. Occupancy cannot silently contain two exclusive units in one cell.
+7. Out-of-bounds and invalid orders are rejected deterministically rather than partially applied.
+8. Piece geometry, combat, economy and UI are layered above the Phase 0 kernel rather than embedded into it.
 
-## 11. Command, logistics and Victorian systems
+## Development sequence
 
-Victorian-era systems provide expansion space after the combat core is proven.
+- **Phase 0:** simulation kernel: 16×16 grid, fixed clock, entity state, deterministic order queue, authoritative occupancy/movement, event stream and replay/determinism tests.
+- **Phase 1:** chess geometry, blockers and threat maps.
+- **Phase 2:** real-time combat, Guard/acquisition and positional bonuses.
+- **Phase 3:** King/sovereign victory rules.
+- **Phase 4:** Crown economy, nodes, annexation, progression, production, reinforcement and Command Capacity.
+- **Phase 5:** Victoria hero progression/abilities and balanced AI commander.
+- **Phase 6:** Phaser touch UI, HUD, board rendering and playable vertical slice.
+- **Phase 7:** polish, four AI personalities, asset expansion and balance.
 
-Potential systems include telegraph command nodes, railway reinforcement, industrial production, field fortification and reconnaissance. These should create strategic networks on the battlefield without obscuring the piece geometry.
+## Design invariant
 
-For example, rail may accelerate reinforcement along controlled corridors while telegraph infrastructure may extend command capabilities. These are design candidates, not mandatory MVP mechanics.
+Every substantial feature must answer yes to:
 
-## 12. Information model
+> **Does this deepen the experience of constructing and exploiting a chess position in a real-time battlefield?**
 
-The prototype may begin with complete battlefield information so the geometry can be balanced cleanly.
-
-Fog of war can be introduced later if it materially improves play. If used, visibility should interact with piece roles and terrain without making chess-derived threat relationships impossible to reason about.
-
-## 13. Victory conditions
-
-The canonical primary victory condition is sovereign defeat through the real-time equivalent of checkmate.
-
-Scenario variants may add territorial control, timed defence, convoy/escort, fortress assault or objective capture, but these must be labelled variants rather than quietly replacing the game's chess identity.
-
-## 14. UX and visual language
-
-The interface must make tactical truth legible at a glance.
-
-Important visual layers include:
-
-- selected-piece state;
-- valid movement geometry;
-- attack/threat lanes;
-- King danger;
-- queued orders;
-- formation membership;
-- terrain effects;
-- objective control;
-- promotion readiness.
-
-The aesthetic target is an elegant Victorian war table brought to life: carved or cast-metal chess identities, regimented battlefield readability, restrained industrial ornament, smoke and machinery where useful, and strong silhouettes at normal play zoom.
-
-Visual spectacle must never conceal tactical state.
-
-## 15. Simulation architecture principles
-
-The simulation should be authoritative, deterministic where practical and separated from rendering.
-
-Core principles:
-
-1. Grid/cell truth is owned by the simulation.
-2. Rendering interpolates authoritative movement but does not determine legality.
-3. Orders are explicit data structures.
-4. Piece capabilities are data-driven rather than scattered through UI code.
-5. Threat calculation is a first-class subsystem.
-6. Match outcomes should be reproducible from equivalent initial state and command/event streams wherever practical.
-7. Game speed and frame rate must not change tactical rules.
-
-## 16. Prototype scope
-
-The first serious vertical slice should prove one question:
-
-> Is chess strategically interesting when its pieces obey recognisable chess geometry but all players command them simultaneously in real time?
-
-The prototype therefore includes:
-
-- one battlefield;
-- two opposing armies;
-- all six chess-derived piece classes;
-- authoritative grid movement;
-- simultaneous orders;
-- blocking and threat geometry;
-- combat/capture resolution;
-- King threat detection;
-- a playable mate/victory rule;
-- basic selection and RTS orders;
-- enough UI overlays to understand tactical state;
-- restartable local matches.
-
-It explicitly does **not** require campaign progression, elaborate economy, multiplayer matchmaking, technology trees, cinematic narrative, dozens of maps or production-grade art.
-
-## 17. Prototype validation questions
-
-The vertical slice should answer these before the project expands:
-
-1. Can players predict piece movement and threat without constantly consulting UI help?
-2. Does simultaneous movement create interesting tactical timing rather than chaos?
-3. Do traditional chess concepts such as forks, pins, screens and sacrifices survive meaningfully?
-4. Is King threat readable and fair in real time?
-5. Are pawns strategically useful rather than disposable clutter?
-6. Are knights distinctive without becoming impossible to counter?
-7. Does controlling groups remain manageable while preserving individual piece identity?
-8. Does a larger battlefield improve chess strategy rather than merely lengthen travel time?
-9. Is there enough decision depth before adding an economy or technology layer?
-
-## 18. Non-goals for the initial implementation
-
-The initial implementation is not:
-
-- a conventional chess client with a timer;
-- a historical simulator of Victorian Britain;
-- a generic RTS with chess-shaped unit skins;
-- an RPG stat system;
-- an economy-first base builder;
-- a requirement to model every historical weapon or institution.
-
-## 19. Development sequence
-
-The recommended implementation sequence is:
-
-**Phase 0 — Simulation kernel**  
-Grid, clock, piece state, deterministic orders and authoritative movement.
-
-**Phase 1 — Chess geometry**  
-Piece-specific movement, blocking, attack geometry and threat maps.
-
-**Phase 2 — Real-time combat**  
-Concurrent movement/attacks, timing, interruption and capture/death resolution.
-
-**Phase 3 — Sovereign rules**  
-Check detection, legal defensive responses and real-time mate/victory semantics.
-
-**Phase 4 — Player controls**  
-Selection, commands, overlays, camera and readable feedback.
-
-**Phase 5 — Tactical vertical slice**  
-One polished battlefield with complete armies and repeatable matches.
-
-**Phase 6 — Formation and battlefield depth**  
-Formation commands, terrain and objective experiments.
-
-**Phase 7 — Victorian strategic layer experiments**  
-Telegraph, rail, reinforcement, fortification and limited economy, admitted only when playtests show they improve the core.
-
-## 20. Design invariant
-
-Every substantial feature should pass this test:
-
-> Does this deepen the experience of commanding chess pieces in a simultaneous real-time battlefield, or does it merely make the game resemble another RTS?
-
-If a feature weakens the former in favour of the latter, it should be redesigned, isolated as a scenario variant, or removed.
-
----
-
-This document is the canonical approved design baseline. Implementation plans may refine numerical values and technical choices, but changes to the product's core identity, real-time chess geometry, sovereign victory model or prototype scope should be made explicitly rather than by implementation drift.
+If not, redesign, defer or remove it.
