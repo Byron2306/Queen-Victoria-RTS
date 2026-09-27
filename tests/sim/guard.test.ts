@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { acquireGuardTarget, createWorld, refreshGuardTargets, type UnitState, type WorldState } from '../../src/sim';
+import { acquireGuardTarget, createWorld, refreshGuardTargets, stepWorld, type MoveCommand, type UnitState, type WorldState } from '../../src/sim';
 
 const unit = (id: string, faction: UnitState['faction'], x: number, y: number): UnitState => ({
   id, faction, kind: 'pawn', position: { x, y },
@@ -56,5 +56,13 @@ describe('Phase 2 Guard targeting', () => {
     const refreshed = refreshGuardTargets(world);
     expect(refreshed.combat.a!.targetId).toBe('enemy-a');
     expect(refreshed.combat.b!.targetId).toBe('enemy-b');
+  });
+
+  it('reassigns the Guard anchor when the player moves a unit', () => {
+    const world = createWorld([unit('v', 'victoria', 3, 3)]);
+    const command: MoveCommand = { type: 'move', sequence: 1, issuedTick: 0, unitId: 'v', to: { x: 3, y: 4 } };
+    const result = stepWorld(world, [command]);
+    expect(result.state.units.v!.position).toEqual({ x: 3, y: 4 });
+    expect(result.state.combat.v!.guardAnchor).toEqual({ x: 3, y: 4 });
   });
 });
