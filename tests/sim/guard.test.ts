@@ -31,16 +31,19 @@ describe('Phase 2 Guard targeting', () => {
   });
 
   it('retains a target inside the pursuit envelope and clears one beyond it', () => {
-    let world = createWorld([
+    let nearWorld = createWorld([
       unit('v', 'victoria', 3, 3),
       unit('near', 'obsidian', 6, 6),
+    ]);
+    nearWorld = patchCombat(nearWorld, 'v', { guardAnchor: { x: 0, y: 0 }, targetId: 'near' });
+    expect(refreshGuardTargets(nearWorld).combat.v!.targetId).toBe('near');
+
+    let farWorld = createWorld([
+      unit('v', 'victoria', 3, 3),
       unit('far', 'obsidian', 8, 8),
     ]);
-    world = patchCombat(world, 'v', { guardAnchor: { x: 0, y: 0 }, targetId: 'near' });
-    expect(refreshGuardTargets(world).combat.v!.targetId).toBe('near');
-
-    world = patchCombat(world, 'v', { guardAnchor: { x: 0, y: 0 }, targetId: 'far' });
-    expect(refreshGuardTargets(world).combat.v!.targetId).toBeNull();
+    farWorld = patchCombat(farWorld, 'v', { guardAnchor: { x: 0, y: 0 }, targetId: 'far' });
+    expect(refreshGuardTargets(farWorld).combat.v!.targetId).toBeNull();
   });
 
   it('refreshes all Guard targets deterministically', () => {
