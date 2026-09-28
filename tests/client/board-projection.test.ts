@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   BOARD_SIZE,
   boardCellToScreen,
+  screenToBoardCell,
   type BoardProjection,
 } from '../../src/client/board/projection';
 
@@ -45,5 +46,41 @@ describe('Phase 6 16x16 board projection', () => {
   it('rejects cells outside the 16x16 board', () => {
     expect(() => boardCellToScreen({ x: 16, y: 0 }, flat)).toThrow();
     expect(() => boardCellToScreen({ x: -1, y: 0 }, flat)).toThrow();
+  });
+});
+
+describe('Phase 6 inverse board projection', () => {
+  it('maps screen positions back to board cells', () => {
+    const projection = {
+      topLeft: { x: 0, y: 0 },
+      topRight: { x: 1600, y: 0 },
+      bottomLeft: { x: 0, y: 1600 },
+      bottomRight: { x: 1600, y: 1600 },
+    };
+
+    expect(
+      screenToBoardCell({ x: 50, y: 50 }, projection),
+    ).toEqual({ x: 0, y: 0 });
+
+    expect(
+      screenToBoardCell({ x: 1550, y: 1550 }, projection),
+    ).toEqual({ x: 15, y: 15 });
+  });
+
+  it('returns null outside the board quadrilateral', () => {
+    const projection = {
+      topLeft: { x: 0, y: 0 },
+      topRight: { x: 1600, y: 0 },
+      bottomLeft: { x: 0, y: 1600 },
+      bottomRight: { x: 1600, y: 1600 },
+    };
+
+    expect(
+      screenToBoardCell({ x: -10, y: 500 }, projection),
+    ).toBeNull();
+
+    expect(
+      screenToBoardCell({ x: 1700, y: 500 }, projection),
+    ).toBeNull();
   });
 });
