@@ -3,6 +3,7 @@ import { createInitialMatchState } from './sovereign';
 import { createInitialTerritoryState } from './nodes';
 import { createInitialHeroState } from './hero';
 import { createInitialAIState } from './ai';
+import { createInitialTurnState } from './turns';
 import type { Coord, UnitState, WorldOptions, WorldState } from './types';
 
 export const BOARD_SIZE = 16 as const;
@@ -34,6 +35,7 @@ export function createWorld(units: readonly UnitState[] = [], options: WorldOpti
     promotions: { pending: [] },
     heroes: createInitialHeroState({}, options.heroIds ?? {}),
     ai: createInitialAIState(options.aiFactions ?? []),
+    turn: createInitialTurnState(),
   };
   for (const unit of units) world = placeUnit(world, unit);
   return {

@@ -212,6 +212,7 @@ export type WorldState = Readonly<{
   promotions: PromotionState;
   heroes: Readonly<Record<Faction, HeroState>>;
   ai: Readonly<Record<Faction, AICommanderState>>;
+  turn: import('./turns').TurnState;
 }>;
 
 export type StepResult = Readonly<{ state: WorldState; events: readonly SimEvent[] }>;
