@@ -17,6 +17,13 @@ import {
 import {
   validateMoveGeometry,
 } from './geometry';
+import {
+  detectKnightFork,
+  detectOpenFile,
+  detectRoyalAlignment,
+  detectSovereignLine,
+  type TacticalBonus,
+} from './tactical-bonuses';
 
 import {
   interpretSovereignDefeats,
@@ -738,6 +745,76 @@ export function resolveCommittedOrders(
     events.push(
       ...result.events,
     );
+
+    if (
+      result.outcome.status ===
+      'RESOLVED'
+    ) {
+      const bonuses:
+        TacticalBonus[] = [];
+
+      if (
+        'unitId' in order
+      ) {
+        const knightFork =
+          detectKnightFork(
+            current,
+            order.unitId,
+          );
+
+        if (knightFork) {
+          bonuses.push(
+            knightFork,
+          );
+        }
+
+        const openFile =
+          detectOpenFile(
+            current,
+            order.unitId,
+          );
+
+        if (openFile) {
+          bonuses.push(
+            openFile,
+          );
+        }
+      }
+
+      bonuses.push(
+        ...detectRoyalAlignment(
+          current,
+          order.faction,
+        ),
+      );
+
+      bonuses.push(
+        ...detectSovereignLine(
+          current,
+          order.faction,
+        ),
+      );
+
+      for (
+        const bonus of
+        bonuses
+      ) {
+        events.push({
+          type:
+            'tactical.bonus',
+          tick:
+            current.tick,
+          kind:
+            bonus.kind,
+          faction:
+            bonus.faction,
+          sourceUnitIds:
+            bonus.sourceUnitIds,
+          targetUnitIds:
+            bonus.targetUnitIds,
+        });
+      }
+    }
   }
 
   return {

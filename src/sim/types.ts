@@ -196,6 +196,7 @@ export type SimEvent =
   | Readonly<{ type: 'ai.commitment.started'; tick: number; faction: Faction; intention: StrategicIntention; objectiveId: string; expiresTick: number }>
   | Readonly<{ type: 'ai.commitment.ended'; tick: number; faction: Faction; intention: StrategicIntention; objectiveId: string; reason: 'expired' | 'invalidated' | 'interrupted' }>
   | Readonly<{ type: 'ai.command.scheduled'; tick: number; faction: Faction; executeTick: number; actorId: string; commandType: SimCommand['type'] }>
+  | Readonly<{ type: 'tactical.bonus'; tick: number; kind: 'knight_fork' | 'open_file' | 'royal_alignment' | 'sovereign_line'; faction: Faction; sourceUnitIds: readonly string[]; targetUnitIds: readonly string[] }>
   | Readonly<{ type: 'command.rejected'; tick: number; sequence: number; unitId: string; commandType: MoveCommand['type'] | AttackCommand['type']; reason: 'match_ended' }>;
 
 export type WorldState = Readonly<{
