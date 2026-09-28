@@ -1,6 +1,5 @@
 import type { Faction, RecruitableUnitKind, SimEvent, UnitKind, WorldState } from './types';
 
-export const CROWN_INCOME_INTERVAL_TICKS = 30;
 export const KILL_REWARD: Readonly<Record<UnitKind, number>> = {
   pawn: 5, knight: 10, bishop: 10, rook: 14, queen: 25, king: 0,
 };
@@ -47,7 +46,6 @@ export function pieceCountWithQueue(world: WorldState, faction: Faction, kind: R
 }
 
 export function applyCrownIncome(world: WorldState): { state: WorldState; events: readonly SimEvent[] } {
-  if ((world.tick + 1) % CROWN_INCOME_INTERVAL_TICKS !== 0) return { state: world, events: [] };
   const crownPower = { ...world.economy.crownPower };
   const events: SimEvent[] = [];
   for (const faction of ['victoria', 'obsidian'] as const) {

@@ -1,3 +1,11 @@
+import { evaluateSovereignThreats } from './sovereign';
+import { applyCrownIncome } from './economy';
+import { advanceHeroRespawn, attemptHeroRespawns } from './hero';
+import { evaluateNodeControl } from './nodes';
+import { resolvePromotions } from './promotion';
+import { deployReinforcements } from './production';
+import { advanceHeroRoundState } from './turn-abilities';
+import type { WorldState } from './types';
 import type {
   Faction,
 } from './types';
@@ -107,5 +115,66 @@ export function transitionTurnPhase(
   return {
     ...state,
     phase: to,
+  };
+}
+
+
+export function resolveReinforcementPhase(
+  world: WorldState,
+): WorldState {
+  if (
+    world.match.status !== 'active' ||
+    world.turn.phase !== 'reinforcement'
+  ) {
+    return world;
+  }
+
+  let working = world;
+
+  const nodes =
+    evaluateNodeControl(working);
+  working = nodes.state;
+
+  const income =
+    applyCrownIncome(working);
+  working = income.state;
+
+  const deployments =
+    deployReinforcements(working);
+  working = deployments.state;
+
+  const promotions =
+    resolvePromotions(working);
+  working = promotions.state;
+
+  working =
+    advanceHeroRoundState(
+      working,
+    );
+
+  const respawnLifecycle =
+    advanceHeroRespawn(working);
+  working =
+    respawnLifecycle.state;
+
+  const respawns =
+    attemptHeroRespawns(working);
+  working =
+    respawns.state;
+
+  const sovereign =
+    evaluateSovereignThreats(
+      working,
+    );
+  working =
+    sovereign.state;
+
+  return {
+    ...working,
+    turn:
+      transitionTurnPhase(
+        working.turn,
+        'victoria_command',
+      ),
   };
 }

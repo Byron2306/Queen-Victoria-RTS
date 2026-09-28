@@ -18,3 +18,4 @@ export * from './hero';
 export * from './ai';
 export * from './abilities';
 export * from './spawn';
+export * from './turns';

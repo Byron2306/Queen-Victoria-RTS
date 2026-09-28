@@ -3,14 +3,13 @@ import { activateHeroAbility, heroMovementAnchored } from './abilities';
 import { evaluateBalancedAI } from './ai';
 import { compareSimCommands } from './commands';
 import { resolveCombatTick } from './combat';
-import { applyCrownIncome, applyKillRewards } from './economy';
+import { applyKillRewards } from './economy';
 import { validateMoveGeometry } from './geometry';
 import { refreshGuardTargets } from './guard';
-import { evaluateNodeControl } from './nodes';
-import { deployReinforcements, queueRecruitment } from './production';
-import { queuePromotionRequest, resolvePromotions } from './promotion';
+import { queueRecruitment } from './production';
+import { queuePromotionRequest } from './promotion';
 import { evaluateSovereignThreats, interpretSovereignDefeats } from './sovereign';
-import { advanceHeroRespawn, attemptHeroRespawns, interpretHeroCombat } from './hero';
+import { interpretHeroCombat } from './hero';
 import type { SimCommand, SimEvent, StepResult, WorldState } from './types';
 import { coordKey, isInBounds } from './world';
 
@@ -88,7 +87,6 @@ export function stepWorld(world: WorldState, commands: readonly SimCommand[]): S
   const heroCombat = interpretHeroCombat(guarded, working, combatResult.events);
   working = heroCombat.state;
   events.push(...heroCombat.events);
-  const defeatedFactions = new Set(heroCombat.events.filter((event): event is Extract<SimEvent, { type: 'hero.defeated' }> => event.type === 'hero.defeated').map((event) => event.faction));
 
   // Stage 8: ability activations always resolve before ordinary commands.
   const abilityCommands = ordered.filter((command): command is Extract<SimCommand, { type: 'hero_ability' }> => command.type === 'hero_ability');
@@ -113,9 +111,9 @@ export function stepWorld(world: WorldState, commands: readonly SimCommand[]): S
     else if (command.type === 'promote') promoteCommands.push(command);
   }
 
-  // Stages 10-16: verified Phase 4 territory/economy/production transaction.
-  const nodes = evaluateNodeControl(working); working = nodes.state; events.push(...nodes.events);
-  const income = applyCrownIncome(working); working = income.state; events.push(...income.events);
+  // Strategic territory, Crown income, production deployment,
+  // promotion resolution, and hero lifecycle are reinforcement-phase
+  // authority. Fixed ticks may not advance them.
   const rewards = applyKillRewards(working, guarded, combatResult.events); working = rewards.state; events.push(...rewards.events);
 
   for (const command of recruitCommands) {
@@ -124,16 +122,6 @@ export function stepWorld(world: WorldState, commands: readonly SimCommand[]): S
   for (const command of promoteCommands) {
     const result = queuePromotionRequest(working, command); working = result.state; events.push(...result.events);
   }
-
-  const deployments = deployReinforcements(working); working = deployments.state; events.push(...deployments.events);
-  const promotions = resolvePromotions(working); working = promotions.state; events.push(...promotions.events);
-
-  // Hero ability lifecycle is round-authoritative.
-  // Fixed ticks may not advance tactical ability duration or cooldown.
-  const respawnLifecycle = advanceHeroRespawn(working, defeatedFactions); working = respawnLifecycle.state; events.push(...respawnLifecycle.events);
-
-  // Stage 18: deterministic respawn attempt after all production/promotion changes.
-  const respawns = attemptHeroRespawns(working); working = respawns.state; events.push(...respawns.events);
 
   // Stage 19: AI may observe the fully resolved tick, but only schedules commands for T+1.
   for (const faction of ['victoria', 'obsidian'] as const) {

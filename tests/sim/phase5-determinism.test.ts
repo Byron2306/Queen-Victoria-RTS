@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canonicalSnapshot, createWorld, evaluateBalancedAI, runReplay, stepWorld } from '../../src/sim';
+import { canonicalSnapshot, createWorld, resolveReinforcementPhase, evaluateBalancedAI, runReplay, stepWorld } from '../../src/sim';
 import type { ScheduledAICommand, StrategicCommitment, WorldState } from '../../src/sim';
 
 function reverseRecords(world: WorldState): WorldState {
@@ -101,10 +101,39 @@ describe('Phase 5 determinism and fairness murder chamber', () => {
     }
     world = createWorld([{ id: 'vking', faction: 'victoria', kind: 'king', position: { x: 1, y: 1 } }, ...blockers], { heroIds: { victoria: 'vhero' } });
     world = { ...world, heroes: { ...world.heroes, victoria: { ...world.heroes.victoria, heroUnitId: 'vhero', status: 'respawning', respawnTicksRemaining: 0 } } };
-    const first = stepWorld(world, []);
-    const second = stepWorld(first.state, []);
-    expect(first.events.filter(e => e.type === 'hero.respawn.ready')).toHaveLength(1);
-    expect(second.events.filter(e => e.type === 'hero.respawn.ready')).toHaveLength(0);
-    expect(second.state.heroes.victoria.status).toBe('ready_to_respawn');
+    world = {
+      ...world,
+      turn: {
+        ...world.turn,
+        phase: 'reinforcement',
+      },
+    };
+
+    const first =
+      resolveReinforcementPhase(
+        world,
+      );
+
+    expect(
+      first.heroes
+        .victoria
+        .status,
+    ).toBe(
+      'ready_to_respawn',
+    );
+
+    const second =
+      stepWorld(
+        first,
+        [],
+      );
+
+    expect(
+      second.state.heroes
+        .victoria
+        .status,
+    ).toBe(
+      'ready_to_respawn',
+    );
   });
 });

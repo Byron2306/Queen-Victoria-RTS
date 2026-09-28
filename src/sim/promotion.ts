@@ -1,5 +1,4 @@
 import { CAPACITY_WEIGHT, PIECE_CAP, capacityUsage, commandCapacity, isRecruitUnlocked, pieceCountWithQueue } from './economy';
-import { REINFORCEMENT_PULSE_TICKS } from './production';
 import type { PromoteCommand, PromotableUnitKind, SimEvent, WorldState } from './types';
 
 export const PROMOTION_COST: Readonly<Record<PromotableUnitKind, number>> = {
@@ -48,7 +47,7 @@ function boundaryReason(world: WorldState, command: PromoteCommand): PromotionRe
 }
 
 export function resolvePromotions(world: WorldState): { state: WorldState; events: readonly SimEvent[] } {
-  if ((world.tick + 1) % REINFORCEMENT_PULSE_TICKS !== 0 || world.promotions.pending.length === 0) return { state: world, events: [] };
+  if (world.promotions.pending.length === 0) return { state: world, events: [] };
   let working: WorldState = { ...world, promotions: { pending: [] } };
   const events: SimEvent[] = [];
   const ordered = [...world.promotions.pending].sort((a,b)=>a.sequence-b.sequence || a.pawnId.localeCompare(b.pawnId) || a.targetKind.localeCompare(b.targetKind));

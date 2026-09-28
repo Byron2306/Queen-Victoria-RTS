@@ -45,7 +45,6 @@ import { placeUnit } from './world';
 import { findReinforcementSpawn } from './spawn';
 export { findReinforcementSpawn } from './spawn';
 
-export const REINFORCEMENT_PULSE_TICKS = 50;
 
 function deploymentLegal(world: WorldState, entry: ProductionQueueEntry): boolean {
   if (!isRecruitUnlocked(world, entry.faction, entry.unitKind)) return false;
@@ -55,7 +54,6 @@ function deploymentLegal(world: WorldState, entry: ProductionQueueEntry): boolea
 }
 
 export function deployReinforcements(world: WorldState): { state: WorldState; events: readonly SimEvent[] } {
-  if ((world.tick + 1) % REINFORCEMENT_PULSE_TICKS !== 0) return { state: world, events: [] };
   let working = world;
   const events: SimEvent[] = [];
   for (const faction of ['victoria', 'obsidian'] as const) {

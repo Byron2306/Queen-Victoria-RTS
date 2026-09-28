@@ -4,10 +4,9 @@ import type { SimEvent, UnitState, WorldState } from '../../src/sim';
 const unit=(id:string,kind:UnitState['kind'],faction:UnitState['faction'],x=0,y=0):UnitState=>({id,kind,faction,position:{x,y}});
 function own(world:WorldState, ids:string[], faction:UnitState['faction']):WorldState { const nodes={...world.territory.nodes}; for(const id of ids) nodes[id]={...nodes[id]!,owner:faction}; return {...world,territory:{nodes}}; }
 describe('Crown economy',()=>{
-  it('pays node income only on the 30-tick boundary',()=>{
-    let w=own(createWorld(),['minor-nw','crown'],'victoria');
-    expect(applyCrownIncome({...w,tick:28}).events).toEqual([]);
-    const paid=applyCrownIncome({...w,tick:29});
+  it('pays owned-node income when the explicit income operation is invoked',()=>{
+    const w=own(createWorld(),['minor-nw','crown'],'victoria');
+    const paid=applyCrownIncome({...w,tick:28});
     expect(paid.state.economy.crownPower.victoria).toBe(3);
     expect(paid.events).toContainEqual(expect.objectContaining({type:'crown.income',faction:'victoria',amount:3,sourceNodeIds:['crown','minor-nw']}));
   });
@@ -41,9 +40,11 @@ describe('Crown economy',()=>{
     for(const [count,kind] of [[2,'knight'],[3,'bishop'],[4,'rook']] as const){w=own(createWorld(),Object.keys(createWorld().territory.nodes).filter(id=>id!=='crown').slice(0,count),'victoria');expect(isRecruitUnlocked(w,'victoria',kind)).toBe(true);}
     w=own(createWorld(),Object.keys(createWorld().territory.nodes),'victoria'); expect(commandCapacity(w,'victoria')).toBe(16);
   });
-  it('does not pay a freshly captured node outside an income boundary',()=>{
+  it('includes newly owned nodes when explicit reinforcement income is resolved',()=>{
     const base=createWorld(); const nodes={...base.territory.nodes,'minor-nw':{...base.territory.nodes['minor-nw']!,owner:'victoria' as const}};
-    expect(applyCrownIncome({...base,tick:0,territory:{nodes}}).events).toEqual([]);
+    const paid=applyCrownIncome({...base,tick:0,territory:{nodes}});
+    expect(paid.state.economy.crownPower.victoria).toBe(1);
+    expect(paid.events).toContainEqual(expect.objectContaining({type:'crown.income',faction:'victoria',amount:1,sourceNodeIds:['minor-nw']}));
   });
 
   it('pays exactly one positional reward from live focus-fire combat provenance',()=>{
