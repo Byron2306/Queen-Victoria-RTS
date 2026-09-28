@@ -1,3 +1,4 @@
+import type { TacticalOrder } from './orders';
 import type {
   AICommanderState, Faction, SimCommand, SimEvent, StrategicCommitment, StrategicIntention,
   UnitKind, WorldState,
@@ -352,4 +353,323 @@ export function scheduleAICommands(world:WorldState,faction:Faction,commands:rea
     state:{...world,ai:{...world.ai,[faction]:ai}},
     events:limited.map(command=>({type:'ai.command.scheduled',tick:world.tick,faction,executeTick,actorId:commandActorId(command),commandType:command.type})),
   };
+}
+
+
+function shadowOrderId(
+  world: WorldState,
+  ordinal: number,
+): string {
+  return `obsidian-r${world.turn.round}-o${ordinal}`;
+}
+
+function legalImmediateTarget(
+  world: WorldState,
+  attackerId: string,
+): string | null {
+  const enemies =
+    Object.keys(world.units)
+      .sort()
+      .filter(id => {
+        const unit =
+          world.units[id];
+
+        return Boolean(
+          unit &&
+          unit.faction ===
+            'victoria' &&
+          canUnitAttackTarget(
+            world,
+            attackerId,
+            id,
+          ),
+        );
+      });
+
+  const kingId =
+    world.match
+      .sovereigns
+      .victoria
+      .kingId;
+
+  if (
+    kingId &&
+    enemies.includes(kingId)
+  ) {
+    return kingId;
+  }
+
+  const heroId =
+    world.heroes
+      .victoria
+      .heroUnitId;
+
+  if (
+    heroId &&
+    enemies.includes(heroId)
+  ) {
+    return heroId;
+  }
+
+  return enemies[0] ?? null;
+}
+
+export function planShadowTurn(
+  world: WorldState,
+): readonly TacticalOrder[] {
+  if (
+    world.match.status !==
+      'active' ||
+    world.turn.phase !==
+      'shadow_command'
+  ) {
+    return [];
+  }
+
+  const faction:
+    Faction = 'obsidian';
+
+  const orders:
+    TacticalOrder[] = [];
+
+  const usedActors =
+    new Set<string>();
+
+  type DraftTacticalOrder =
+    TacticalOrder extends infer Order
+      ? Order extends TacticalOrder
+        ? Omit<
+            Order,
+            | 'orderId'
+            | 'issuedRound'
+            | 'commandCost'
+          >
+        : never
+      : never;
+
+  const push = (
+    order:
+      DraftTacticalOrder,
+  ): void => {
+    if (orders.length >= 4) {
+      return;
+    }
+
+    orders.push({
+      ...order,
+      orderId:
+        shadowOrderId(
+          world,
+          orders.length,
+        ),
+      issuedRound:
+        world.turn.round,
+      commandCost: 1,
+    } as TacticalOrder);
+  };
+
+  /*
+   * Priority 1:
+   * sovereign survival.
+   */
+  if (
+    world.match
+      .sovereigns
+      .obsidian
+      .threatened
+  ) {
+    const threats = [
+      ...world.match
+        .sovereigns
+        .obsidian
+        .threateningUnitIds,
+    ].sort();
+
+    for (
+      const threatId of threats
+    ) {
+      const defenders =
+        Object.keys(world.units)
+          .sort()
+          .filter(id => {
+            const unit =
+              world.units[id];
+
+            return Boolean(
+              unit &&
+              unit.faction ===
+                faction &&
+              !usedActors.has(id) &&
+              canUnitAttackTarget(
+                world,
+                id,
+                threatId,
+              ),
+            );
+          });
+
+      const defender =
+        defenders[0];
+
+      if (!defender) {
+        continue;
+      }
+
+      push({
+        kind: 'attack',
+        faction,
+        unitId: defender,
+        targetUnitId:
+          threatId,
+      });
+
+      usedActors.add(
+        defender,
+      );
+
+      if (orders.length >= 4) {
+        return orders;
+      }
+    }
+  }
+
+  /*
+   * Priority 2:
+   * immediate legal attacks.
+   */
+  for (
+    const attackerId of
+    Object.keys(world.units)
+      .sort()
+  ) {
+    if (orders.length >= 4) {
+      break;
+    }
+
+    if (
+      usedActors.has(
+        attackerId,
+      )
+    ) {
+      continue;
+    }
+
+    const attacker =
+      world.units[
+        attackerId
+      ];
+
+    if (
+      !attacker ||
+      attacker.faction !==
+        faction ||
+      !world.combat[
+        attackerId
+      ] ||
+      world.combat[
+        attackerId
+      ]!.health <= 0
+    ) {
+      continue;
+    }
+
+    const targetId =
+      legalImmediateTarget(
+        world,
+        attackerId,
+      );
+
+    if (!targetId) {
+      continue;
+    }
+
+    push({
+      kind: 'attack',
+      faction,
+      unitId:
+        attackerId,
+      targetUnitId:
+        targetId,
+    });
+
+    usedActors.add(
+      attackerId,
+    );
+  }
+
+  if (orders.length >= 4) {
+    return orders;
+  }
+
+  /*
+   * Priorities 3-6:
+   * use the existing deterministic
+   * strategic scoring to choose
+   * objective-progress movement.
+   */
+  const intentions =
+    scoreStrategicIntentions(
+      world,
+      faction,
+    );
+
+  for (
+    const candidate of intentions
+  ) {
+    if (orders.length >= 4) {
+      break;
+    }
+
+    const commitment:
+      StrategicCommitment = {
+        intention:
+          candidate.intention,
+        objectiveId:
+          candidate.objectiveId,
+        startedTick:
+          world.tick,
+        expiresTick:
+          world.tick + 1,
+        score:
+          candidate.score,
+      };
+
+    const objective =
+      objectivePosition(
+        world,
+        faction,
+        commitment,
+      );
+
+    if (!objective) {
+      continue;
+    }
+
+    const move =
+      bestProgressMove(
+        world,
+        faction,
+        objective,
+        usedActors,
+      );
+
+    if (!move) {
+      continue;
+    }
+
+    push({
+      kind: 'move',
+      faction,
+      unitId:
+        move.unitId,
+      destination:
+        move.to,
+    });
+
+    usedActors.add(
+      move.unitId,
+    );
+  }
+
+  return orders;
 }
