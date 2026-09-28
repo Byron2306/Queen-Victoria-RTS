@@ -425,3 +425,161 @@ describe('Guard tactical resolution', () => {
     });
   });
 });
+
+describe('Ability tactical resolution', () => {
+  it('resolves an AbilityOrder through the committed resolver', () => {
+    let world = createWorld([
+      unit(
+        'victoria-queen',
+        'victoria',
+        'queen',
+        4,
+        4,
+      ),
+    ]);
+
+    world = {
+      ...world,
+
+      economy: {
+        crownPower: {
+          ...world.economy
+            .crownPower,
+          victoria: 2,
+        },
+      },
+
+      heroes: {
+        ...world.heroes,
+
+        victoria: {
+          ...world.heroes
+            .victoria,
+          heroUnitId:
+            'victoria-queen',
+          status: 'alive',
+          level: 5,
+          activeAbility: null,
+        },
+      },
+    };
+
+    const order:
+      TacticalOrder = {
+        orderId:
+          'ability-1',
+        kind: 'ability',
+        faction:
+          'victoria',
+        unitId:
+          'victoria-queen',
+        abilityId:
+          'royal_decree',
+        issuedRound: 1,
+        commandCost: 1,
+      };
+
+    const result =
+      resolveCommittedOrders(
+        world,
+        [order],
+      );
+
+    expect(
+      result.outcomes[0]
+        ?.status,
+    ).toBe('RESOLVED');
+
+    expect(
+      result.world
+        .economy
+        .crownPower
+        .victoria,
+    ).toBe(1);
+
+    expect(
+      result.world
+        .heroes
+        .victoria
+        .activeAbility,
+    ).toBe(
+      'royal_decree',
+    );
+  });
+
+  it('refuses AbilityOrder resolution without spending Crown when legality fails', () => {
+    let world = createWorld([
+      unit(
+        'victoria-queen',
+        'victoria',
+        'queen',
+        4,
+        4,
+      ),
+    ]);
+
+    world = {
+      ...world,
+
+      economy: {
+        crownPower: {
+          ...world.economy
+            .crownPower,
+          victoria: 2,
+        },
+      },
+
+      heroes: {
+        ...world.heroes,
+
+        victoria: {
+          ...world.heroes
+            .victoria,
+          heroUnitId:
+            'victoria-queen',
+          status: 'alive',
+          level: 5,
+          activeAbility:
+            'hold_the_crown',
+        },
+      },
+    };
+
+    const order:
+      TacticalOrder = {
+        orderId:
+          'ability-2',
+        kind: 'ability',
+        faction:
+          'victoria',
+        unitId:
+          'victoria-queen',
+        abilityId:
+          'royal_decree',
+        issuedRound: 1,
+        commandCost: 1,
+      };
+
+    const result =
+      resolveCommittedOrders(
+        world,
+        [order],
+      );
+
+    expect(
+      result.outcomes[0],
+    ).toMatchObject({
+      orderId:
+        'ability-2',
+      status:
+        'REFUSED',
+    });
+
+    expect(
+      result.world
+        .economy
+        .crownPower
+        .victoria,
+    ).toBe(2);
+  });
+});

@@ -1,3 +1,4 @@
+import { resolveAbilityOrder } from './turn-abilities';
 import {
   canUnitAttackTarget,
   UNIT_COMBAT_PROFILES,
@@ -582,6 +583,53 @@ function resolveGuard(
   };
 }
 
+function resolveAbility(
+  world: WorldState,
+  order: Extract<
+    TacticalOrder,
+    { kind: 'ability' }
+  >,
+): SingleResolution {
+  const result =
+    resolveAbilityOrder(
+      world,
+      order,
+    );
+
+  if (
+    result.status ===
+    'REFUSED'
+  ) {
+    return {
+      world: result.world,
+
+      outcome: {
+        orderId:
+          order.orderId,
+        status: 'REFUSED',
+        reason:
+          result.reason,
+      },
+
+      events:
+        result.events,
+    };
+  }
+
+  return {
+    world: result.world,
+
+    outcome: {
+      orderId:
+        order.orderId,
+      status: 'RESOLVED',
+    },
+
+    events:
+      result.events,
+  };
+}
+
 function resolveSingleOrder(
   world: WorldState,
   order: TacticalOrder,
@@ -626,6 +674,11 @@ function resolveSingleOrder(
       );
 
     case 'ability':
+      return resolveAbility(
+        world,
+        order,
+      );
+
     case 'recruit':
       return refused(
         world,

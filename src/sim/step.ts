@@ -1,5 +1,5 @@
 import { advanceTick } from './clock';
-import { activateHeroAbility, advanceHeroAbilityLifecycle, heroMovementAnchored } from './abilities';
+import { activateHeroAbility, heroMovementAnchored } from './abilities';
 import { evaluateBalancedAI } from './ai';
 import { compareSimCommands } from './commands';
 import { resolveCombatTick } from './combat';
@@ -93,12 +93,10 @@ export function stepWorld(world: WorldState, commands: readonly SimCommand[]): S
   // Stage 8: ability activations always resolve before ordinary commands.
   const abilityCommands = ordered.filter((command): command is Extract<SimCommand, { type: 'hero_ability' }> => command.type === 'hero_ability');
   const ordinaryCommands = ordered.filter((command) => command.type !== 'hero_ability');
-  const activatedFactions = new Set<'victoria' | 'obsidian'>();
   for (const command of abilityCommands) {
     const result = activateHeroAbility(working, command);
     working = result.state;
     events.push(...result.events);
-    if (result.events.some((event) => event.type === 'hero.ability.activated')) activatedFactions.add(command.faction);
   }
 
   // Stage 9: ordinary tactical commands. Recruitment/promotion retain Phase 4 delayed phases.
@@ -130,8 +128,8 @@ export function stepWorld(world: WorldState, commands: readonly SimCommand[]): S
   const deployments = deployReinforcements(working); working = deployments.state; events.push(...deployments.events);
   const promotions = resolvePromotions(working); working = promotions.state; events.push(...promotions.events);
 
-  // Stage 17: hero lifecycle. New counters keep their full creation-tick values.
-  const abilityLifecycle = advanceHeroAbilityLifecycle(working, activatedFactions); working = abilityLifecycle.state; events.push(...abilityLifecycle.events);
+  // Hero ability lifecycle is round-authoritative.
+  // Fixed ticks may not advance tactical ability duration or cooldown.
   const respawnLifecycle = advanceHeroRespawn(working, defeatedFactions); working = respawnLifecycle.state; events.push(...respawnLifecycle.events);
 
   // Stage 18: deterministic respawn attempt after all production/promotion changes.

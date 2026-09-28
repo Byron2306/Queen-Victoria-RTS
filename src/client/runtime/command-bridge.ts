@@ -165,20 +165,58 @@ export class ClientCommandBridge {
   }
 
   heroAbility(
+    world: WorldState,
+    faction: Faction,
+    heroId: string,
+    ability: HeroAbilityId,
+  ): void;
+
+  heroAbility(
     issuedTick: number,
     faction: Faction,
     heroId: string,
     ability: HeroAbilityId,
+  ): void;
+
+  heroAbility(
+    worldOrTick:
+      WorldState | number,
+    faction: Faction,
+    heroId: string,
+    ability: HeroAbilityId,
   ): void {
-    this.scheduleLegacy(
-      issuedTick,
-      {
-        type: 'hero_ability',
-        faction,
-        heroId,
-        ability,
-      },
-    );
+    if (
+      typeof worldOrTick ===
+      'number'
+    ) {
+      this.scheduleLegacy(
+        worldOrTick,
+        {
+          type:
+            'hero_ability',
+          faction,
+          heroId,
+          ability,
+        },
+      );
+
+      return;
+    }
+
+    this.pendingTactical.push({
+      orderId:
+        this.tacticalOrderId(
+          worldOrTick,
+          faction,
+        ),
+      kind: 'ability',
+      faction,
+      unitId: heroId,
+      abilityId: ability,
+      issuedRound:
+        worldOrTick.turn.round,
+      commandCost: 1,
+    });
   }
 
   promote(

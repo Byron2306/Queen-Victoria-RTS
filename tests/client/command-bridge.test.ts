@@ -211,3 +211,44 @@ describe('Royal Tactical client command bridge', () => {
     ).toEqual([]);
   });
 });
+
+describe('Royal Tactical Victoria ability bridge', () => {
+  it('queues Victoria hero ability as a tactical AbilityOrder', () => {
+    const world =
+      createPhase6SkirmishWorld();
+
+    const bridge =
+      new ClientCommandBridge();
+
+    bridge.heroAbility(
+      world,
+      'victoria',
+      'victoria-queen',
+      'royal_decree',
+    );
+
+    expect(
+      bridge.drainTactical(),
+    ).toEqual([
+      {
+        orderId:
+          'victoria-r1-o0',
+        kind: 'ability',
+        faction:
+          'victoria',
+        unitId:
+          'victoria-queen',
+        abilityId:
+          'royal_decree',
+        issuedRound: 1,
+        commandCost: 1,
+      },
+    ]);
+
+    expect(
+      bridge.drainLegacy(
+        world.tick + 1,
+      ),
+    ).toEqual([]);
+  });
+});
