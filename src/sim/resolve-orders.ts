@@ -508,6 +508,80 @@ function resolveAttack(
   };
 }
 
+function resolveGuard(
+  world: WorldState,
+  order: Extract<
+    TacticalOrder,
+    { kind: 'guard' }
+  >,
+): SingleResolution {
+  const unit =
+    world.units[order.unitId];
+
+  if (!unit) {
+    return skipped(
+      world,
+      order.orderId,
+      'actor_missing',
+    );
+  }
+
+  const combat =
+    world.combat[
+      order.unitId
+    ];
+
+  if (
+    !combat ||
+    combat.health <= 0
+  ) {
+    return skipped(
+      world,
+      order.orderId,
+      'actor_dead',
+    );
+  }
+
+  if (
+    unit.faction !==
+    order.faction
+  ) {
+    return refused(
+      world,
+      order.orderId,
+      'wrong_faction',
+    );
+  }
+
+  return {
+    world: {
+      ...world,
+
+      combat: {
+        ...world.combat,
+
+        [unit.id]: {
+          ...combat,
+          stance: 'guard',
+          guardAnchor: {
+            ...order.anchor,
+          },
+          targetId: null,
+        },
+      },
+    },
+
+    outcome: {
+      orderId:
+        order.orderId,
+      status:
+        'RESOLVED',
+    },
+
+    events: [],
+  };
+}
+
 function resolveSingleOrder(
   world: WorldState,
   order: TacticalOrder,
@@ -546,6 +620,11 @@ function resolveSingleOrder(
       );
 
     case 'guard':
+      return resolveGuard(
+        world,
+        order,
+      );
+
     case 'ability':
     case 'recruit':
       return refused(

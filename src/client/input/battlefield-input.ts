@@ -2,14 +2,22 @@ import type {
   Coord,
   WorldState,
 } from '../../sim/types';
-import { coordKey } from '../../sim/world';
-import { ClientCommandBridge } from '../runtime/command-bridge';
+
+import {
+  coordKey,
+} from '../../sim/world';
+
+import {
+  ClientCommandBridge,
+} from '../runtime/command-bridge';
 
 export class BattlefieldInput {
-  public selectedUnitId: string | null = null;
+  public selectedUnitId:
+    string | null = null;
 
   constructor(
-    private readonly commands: ClientCommandBridge,
+    private readonly commands:
+      ClientCommandBridge,
   ) {}
 
   pointerDown(
@@ -17,22 +25,39 @@ export class BattlefieldInput {
     issuedTick: number,
     cell: Coord,
   ): void {
+    void issuedTick;
+
     if (this.selectedUnitId) {
-      const selected = world.units[this.selectedUnitId];
+      const selected =
+        world.units[
+          this.selectedUnitId
+        ];
 
       if (!selected) {
-        this.selectedUnitId = null;
+        this.selectedUnitId =
+          null;
         return;
       }
     }
 
-    const occupantId = world.occupancy[coordKey(cell)];
-    const occupant = occupantId
-      ? world.units[occupantId]
-      : undefined;
+    const occupantId =
+      world.occupancy[
+        coordKey(cell)
+      ];
 
-    if (occupant?.faction === 'victoria') {
-      this.selectedUnitId = occupant.id;
+    const occupant =
+      occupantId
+        ? world.units[
+            occupantId
+          ]
+        : undefined;
+
+    if (
+      occupant?.faction ===
+      'victoria'
+    ) {
+      this.selectedUnitId =
+        occupant.id;
       return;
     }
 
@@ -40,28 +65,61 @@ export class BattlefieldInput {
       return;
     }
 
-    const selected = world.units[this.selectedUnitId];
+    const selected =
+      world.units[
+        this.selectedUnitId
+      ];
 
     if (!selected) {
-      this.selectedUnitId = null;
+      this.selectedUnitId =
+        null;
       return;
     }
 
-    if (occupant && occupant.faction !== selected.faction) {
+    if (
+      occupant &&
+      occupant.faction !==
+        selected.faction
+    ) {
       this.commands.attack(
-        issuedTick,
+        world,
         selected.id,
         occupant.id,
       );
+
       return;
     }
 
     if (!occupant) {
       this.commands.move(
-        issuedTick,
+        world,
         selected.id,
         cell,
       );
     }
+  }
+
+  guardSelected(
+    world: WorldState,
+  ): void {
+    if (!this.selectedUnitId) {
+      return;
+    }
+
+    const selected =
+      world.units[
+        this.selectedUnitId
+      ];
+
+    if (!selected) {
+      this.selectedUnitId =
+        null;
+      return;
+    }
+
+    this.commands.guard(
+      world,
+      selected.id,
+    );
   }
 }

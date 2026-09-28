@@ -5,72 +5,163 @@ import type {
   PromotableUnitKind,
   RecruitableUnitKind,
   SimCommand,
+  WorldState,
 } from '../../sim/types';
 
-type ScheduledClientCommand = Readonly<{
-  executeTick: number;
-  command: SimCommand;
-}>;
+import type {
+  TacticalOrder,
+} from '../../sim/orders';
+
+type ScheduledClientCommand =
+  Readonly<{
+    executeTick: number;
+    command: SimCommand;
+  }>;
 
 type ClientCommandInput =
   SimCommand extends infer Command
     ? Command extends SimCommand
-      ? Omit<Command, 'sequence' | 'issuedTick'>
+      ? Omit<
+          Command,
+          'sequence' | 'issuedTick'
+        >
       : never
     : never;
 
 export class ClientCommandBridge {
   private nextSequence = 0;
-  private readonly pending: ScheduledClientCommand[] = [];
+  private nextTacticalOrdinal = 0;
 
-  private schedule(
+  private readonly pendingLegacy:
+    ScheduledClientCommand[] = [];
+
+  private readonly pendingTactical:
+    TacticalOrder[] = [];
+
+  private scheduleLegacy(
     issuedTick: number,
     command: ClientCommandInput,
   ): void {
-    this.pending.push({
-      executeTick: issuedTick + 1,
+    this.pendingLegacy.push({
+      executeTick:
+        issuedTick + 1,
+
       command: {
         ...command,
-        sequence: this.nextSequence++,
+        sequence:
+          this.nextSequence++,
         issuedTick,
       } as SimCommand,
     });
   }
 
+  private tacticalOrderId(
+    world: WorldState,
+    faction: Faction,
+  ): string {
+    return [
+      faction,
+      `r${world.turn.round}`,
+      `o${this.nextTacticalOrdinal++}`,
+    ].join('-');
+  }
+
   move(
-    issuedTick: number,
+    world: WorldState,
     unitId: string,
     to: Coord,
   ): void {
-    this.schedule(issuedTick, {
-      type: 'move',
+    const unit =
+      world.units[unitId];
+
+    if (!unit) return;
+
+    this.pendingTactical.push({
+      orderId:
+        this.tacticalOrderId(
+          world,
+          unit.faction,
+        ),
+      kind: 'move',
+      faction: unit.faction,
       unitId,
-      to,
+      destination: {
+        ...to,
+      },
+      issuedRound:
+        world.turn.round,
+      commandCost: 1,
     });
   }
 
   attack(
-    issuedTick: number,
+    world: WorldState,
     unitId: string,
     targetId: string,
   ): void {
-    this.schedule(issuedTick, {
-      type: 'attack',
+    const unit =
+      world.units[unitId];
+
+    if (!unit) return;
+
+    this.pendingTactical.push({
+      orderId:
+        this.tacticalOrderId(
+          world,
+          unit.faction,
+        ),
+      kind: 'attack',
+      faction: unit.faction,
       unitId,
-      targetId,
+      targetUnitId:
+        targetId,
+      issuedRound:
+        world.turn.round,
+      commandCost: 1,
+    });
+  }
+
+  guard(
+    world: WorldState,
+    unitId: string,
+  ): void {
+    const unit =
+      world.units[unitId];
+
+    if (!unit) return;
+
+    this.pendingTactical.push({
+      orderId:
+        this.tacticalOrderId(
+          world,
+          unit.faction,
+        ),
+      kind: 'guard',
+      faction: unit.faction,
+      unitId,
+      anchor: {
+        ...unit.position,
+      },
+      issuedRound:
+        world.turn.round,
+      commandCost: 1,
     });
   }
 
   recruit(
     issuedTick: number,
     faction: Faction,
-    unitKind: RecruitableUnitKind,
+    unitKind:
+      RecruitableUnitKind,
   ): void {
-    this.schedule(issuedTick, {
-      type: 'recruit',
-      faction,
-      unitKind,
-    });
+    this.scheduleLegacy(
+      issuedTick,
+      {
+        type: 'recruit',
+        faction,
+        unitKind,
+      },
+    );
   }
 
   heroAbility(
@@ -79,42 +170,81 @@ export class ClientCommandBridge {
     heroId: string,
     ability: HeroAbilityId,
   ): void {
-    this.schedule(issuedTick, {
-      type: 'hero_ability',
-      faction,
-      heroId,
-      ability,
-    });
+    this.scheduleLegacy(
+      issuedTick,
+      {
+        type: 'hero_ability',
+        faction,
+        heroId,
+        ability,
+      },
+    );
   }
 
   promote(
     issuedTick: number,
     faction: Faction,
     pawnId: string,
-    targetKind: PromotableUnitKind,
+    targetKind:
+      PromotableUnitKind,
   ): void {
-    this.schedule(issuedTick, {
-      type: 'promote',
-      faction,
-      pawnId,
-      targetKind,
-    });
+    this.scheduleLegacy(
+      issuedTick,
+      {
+        type: 'promote',
+        faction,
+        pawnId,
+        targetKind,
+      },
+    );
   }
 
-  drain(tick: number): readonly SimCommand[] {
-    const due: SimCommand[] = [];
-    const future: ScheduledClientCommand[] = [];
+  drainTactical():
+    readonly TacticalOrder[] {
+    const due = [
+      ...this.pendingTactical,
+    ];
 
-    for (const scheduled of this.pending) {
-      if (scheduled.executeTick <= tick) {
-        due.push(scheduled.command);
+    this.pendingTactical
+      .length = 0;
+
+    return due;
+  }
+
+  drainLegacy(
+    tick: number,
+  ): readonly SimCommand[] {
+    const due:
+      SimCommand[] = [];
+
+    const future:
+      ScheduledClientCommand[] =
+        [];
+
+    for (
+      const scheduled of
+      this.pendingLegacy
+    ) {
+      if (
+        scheduled.executeTick <=
+        tick
+      ) {
+        due.push(
+          scheduled.command,
+        );
       } else {
-        future.push(scheduled);
+        future.push(
+          scheduled,
+        );
       }
     }
 
-    this.pending.length = 0;
-    this.pending.push(...future);
+    this.pendingLegacy
+      .length = 0;
+
+    this.pendingLegacy.push(
+      ...future,
+    );
 
     return due;
   }

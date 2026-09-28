@@ -1,4 +1,5 @@
 import { stepWorld } from '../../sim/step';
+import { enqueueTacticalOrder } from '../../sim/orders';
 import type {
   SimEvent,
   WorldState,
@@ -34,8 +35,24 @@ export class FixedTickRuntime {
     const events: SimEvent[] = [];
 
     while (this.accumulatedMs >= SIM_TICK_MS) {
+      for (
+        const order of
+        this.commands.drainTactical()
+      ) {
+        const queued =
+          enqueueTacticalOrder(
+            this.world,
+            order,
+          );
+
+        this.world =
+          queued.world;
+      }
+
       const dueCommands =
-        this.commands.drain(this.world.tick);
+        this.commands.drainLegacy(
+          this.world.tick,
+        );
 
       const result = stepWorld(
         this.world,

@@ -374,3 +374,54 @@ describe('Royal Tactical deterministic order resolution', () => {
     });
   });
 });
+
+describe('Guard tactical resolution', () => {
+  it('changes Guard anchor only during order resolution', () => {
+    const world =
+      createWorld([
+        unit(
+          'victoria-rook',
+          'victoria',
+          'rook',
+          4,
+          4,
+        ),
+      ]);
+
+    const order:
+      TacticalOrder = {
+        orderId:
+          'guard-1',
+        kind: 'guard',
+        faction:
+          'victoria',
+        unitId:
+          'victoria-rook',
+        anchor:
+          { x: 4, y: 4 },
+        issuedRound: 1,
+        commandCost: 1,
+      };
+
+    const result =
+      resolveCommittedOrders(
+        world,
+        [order],
+      );
+
+    expect(
+      result.outcomes[0]
+        ?.status,
+    ).toBe('RESOLVED');
+
+    expect(
+      result.world
+        .combat[
+          'victoria-rook'
+        ]?.guardAnchor,
+    ).toEqual({
+      x: 4,
+      y: 4,
+    });
+  });
+});

@@ -44,34 +44,38 @@ describe('Phase 6 fixed-tick runtime', () => {
     expect(runtime.world.tick).toBe(2);
   });
 
-  it('processes player commands at T+1', () => {
-    const runtime = new FixedTickRuntime();
+  it('does not execute tactical movement through fixed ticks', () => {
+    const runtime =
+      new FixedTickRuntime();
+
+    const before =
+      runtime.world.units[
+        'victoria-queen'
+      ]!.position;
 
     runtime.commands.move(
-      runtime.world.tick,
+      runtime.world,
       'victoria-queen',
       { x: 4, y: 12 },
     );
 
-    runtime.advance(SIM_TICK_MS);
-
-    expect(runtime.world.tick).toBe(1);
-    expect(runtime.world.units['victoria-queen']?.position)
-      .toEqual({ x: 3, y: 13 });
-
-    const result = runtime.advance(SIM_TICK_MS);
-
-    expect(runtime.world.tick).toBe(2);
-    expect(runtime.world.units['victoria-queen']?.position)
-      .toEqual({ x: 4, y: 12 });
+    runtime.advance(
+      SIM_TICK_MS * 2,
+    );
 
     expect(
-      result.events.some(
-        event =>
-          event.type === 'move.accepted' &&
-          event.unitId === 'victoria-queen',
-      ),
-    ).toBe(true);
+      runtime.world.units[
+        'victoria-queen'
+      ]?.position,
+    ).toEqual(before);
+
+    expect(
+      runtime.world
+        .turn
+        .pendingOrderIds,
+    ).toEqual([
+      'victoria-r1-o0',
+    ]);
   });
 
   it('performs multiple deterministic steps for accumulated time', () => {
@@ -81,5 +85,48 @@ describe('Phase 6 fixed-tick runtime', () => {
 
     expect(result.steps).toBe(3);
     expect(runtime.world.tick).toBe(3);
+  });
+});
+
+describe('Royal Tactical fixed-tick authority boundary', () => {
+  it('queues tactical movement without moving the unit during fixed ticks', () => {
+    const runtime =
+      new FixedTickRuntime();
+
+    const before =
+      runtime.world.units[
+        'victoria-queen'
+      ]!.position;
+
+    runtime.commands.move(
+      runtime.world,
+      'victoria-queen',
+      { x: 4, y: 12 },
+    );
+
+    runtime.advance(
+      SIM_TICK_MS * 3,
+    );
+
+    expect(
+      runtime.world.units[
+        'victoria-queen'
+      ]?.position,
+    ).toEqual(before);
+
+    expect(
+      runtime.world
+        .turn
+        .pendingOrderIds,
+    ).toEqual([
+      'victoria-r1-o0',
+    ]);
+
+    expect(
+      runtime.world
+        .turn
+        .royalCommandsRemaining
+        .victoria,
+    ).toBe(3);
   });
 });

@@ -1,47 +1,173 @@
-import { describe, expect, it } from 'vitest';
-import { ClientCommandBridge } from '../../src/client/runtime/command-bridge';
+import {
+  describe,
+  expect,
+  it,
+} from 'vitest';
 
-describe('Phase 6 client command bridge', () => {
-  it('schedules player commands for T+1', () => {
-    const bridge = new ClientCommandBridge();
+import {
+  ClientCommandBridge,
+} from '../../src/client/runtime/command-bridge';
 
-    bridge.move(10, 'victoria-queen', { x: 4, y: 12 });
+import {
+  createPhase6SkirmishWorld,
+} from '../../src/client/session/skirmish';
 
-    expect(bridge.drain(10)).toEqual([]);
+describe('Royal Tactical client command bridge', () => {
+  it('queues Move as a tactical order rather than a legacy SimCommand', () => {
+    const world =
+      createPhase6SkirmishWorld();
 
-    expect(bridge.drain(11)).toEqual([
+    const bridge =
+      new ClientCommandBridge();
+
+    bridge.move(
+      world,
+      'victoria-queen',
+      { x: 4, y: 12 },
+    );
+
+    expect(
+      bridge.drainTactical(),
+    ).toEqual([
       {
-        type: 'move',
-        sequence: 0,
-        issuedTick: 10,
-        unitId: 'victoria-queen',
-        to: { x: 4, y: 12 },
+        orderId:
+          'victoria-r1-o0',
+        kind: 'move',
+        faction: 'victoria',
+        unitId:
+          'victoria-queen',
+        destination:
+          { x: 4, y: 12 },
+        issuedRound: 1,
+        commandCost: 1,
+      },
+    ]);
+
+    expect(
+      bridge.drainLegacy(
+        world.tick + 1,
+      ),
+    ).toEqual([]);
+  });
+
+  it('queues Attack as a tactical order', () => {
+    const world =
+      createPhase6SkirmishWorld();
+
+    const bridge =
+      new ClientCommandBridge();
+
+    bridge.attack(
+      world,
+      'victoria-rook-a',
+      'obsidian-pawn-a',
+    );
+
+    expect(
+      bridge.drainTactical(),
+    ).toEqual([
+      {
+        orderId:
+          'victoria-r1-o0',
+        kind: 'attack',
+        faction: 'victoria',
+        unitId:
+          'victoria-rook-a',
+        targetUnitId:
+          'obsidian-pawn-a',
+        issuedRound: 1,
+        commandCost: 1,
       },
     ]);
   });
 
-  it('drains each command only once', () => {
-    const bridge = new ClientCommandBridge();
+  it('queues Guard as a tactical order', () => {
+    const world =
+      createPhase6SkirmishWorld();
 
-    bridge.attack(4, 'victoria-rook-a', 'obsidian-pawn-a');
+    const bridge =
+      new ClientCommandBridge();
 
-    expect(bridge.drain(5)).toHaveLength(1);
-    expect(bridge.drain(5)).toEqual([]);
-    expect(bridge.drain(6)).toEqual([]);
+    bridge.guard(
+      world,
+      'victoria-rook-a',
+    );
+
+    expect(
+      bridge.drainTactical(),
+    ).toEqual([
+      {
+        orderId:
+          'victoria-r1-o0',
+        kind: 'guard',
+        faction: 'victoria',
+        unitId:
+          'victoria-rook-a',
+        anchor:
+          world.units[
+            'victoria-rook-a'
+          ]!.position,
+        issuedRound: 1,
+        commandCost: 1,
+      },
+    ]);
   });
 
-  it('assigns deterministic sequence numbers across command types', () => {
-    const bridge = new ClientCommandBridge();
+  it('assigns deterministic tactical order ids', () => {
+    const world =
+      createPhase6SkirmishWorld();
 
-    bridge.move(20, 'victoria-queen', { x: 4, y: 12 });
-    bridge.attack(20, 'victoria-rook-a', 'obsidian-pawn-a');
-    bridge.recruit(20, 'victoria', 'pawn');
+    const bridge =
+      new ClientCommandBridge();
+
+    bridge.move(
+      world,
+      'victoria-queen',
+      { x: 4, y: 12 },
+    );
+
+    bridge.attack(
+      world,
+      'victoria-rook-a',
+      'obsidian-pawn-a',
+    );
+
+    bridge.guard(
+      world,
+      'victoria-rook-b',
+    );
+
+    expect(
+      bridge
+        .drainTactical()
+        .map(
+          order =>
+            order.orderId,
+        ),
+    ).toEqual([
+      'victoria-r1-o0',
+      'victoria-r1-o1',
+      'victoria-r1-o2',
+    ]);
+  });
+
+  it('keeps recruit, ability, and promotion on the legacy bridge temporarily', () => {
+    const bridge =
+      new ClientCommandBridge();
+
+    bridge.recruit(
+      20,
+      'victoria',
+      'pawn',
+    );
+
     bridge.heroAbility(
       20,
       'victoria',
       'victoria-queen',
       'royal_decree',
     );
+
     bridge.promote(
       20,
       'victoria',
@@ -49,68 +175,39 @@ describe('Phase 6 client command bridge', () => {
       'rook',
     );
 
-    const commands = bridge.drain(21);
-
-    expect(commands.map(command => command.sequence))
-      .toEqual([0, 1, 2, 3, 4]);
-
-    expect(commands.map(command => command.type))
-      .toEqual([
-        'move',
-        'attack',
-        'recruit',
-        'hero_ability',
-        'promote',
-      ]);
+    expect(
+      bridge
+        .drainLegacy(21)
+        .map(
+          command =>
+            command.type,
+        ),
+    ).toEqual([
+      'recruit',
+      'hero_ability',
+      'promote',
+    ]);
   });
 
-  it('preserves exact SimCommand payloads', () => {
-    const bridge = new ClientCommandBridge();
+  it('drains tactical orders only once', () => {
+    const world =
+      createPhase6SkirmishWorld();
 
-    bridge.recruit(7, 'victoria', 'bishop');
+    const bridge =
+      new ClientCommandBridge();
 
-    bridge.heroAbility(
-      7,
-      'victoria',
+    bridge.move(
+      world,
       'victoria-queen',
-      'hold_the_crown',
+      { x: 4, y: 12 },
     );
 
-    expect(bridge.drain(8)).toEqual([
-      {
-        type: 'recruit',
-        sequence: 0,
-        issuedTick: 7,
-        faction: 'victoria',
-        unitKind: 'bishop',
-      },
-      {
-        type: 'hero_ability',
-        sequence: 1,
-        issuedTick: 7,
-        faction: 'victoria',
-        heroId: 'victoria-queen',
-        ability: 'hold_the_crown',
-      },
-    ]);
-  });
+    expect(
+      bridge.drainTactical(),
+    ).toHaveLength(1);
 
-  it('keeps future commands queued', () => {
-    const bridge = new ClientCommandBridge();
-
-    bridge.move(30, 'victoria-queen', { x: 4, y: 12 });
-    bridge.move(31, 'victoria-queen', { x: 5, y: 11 });
-
-    expect(bridge.drain(31)).toHaveLength(1);
-
-    expect(bridge.drain(32)).toEqual([
-      {
-        type: 'move',
-        sequence: 1,
-        issuedTick: 31,
-        unitId: 'victoria-queen',
-        to: { x: 5, y: 11 },
-      },
-    ]);
+    expect(
+      bridge.drainTactical(),
+    ).toEqual([]);
   });
 });
