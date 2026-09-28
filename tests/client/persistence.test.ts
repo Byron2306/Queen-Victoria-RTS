@@ -106,12 +106,12 @@ describe('Phase 6 persisted runtime continuity', () => {
     const loaded = loadGame(storage);
 
     expect(loaded).not.toBeNull();
-    expect(loaded!.tick).toBe(2);
+    expect(loaded!.tick).toBe(0);
 
     const resumed = new FixedTickRuntime(loaded!);
 
     resumed.advance(SIM_TICK_MS);
 
-    expect(resumed.world.tick).toBe(3);
+    expect(resumed.world.tick).toBe(0);
   });
 });

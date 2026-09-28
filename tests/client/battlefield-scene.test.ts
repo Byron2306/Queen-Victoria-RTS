@@ -22,7 +22,7 @@ describe('Phase 6 battlefield scene controller', () => {
 
     controller.update(50);
     expect(controller.runtime.world.tick)
-      .toBe(1);
+      .toBe(0);
   });
 
   it('returns the events produced by runtime advancement', () => {

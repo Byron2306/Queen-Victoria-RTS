@@ -45,6 +45,6 @@ describe('Phase 6 Phaser battlefield scene factory', () => {
 
     scene.update(50, 50);
     expect(scene.controller.runtime.world.tick)
-      .toBe(1);
+      .toBe(0);
   });
 });
