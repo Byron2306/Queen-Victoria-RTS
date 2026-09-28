@@ -1,5 +1,3 @@
-import { stepWorld } from '../../sim/step';
-import { enqueueTacticalOrder } from '../../sim/orders';
 import type {
   SimEvent,
   WorldState,
@@ -14,6 +12,13 @@ export interface RuntimeAdvanceResult {
   events: readonly SimEvent[];
 }
 
+/**
+ * Presentation clock only.
+ *
+ * Royal Tactical strategic truth advances through explicit command,
+ * resolution, Shadow, and reinforcement phase APIs. Wall-clock time may
+ * count presentation frames, but it must never mutate WorldState.
+ */
 export class FixedTickRuntime {
   public world: WorldState;
   public readonly commands: ClientCommandBridge;
@@ -32,43 +37,15 @@ export class FixedTickRuntime {
     this.accumulatedMs += elapsedMs;
 
     let steps = 0;
-    const events: SimEvent[] = [];
 
     while (this.accumulatedMs >= SIM_TICK_MS) {
-      for (
-        const order of
-        this.commands.drainTactical()
-      ) {
-        const queued =
-          enqueueTacticalOrder(
-            this.world,
-            order,
-          );
-
-        this.world =
-          queued.world;
-      }
-
-      const dueCommands =
-        this.commands.drainLegacy(
-          this.world.tick,
-        );
-
-      const result = stepWorld(
-        this.world,
-        dueCommands,
-      );
-
-      this.world = result.state;
-      events.push(...result.events);
-
       this.accumulatedMs -= SIM_TICK_MS;
       steps += 1;
     }
 
     return {
       steps,
-      events,
+      events: [],
     };
   }
 }
