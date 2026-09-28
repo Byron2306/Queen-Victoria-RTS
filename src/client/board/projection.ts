@@ -167,3 +167,31 @@ export function screenToBoardCell(
     ),
   };
 }
+
+export function constrainProjectionAboveHud(
+  projection: BoardProjection,
+  hudTop: number,
+): BoardProjection {
+  return {
+    topLeft: {
+      ...projection.topLeft,
+    },
+    topRight: {
+      ...projection.topRight,
+    },
+    bottomLeft: {
+      x: projection.bottomLeft.x,
+      y: Math.min(
+        projection.bottomLeft.y,
+        hudTop,
+      ),
+    },
+    bottomRight: {
+      x: projection.bottomRight.x,
+      y: Math.min(
+        projection.bottomRight.y,
+        hudTop,
+      ),
+    },
+  };
+}

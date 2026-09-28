@@ -21,6 +21,7 @@ export interface RenderedBattlefieldUnit {
   screen: ScreenPoint;
   asset: string | null;
   selected: boolean;
+  scaleX: number;
 }
 
 export interface RenderedCaptureNode {
@@ -123,6 +124,10 @@ export function createBattlefieldRenderModel(
       ),
       asset: resolveUnitAsset(unit),
       selected: unit.id === selectedUnitId,
+      scaleX:
+        unit.faction === 'victoria'
+          ? 1
+          : -1,
     }))
     .sort(
       (a, b) =>
