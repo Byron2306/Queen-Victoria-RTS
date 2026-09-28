@@ -36,6 +36,7 @@ export function createWorld(units: readonly UnitState[] = [], options: WorldOpti
     heroes: createInitialHeroState({}, options.heroIds ?? {}),
     ai: createInitialAIState(options.aiFactions ?? []),
     turn: createInitialTurnState(),
+    pendingOrders: [],
   };
   for (const unit of units) world = placeUnit(world, unit);
   return {

@@ -213,6 +213,7 @@ export type WorldState = Readonly<{
   heroes: Readonly<Record<Faction, HeroState>>;
   ai: Readonly<Record<Faction, AICommanderState>>;
   turn: import('./turns').TurnState;
+  pendingOrders: readonly import('./orders').TacticalOrder[];
 }>;
 
 export type StepResult = Readonly<{ state: WorldState; events: readonly SimEvent[] }>;
