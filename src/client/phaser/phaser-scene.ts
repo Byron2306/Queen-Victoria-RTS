@@ -1,4 +1,12 @@
 import {
+  createHudModel,
+} from '../hud/model';
+
+import {
+  createHudTurnText,
+} from '../hud/text-model';
+
+import {
   BattlefieldSceneController,
 } from './battlefield-scene';
 
@@ -11,7 +19,8 @@ type PhaserSceneBase = new (
 export function createBattlefieldSceneClass(
   BaseScene: PhaserSceneBase,
 ) {
-  return class BattlefieldScene extends BaseScene {
+  return class BattlefieldScene
+    extends BaseScene {
     public readonly controller:
       BattlefieldSceneController;
 
@@ -24,11 +33,23 @@ export function createBattlefieldSceneClass(
         new BattlefieldSceneController();
     }
 
+    get turnHudText():
+      readonly string[] {
+      return createHudTurnText(
+        createHudModel(
+          this.controller.world,
+          null,
+        ),
+      );
+    }
+
     update(
       _time: number,
       delta: number,
     ): void {
-      this.controller.update(delta);
+      this.controller.update(
+        delta,
+      );
     }
   };
 }

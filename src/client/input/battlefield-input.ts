@@ -27,6 +27,14 @@ export class BattlefieldInput {
   ): void {
     void issuedTick;
 
+    if (
+      world.turn.phase !==
+      'victoria_command'
+    ) {
+      this.selectedUnitId = null;
+      return;
+    }
+
     if (this.selectedUnitId) {
       const selected =
         world.units[
@@ -102,6 +110,14 @@ export class BattlefieldInput {
   guardSelected(
     world: WorldState,
   ): void {
+    if (
+      world.turn.phase !==
+      'victoria_command'
+    ) {
+      this.selectedUnitId = null;
+      return;
+    }
+
     if (!this.selectedUnitId) {
       return;
     }

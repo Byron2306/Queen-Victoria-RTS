@@ -8,6 +8,12 @@ import type {
   UnitState,
   WorldState,
 } from '../../sim/types';
+import type {
+  TacticalOrder,
+} from '../../sim/orders';
+import {
+  ROYAL_COMMANDS_PER_ROUND,
+} from '../../sim/turns';
 
 export interface HudHeroModel {
   unitId: string | null;
@@ -28,6 +34,13 @@ export interface HudModel {
   sovereigns: Readonly<Record<'victoria' | 'obsidian', SovereignState>>;
   selectedUnit: UnitState | null;
   selectedCombat: UnitCombatState | null;
+  turn: {
+    round: number;
+    phase: WorldState['turn']['phase'];
+    royalCommandsRemaining: number;
+    royalCommandsMaximum: number;
+    pendingOrders: readonly TacticalOrder[];
+  };
 }
 
 export function createHudModel(
@@ -63,5 +76,14 @@ export function createHudModel(
     sovereigns: world.match.sovereigns,
     selectedUnit,
     selectedCombat,
+    turn: {
+      round: world.turn.round,
+      phase: world.turn.phase,
+      royalCommandsRemaining:
+        world.turn.royalCommandsRemaining.victoria,
+      royalCommandsMaximum:
+        ROYAL_COMMANDS_PER_ROUND,
+      pendingOrders: world.pendingOrders,
+    },
   };
 }
