@@ -72,8 +72,49 @@ export function canonicalSnapshot(result: ReplayResult): string {
       a.executeTick - b.executeTick || compareSimCommands(a.command, b.command));
     return [faction, { ...state, commitments, pendingCommands }];
   }));
+  const turn = {
+    ...result.state.turn,
+
+    royalCommandsRemaining: {
+      victoria:
+        result.state.turn
+          .royalCommandsRemaining
+          .victoria,
+
+      obsidian:
+        result.state.turn
+          .royalCommandsRemaining
+          .obsidian,
+    },
+
+    pendingOrderIds: [
+      ...result.state.turn
+        .pendingOrderIds,
+    ],
+  };
+
+  const pendingOrders = [
+    ...result.state.pendingOrders,
+  ];
+
   return JSON.stringify({
-    state: { tick: result.state.tick, width: result.state.width, height: result.state.height, units, occupancy, combat, match, territory, economy, production, promotions, heroes, ai },
+    state: {
+      tick: result.state.tick,
+      width: result.state.width,
+      height: result.state.height,
+      units,
+      occupancy,
+      combat,
+      match,
+      territory,
+      economy,
+      production,
+      promotions,
+      heroes,
+      ai,
+      turn,
+      pendingOrders,
+    },
     eventsByTick: result.eventsByTick,
   });
 }

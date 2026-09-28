@@ -1,6 +1,7 @@
+import { createInitialTurnState } from '../../sim/turns';
 import type { WorldState } from '../../sim/types';
 
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 export const SAVE_KEY = 'queen-victoria-rts.save';
 
 export interface StorageLike {
@@ -41,15 +42,32 @@ export function loadGame(
   try {
     const parsed = JSON.parse(raw) as Partial<SaveEnvelope>;
 
-    if (parsed.version !== SAVE_VERSION) {
-      return null;
-    }
-
     if (!parsed.world) {
       return null;
     }
 
-    return parsed.world;
+    if (parsed.version === SAVE_VERSION) {
+      return parsed.world;
+    }
+
+    if (parsed.version === 1) {
+      const legacy =
+        parsed.world as Partial<WorldState>;
+
+      return {
+        ...(legacy as WorldState),
+
+        turn:
+          legacy.turn ??
+          createInitialTurnState(),
+
+        pendingOrders:
+          legacy.pendingOrders ??
+          [],
+      };
+    }
+
+    return null;
   } catch {
     return null;
   }
