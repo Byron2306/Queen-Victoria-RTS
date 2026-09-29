@@ -305,8 +305,8 @@ describe(
             'vpawn',
             'victoria',
             'pawn',
-            3,
-            2,
+            9,
+            8,
           ),
         ]);
 
