@@ -34,7 +34,7 @@ describe('hero respawn',()=>{
   it('emits ready once while blocked and retries until space opens',()=>{
     let world=defeated();
     const occupied:Record<string,string>={};
-    for(let y=0;y<16;y+=1) for(let x=0;x<16;x+=1) occupied[`${x},${y}`]=`block-${x}-${y}`;
+    for(let y=0;y<24;y+=1) for(let x=0;x<24;x+=1) occupied[`${x},${y}`]=`block-${x}-${y}`;
     world={...world,occupancy:occupied,heroes:{...world.heroes,victoria:{...world.heroes.victoria,respawnTicksRemaining:0}}};
     const blocked=attemptHeroRespawns(world);
     expect(blocked.state.heroes.victoria.status).toBe('ready_to_respawn');
@@ -42,9 +42,9 @@ describe('hero respawn',()=>{
     const again=attemptHeroRespawns(blocked.state);
     expect(again.events).toHaveLength(0);
     const opened={...again.state,occupancy:{...again.state.occupancy}};
-    delete (opened.occupancy as Record<string,string>)['7,14'];
+    delete (opened.occupancy as Record<string,string>)['2,12'];
     const returned=attemptHeroRespawns(opened);
     expect(returned.events[0]?.type).toBe('hero.respawned');
-    expect(returned.state.units.vhero!.position).toEqual({x:7,y:14});
+    expect(returned.state.units.vhero!.position).toEqual({x:2,y:12});
   });
 });
