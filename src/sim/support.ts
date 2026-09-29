@@ -25,15 +25,8 @@ export type SupportChain = Readonly<{
 }>;
 
 export type SupportGraphResult =
-  | Readonly<{
-      valid: true;
-      chains: Readonly<Record<string, SupportChain>>;
-    }>
-  | Readonly<{
-      valid: false;
-      reason: string;
-      orderId?: string;
-    }>;
+  | Readonly<{ valid: true; chains: Readonly<Record<string, SupportChain>> }>
+  | Readonly<{ valid: false; reason: string; orderId?: string }>;
 
 const CONTRIBUTION_BY_DEPTH = [0, 10000, 7000, 4500, 2500] as const;
 
@@ -83,27 +76,11 @@ export function validateSupportGraph(
   for (const [rootOrderId, rootOrders] of [...byRoot.entries()].sort(([a], [b]) => a.localeCompare(b))) {
     const root = roots.get(rootOrderId)!;
     const edgeBySupporter = new Map(rootOrders.map(order => [order.unitId, order] as const));
-
-    for (const order of rootOrders) {
-      const supporter = world.units[order.unitId];
-      const supporterCombat = world.combat[order.unitId];
-      if (!supporter || !supporterCombat || supporterCombat.health <= 0 || supporter.faction !== root.faction) {
-        return { valid: false, reason: 'supporter_unavailable', orderId: order.orderId };
-      }
-
-      const receiver = world.units[order.supportedUnitId];
-      const receiverCombat = world.combat[order.supportedUnitId];
-      if (!receiver || !receiverCombat || receiverCombat.health <= 0 || receiver.faction !== root.faction) {
-        return { valid: false, reason: 'supported_unit_unavailable', orderId: order.orderId };
-      }
-
-      const geometry = validateMoveGeometry(world, supporter, receiver.position);
-      if (!geometry.legal) {
-        return { valid: false, reason: 'support_link_blocked', orderId: order.orderId };
-      }
-    }
-
     const links: SupportLink[] = [];
+
+    // Structural graph errors are authoritative before geometry errors. A
+    // cyclic command network is invalid even if one of its physical links is
+    // also blocked.
     for (const order of rootOrders) {
       const visited = new Set<string>();
       let current = order;
@@ -134,6 +111,25 @@ export function validateSupportGraph(
       });
     }
 
+    for (const order of rootOrders) {
+      const supporter = world.units[order.unitId];
+      const supporterCombat = world.combat[order.unitId];
+      if (!supporter || !supporterCombat || supporterCombat.health <= 0 || supporter.faction !== root.faction) {
+        return { valid: false, reason: 'supporter_unavailable', orderId: order.orderId };
+      }
+
+      const receiver = world.units[order.supportedUnitId];
+      const receiverCombat = world.combat[order.supportedUnitId];
+      if (!receiver || !receiverCombat || receiverCombat.health <= 0 || receiver.faction !== root.faction) {
+        return { valid: false, reason: 'supported_unit_unavailable', orderId: order.orderId };
+      }
+
+      const geometry = validateMoveGeometry(world, supporter, receiver.position);
+      if (!geometry.legal) {
+        return { valid: false, reason: 'support_link_blocked', orderId: order.orderId };
+      }
+    }
+
     links.sort((a, b) => a.depth - b.depth || a.orderId.localeCompare(b.orderId));
     chains[rootOrderId] = {
       rootOrderId,
@@ -151,7 +147,6 @@ export function supportPressureForChain(
   chain: SupportChain,
 ): number {
   let total = 0;
-
   for (const link of chain.links) {
     const unit = world.units[link.unitId];
     if (!unit) continue;
@@ -162,6 +157,5 @@ export function supportPressureForChain(
     const ranked = Math.floor((base * supportBps) / 10000);
     total += Math.floor((ranked * link.contributionBps) / 10000);
   }
-
   return total;
 }
