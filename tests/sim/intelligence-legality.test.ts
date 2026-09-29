@@ -65,27 +65,27 @@ function reposition(
 describe('knowledge-bounded movement', () => {
   it('rejects an unknown destination but allows the same destination once remembered', () => {
     let world = createWorld([
-      unit('victoria-rook', 'victoria', 'rook', 7, 7),
+      unit('victoria-rook', 'victoria', 'rook', 11, 11),
     ]);
     world = refreshFactionIntelligence(world, 'victoria');
 
-    expect(validateMoveKnowledge(world, 'victoria', { x: 7, y: 7 }, { x: 7, y: 11 }, 'rook'))
+    expect(validateMoveKnowledge(world, 'victoria', { x: 11, y: 11 }, { x: 11, y: 15 }, 'rook'))
       .toEqual({ legal: false, reason: 'unknown_destination' });
 
-    world = reposition(world, 'victoria-rook', 7, 8);
+    world = reposition(world, 'victoria-rook', 11, 12);
     world = refreshFactionIntelligence(world, 'victoria');
-    expect(getTileMemory(world, 'victoria', { x: 7, y: 11 }).visibility).toBe('observed');
+    expect(getTileMemory(world, 'victoria', { x: 11, y: 15 }).visibility).toBe('observed');
 
-    world = reposition(world, 'victoria-rook', 7, 7);
+    world = reposition(world, 'victoria-rook', 11, 11);
     world = refreshFactionIntelligence(world, 'victoria');
-    expect(getTileMemory(world, 'victoria', { x: 7, y: 11 }).visibility).toBe('remembered');
-    expect(validateMoveKnowledge(world, 'victoria', { x: 7, y: 7 }, { x: 7, y: 11 }, 'rook'))
+    expect(getTileMemory(world, 'victoria', { x: 11, y: 15 }).visibility).toBe('remembered');
+    expect(validateMoveKnowledge(world, 'victoria', { x: 11, y: 11 }, { x: 11, y: 15 }, 'rook'))
       .toEqual({ legal: true });
   });
 
   it('rejects a sliding move through an unknown required path cell', () => {
     let world = createWorld([
-      unit('victoria-rook', 'victoria', 'rook', 7, 7),
+      unit('victoria-rook', 'victoria', 'rook', 11, 11),
     ]);
     world = refreshFactionIntelligence(world, 'victoria');
 
@@ -98,7 +98,7 @@ describe('knowledge-bounded movement', () => {
           ...world.intelligence.byFaction,
           victoria: {
             ...intelligence,
-            '7,9': {
+            '11,13': {
               visibility: 'unknown',
               lastSeenRound: null,
               lastKnownPolarity: null,
@@ -107,8 +107,8 @@ describe('knowledge-bounded movement', () => {
               lastKnownFortificationId: null,
               lastKnownBannerId: null,
             },
-            '7,11': {
-              ...intelligence['7,10']!,
+            '11,15': {
+              ...intelligence['11,14']!,
               visibility: 'remembered',
             },
           },
@@ -116,35 +116,35 @@ describe('knowledge-bounded movement', () => {
       },
     };
 
-    expect(validateMoveKnowledge(world, 'victoria', { x: 7, y: 7 }, { x: 7, y: 11 }, 'rook'))
+    expect(validateMoveKnowledge(world, 'victoria', { x: 11, y: 11 }, { x: 11, y: 15 }, 'rook'))
       .toEqual({ legal: false, reason: 'unknown_path' });
   });
 
   it('queen_cannot_leeeeroooy_through_unknown_territory', () => {
     let world = createWorld([
-      unit('victoria-queen', 'victoria', 'queen', 7, 7),
+      unit('victoria-queen', 'victoria', 'queen', 11, 11),
     ]);
     world = refreshFactionIntelligence(world, 'victoria');
 
-    const result = resolveCommittedOrders(world, [move('victoria-queen', 7, 12)]);
+    const result = resolveCommittedOrders(world, [move('victoria-queen', 11, 16)]);
 
     expect(result.outcomes[0]).toEqual({
-      orderId: 'move-victoria-queen-7-12',
+      orderId: 'move-victoria-queen-11-16',
       status: 'REFUSED',
       reason: 'unknown_destination',
     });
-    expect(result.world.units['victoria-queen']!.position).toEqual({ x: 7, y: 7 });
+    expect(result.world.units['victoria-queen']!.position).toEqual({ x: 11, y: 11 });
   });
 
   it('lets a knight use an observed L-hop window without knowing intervening cells', () => {
     let world = createWorld([
-      unit('victoria-knight', 'victoria', 'knight', 7, 7),
+      unit('victoria-knight', 'victoria', 'knight', 11, 11),
     ]);
     world = refreshFactionIntelligence(world, 'victoria');
 
-    expect(getTileMemory(world, 'victoria', { x: 8, y: 7 }).visibility).toBe('unknown');
-    expect(getTileMemory(world, 'victoria', { x: 9, y: 8 }).visibility).toBe('observed');
-    expect(validateMoveKnowledge(world, 'victoria', { x: 7, y: 7 }, { x: 9, y: 8 }, 'knight'))
+    expect(getTileMemory(world, 'victoria', { x: 12, y: 11 }).visibility).toBe('unknown');
+    expect(getTileMemory(world, 'victoria', { x: 13, y: 12 }).visibility).toBe('observed');
+    expect(validateMoveKnowledge(world, 'victoria', { x: 11, y: 11 }, { x: 13, y: 12 }, 'knight'))
       .toEqual({ legal: true });
   });
 });
@@ -152,8 +152,8 @@ describe('knowledge-bounded movement', () => {
 describe('knowledge-bounded targeting', () => {
   it('allows observed targets and refuses the same real enemy once it becomes unobserved', () => {
     let world = createWorld([
-      unit('victoria-queen', 'victoria', 'queen', 7, 7),
-      unit('enemy', 'obsidian', 'pawn', 7, 10),
+      unit('victoria-queen', 'victoria', 'queen', 11, 11),
+      unit('enemy', 'obsidian', 'pawn', 11, 14),
     ]);
     world = refreshFactionIntelligence(world, 'victoria');
 
@@ -161,7 +161,7 @@ describe('knowledge-bounded targeting', () => {
     expect(resolveCommittedOrders(world, [attack('attack', 'enemy')]).outcomes[0]?.status)
       .toBe('RESOLVED');
 
-    world = reposition(world, 'enemy', 7, 12);
+    world = reposition(world, 'enemy', 11, 16);
     world = refreshFactionIntelligence(world, 'victoria');
 
     expect(targetIsObserved(world, 'victoria', 'enemy')).toBe(false);
