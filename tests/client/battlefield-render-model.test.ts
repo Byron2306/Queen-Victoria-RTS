@@ -102,7 +102,7 @@ describe('Phase 6 battlefield render model', () => {
     expect(JSON.stringify(world)).toBe(before);
   });
 
-  it('projects all seven capture nodes', () => {
+  it('projects all eight capture nodes including both major Crown nodes', () => {
     const world = createPhase6SkirmishWorld();
 
     const model = createBattlefieldRenderModel(
@@ -111,15 +111,17 @@ describe('Phase 6 battlefield render model', () => {
       null,
     );
 
-    expect(model.nodes).toHaveLength(7);
+    expect(model.nodes).toHaveLength(8);
 
-    const crown = model.nodes.find(
-      node => node.id === 'crown',
+    const crowns = model.nodes.filter(
+      node => node.kind === 'crown',
     );
 
-    expect(crown?.kind).toBe('crown');
-    expect(Number.isFinite(crown!.screen.x)).toBe(true);
-    expect(Number.isFinite(crown!.screen.y)).toBe(true);
+    expect(crowns).toHaveLength(2);
+    for (const crown of crowns) {
+      expect(Number.isFinite(crown.screen.x)).toBe(true);
+      expect(Number.isFinite(crown.screen.y)).toBe(true);
+    }
   });
 });
 

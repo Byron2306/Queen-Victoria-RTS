@@ -105,10 +105,10 @@ export function evaluateNodeControl(world: WorldState): { state: WorldState; eve
 }
 
 /**
- * Royal Tactical resolves strategic territory once per round, not from the
- * presentation clock. One round therefore advances the legacy capture meter
- * by one complete capture window. Neutral nodes can be claimed in one round;
- * an enemy-owned node is neutralized first and can be claimed on a later round.
+ * Royal Tactical resolves strategic territory once per round rather than from
+ * wall-clock presentation ticks. One reinforcement boundary advances a full
+ * legacy capture window. We retain progress=1 as a round-boundary receipt so
+ * existing save/debug surfaces can distinguish a freshly captured node.
  */
 export function evaluateNodeControlForRound(world: WorldState): { state: WorldState; events: readonly SimEvent[] } {
   let state = world;
@@ -118,6 +118,21 @@ export function evaluateNodeControlForRound(world: WorldState): { state: WorldSt
     const result = evaluateNodeControl(state);
     state = result.state;
     events.push(...result.events);
+  }
+
+  const freshlyCaptured = new Set(
+    events
+      .filter((event): event is Extract<SimEvent, { type: 'node.captured' }> => event.type === 'node.captured')
+      .map((event) => event.nodeId),
+  );
+
+  if (freshlyCaptured.size > 0) {
+    const nodes = { ...state.territory.nodes };
+    for (const nodeId of freshlyCaptured) {
+      const node = nodes[nodeId];
+      if (node) nodes[nodeId] = { ...node, captureProgressTicks: 1 };
+    }
+    state = { ...state, territory: { nodes } };
   }
 
   return { state, events };
