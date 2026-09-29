@@ -83,12 +83,12 @@ describe('chess-geometric battlefield vision', () => {
 
     world = resolveSettlement(world);
     world = buildFortification(world, {
-      id: 'blocking-bastion', faction: 'victoria', cell: { x: 7, y: 9 }, kind: 'bastion',
+      id: 'blocking-bastion', faction: 'victoria', cell: { x: 7, y: 8 }, kind: 'bastion',
     }).state;
 
     const blocked = ids(visibleCellsForUnit(world, rook));
-    expect(blocked).toContain('7,9');
-    expect(blocked).not.toContain('7,10');
+    expect(blocked).toContain('7,8');
+    expect(blocked).not.toContain('7,9');
   });
 
   it('treats owned territory and controlled nodes as live vision sources', () => {
