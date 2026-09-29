@@ -23,12 +23,13 @@ describe('Royal Tactical node topology', () => {
     expect(DEFAULT_CAPTURE_NODES).toEqual(APPROVED_NODES);
 
     const nodes = Object.values(DEFAULT_CAPTURE_NODES);
+    const centers = nodes.map((node) => `${node.center.x},${node.center.y}`);
     expect(nodes).toHaveLength(8);
     expect(nodes.filter((node) => node.kind === 'crown')).toHaveLength(2);
     expect(nodes.filter((node) => node.kind === 'minor')).toHaveLength(6);
     expect(nodes.every((node) => isPlayableCell(node.center.x, node.center.y))).toBe(true);
-    expect(nodes.some((node) => node.center.x === 11 && node.center.y === 11)).toBe(false);
-    expect(nodes.some((node) => node.center.x === 12 && node.center.y === 12)).toBe(false);
+    expect(centers).not.toContain('11,11');
+    expect(centers).not.toContain('12,12');
   });
 
   it('refuses node capture without orthogonally adjacent faction supply', () => {
