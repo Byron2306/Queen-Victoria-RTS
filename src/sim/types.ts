@@ -155,7 +155,15 @@ export type WorldOptions = Readonly<{
   heroIds?: Partial<Record<Faction, string>>;
   aiFactions?: readonly Faction[];
 }>;
-export type MoveRejectReason = 'out_of_bounds' | 'illegal_geometry' | 'blocked' | 'missing_unit' | 'occupied' | 'hero_anchored';
+export type MoveRejectReason =
+  | 'out_of_bounds'
+  | 'illegal_geometry'
+  | 'blocked'
+  | 'polarity_mismatch'
+  | 'polarity_break'
+  | 'missing_unit'
+  | 'occupied'
+  | 'hero_anchored';
 export type AttackRejectReason = 'missing_unit' | 'missing_target' | 'self_target' | 'friendly_target' | 'dead_target';
 
 export type SimEvent =
@@ -217,7 +225,3 @@ export type WorldState = Readonly<{
   turn: import('./turns').TurnState;
   pendingOrders: readonly import('./orders').TacticalOrder[];
 }>;
-
-export type StepResult = Readonly<{ state: WorldState; events: readonly SimEvent[] }>;
-export type CombatTickResult = Readonly<{ state: WorldState; events: readonly SimEvent[] }>;
-export type ReplayResult = Readonly<{ state: WorldState; eventsByTick: readonly (readonly SimEvent[])[] }>;
