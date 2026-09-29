@@ -74,3 +74,10 @@ export const TRIPTYCH_OPENING_UNITS: readonly UnitState[] = [
     position: { x: 18, y: 11 },
   },
 ] as const;
+
+export function createTriptychOpeningUnits(): UnitState[] {
+  return TRIPTYCH_OPENING_UNITS.map((unit) => ({
+    ...unit,
+    position: { ...unit.position },
+  }));
+}
