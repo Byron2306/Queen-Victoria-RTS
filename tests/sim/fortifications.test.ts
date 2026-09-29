@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createWorld } from '../../src/sim/world';
 import { resolveSettlement } from '../../src/sim/territory';
+import { validateMoveGeometry } from '../../src/sim/geometry';
 import {
   buildFortification,
   canBuildFortification,
@@ -54,5 +55,38 @@ describe('Triptych fortifications', () => {
     expect(getFortificationAt(world, cell)?.durability).toBe(1);
     world = damageFortification(world, 'fort-v-1', 1);
     expect(getFortificationAt(world, cell)).toBeNull();
+  });
+
+  it('blocks both ray traversal and direct landing while it survives', () => {
+    const fortCell = { x: 7, y: 10 } as const;
+    let world = createWorld([
+      { id: 'builder', faction: 'victoria', kind: 'pawn', position: fortCell },
+    ]);
+    world = resolveSettlement(world);
+    world = buildFortification(world, {
+      id: 'fort-v-1',
+      faction: 'victoria',
+      cell: fortCell,
+    }).state;
+
+    const rook = { id: 'rook', faction: 'obsidian', kind: 'rook', position: { x: 7, y: 8 } } as const;
+    const knight = { id: 'knight', faction: 'obsidian', kind: 'knight', position: { x: 6, y: 8 } } as const;
+    world = {
+      ...world,
+      units: { rook, knight },
+      occupancy: {
+        '7,8': 'rook',
+        '6,8': 'knight',
+      },
+    };
+
+    expect(validateMoveGeometry(world, rook, { x: 7, y: 12 })).toEqual({
+      legal: false,
+      reason: 'blocked',
+    });
+    expect(validateMoveGeometry(world, knight, fortCell)).toEqual({
+      legal: false,
+      reason: 'blocked',
+    });
   });
 });
