@@ -29,6 +29,7 @@ describe('faction-safe presented battlefield world', () => {
   it('presents remembered enemy contacts as ghosts rather than live units', () => {
     let world = worldWithObservedAndHiddenEnemies();
     const memory = world.intelligence.byFaction.victoria['7,10']!;
+    const { ['7,10']: _oldOccupant, ...occupancyWithoutOldCell } = world.occupancy;
 
     world = {
       ...world,
@@ -40,8 +41,7 @@ describe('faction-safe presented battlefield world', () => {
         },
       },
       occupancy: {
-        ...world.occupancy,
-        '7,10': undefined,
+        ...occupancyWithoutOldCell,
         '14,13': 'seen-pawn',
       },
       intelligence: {
@@ -75,14 +75,25 @@ describe('faction-safe presented battlefield world', () => {
   it('uses stale remembered polarity rather than hidden authoritative polarity', () => {
     let world = worldWithObservedAndHiddenEnemies();
     const memory = world.intelligence.byFaction.victoria['7,10']!;
+    const territory = world.territory as typeof world.territory & {
+      tiles: Record<string, {
+        id: string;
+        cell: { x: number; y: number };
+        polarity: 'black' | 'white';
+        factionControl: 'neutral' | 'victoria' | 'obsidian';
+      }>;
+    };
 
     world = {
       ...world,
-      polarity: {
-        ...world.polarity,
+      territory: {
+        ...territory,
         tiles: {
-          ...world.polarity.tiles,
-          '7,10': 'black',
+          ...territory.tiles,
+          '7,10': {
+            ...territory.tiles['7,10']!,
+            polarity: 'black',
+          },
         },
       },
       intelligence: {
