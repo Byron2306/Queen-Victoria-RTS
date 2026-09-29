@@ -1,6 +1,14 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { tileCenter } from '../../src/client/board/projection';
+import {
+  boardCellToScreen,
+  screenToBoardCell,
+  tileCenter,
+} from '../../src/client/board/projection';
+import {
+  centerBattlefieldCameraOn,
+  createBattlefieldCameraState,
+} from '../../src/client/camera/battlefield-camera';
 import {
   resetBattlefieldCamera,
   setBattlefieldCameraState,
@@ -145,5 +153,37 @@ describe('Triptych free-roam camera + intelligence presentation gauntlet', () =>
         && contact.cell.y === 13,
     );
     expect(hiddenCurrentCell).toBe(false);
+
+    resetBattlefieldCamera();
+    const centeringLayout = createResponsiveBattlefieldLayout(1600, 900);
+    const rookCell = world.units['victoria-rook']!.position;
+    const baseAnchor = boardCellToScreen(
+      rookCell,
+      centeringLayout.projection,
+    );
+    const focus = {
+      x: centeringLayout.board.x + centeringLayout.board.width / 2,
+      y: centeringLayout.board.y + centeringLayout.board.height / 2,
+    };
+
+    setBattlefieldCameraState(
+      centerBattlefieldCameraOn(
+        createBattlefieldCameraState(),
+        baseAnchor,
+        focus,
+      ),
+    );
+
+    const centeredLayout = createResponsiveBattlefieldLayout(1600, 900);
+    const centeredAnchor = boardCellToScreen(
+      rookCell,
+      centeredLayout.projection,
+    );
+
+    expect(centeredAnchor.x).toBeCloseTo(focus.x, 6);
+    expect(centeredAnchor.y).toBeCloseTo(focus.y, 6);
+    expect(
+      screenToBoardCell(centeredAnchor, centeredLayout.projection),
+    ).toEqual(rookCell);
   });
 });
