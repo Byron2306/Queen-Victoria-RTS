@@ -1,3 +1,4 @@
+import { assetUrl } from '../assets/base-url';
 import {
   fitAspectInside,
 } from '../render/hud-art-layout';
@@ -199,72 +200,72 @@ export function createBattlefieldSceneClass<
 
       scene.load.image(
         'hud-top-status',
-        '/assets/ui/top-status.png',
+        assetUrl('assets/ui/top-status.png'),
       );
 
       scene.load.image(
         'hud-selected-unit',
-        '/assets/ui/selected-unit-panel.png',
+        assetUrl('assets/ui/selected-unit-panel.png'),
       );
 
       scene.load.image(
         'hud-abilities',
-        '/assets/ui/abilities-frame.png',
+        assetUrl('assets/ui/abilities-frame.png'),
       );
 
       scene.load.image(
         'hud-deploy-units',
-        '/assets/ui/deploy-units.png',
+        assetUrl('assets/ui/deploy-units.png'),
       );
 
       scene.load.image(
         'hud-ability-royal-decree',
-        '/assets/ui/ability-royal-decree.png',
+        assetUrl('assets/ui/ability-royal-decree.png'),
       );
 
       scene.load.image(
         'hud-ability-hold-the-crown',
-        '/assets/ui/ability-hold-the-crown.png',
+        assetUrl('assets/ui/ability-hold-the-crown.png'),
       );
 
       scene.load.image(
         'hud-ability-sovereign-line',
-        '/assets/ui/ability-sovereign-line.png',
+        assetUrl('assets/ui/ability-sovereign-line.png'),
       );
 
       scene.load.image(
         'hud-ability-imperial-gambit',
-        '/assets/ui/ability-imperial-gambit.png',
+        assetUrl('assets/ui/ability-imperial-gambit.png'),
       );
 
       scene.load.image(
         'hud-deploy-pawn',
-        '/assets/ui/deploy-pawn.png',
+        assetUrl('assets/ui/deploy-pawn.png'),
       );
 
       scene.load.image(
         'hud-deploy-knight',
-        '/assets/ui/deploy-knight.png',
+        assetUrl('assets/ui/deploy-knight.png'),
       );
 
       scene.load.image(
         'hud-deploy-bishop',
-        '/assets/ui/deploy-bishop.png',
+        assetUrl('assets/ui/deploy-bishop.png'),
       );
 
       scene.load.image(
         'hud-deploy-rook',
-        '/assets/ui/deploy-rook.png',
+        assetUrl('assets/ui/deploy-rook.png'),
       );
 
       scene.load.image(
         'hud-victoria-status',
-        '/assets/ui/victoria-status.png',
+        assetUrl('assets/ui/victoria-status.png'),
       );
 
       scene.load.image(
         'hud-shadow-king-status',
-        '/assets/ui/shadow-king-status.png',
+        assetUrl('assets/ui/shadow-king-status.png'),
       );
     }
 
