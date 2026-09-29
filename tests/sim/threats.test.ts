@@ -29,13 +29,17 @@ describe('Phase 1 threat projection', () => {
     expect(keys(projectThreatCells(world, obsidian))).toEqual(['9,9', '11,9']);
   });
 
-  it('projects all in-bounds knight and king threats at edges', () => {
+  it('projects all in-bounds knight and king threats under 24x24 bounds', () => {
     const knight = unit('n', 'knight', 0, 0);
     const king = unit('k', 'king', 15, 15);
     const world = createWorld([knight, king]);
 
     expect(keys(projectThreatCells(world, knight))).toEqual(['2,1', '1,2']);
-    expect(keys(projectThreatCells(world, king))).toEqual(['14,14', '15,14', '14,15']);
+    expect(keys(projectThreatCells(world, king))).toEqual([
+      '14,14', '15,14', '16,14',
+      '14,15', '16,15',
+      '14,16', '15,16', '16,16',
+    ]);
   });
 
   it('includes the first occupied square on a sliding ray and stops beyond it', () => {
