@@ -1,6 +1,12 @@
 import type {
   BoardProjection,
 } from '../board/projection';
+import {
+  getBattlefieldCameraState,
+} from '../camera/battlefield-camera-store';
+import {
+  applyCameraToProjection,
+} from '../camera/camera-projection';
 
 export interface Rect {
   x: number;
@@ -19,6 +25,28 @@ export interface ResponsiveBattlefieldLayout {
 }
 
 const ASPECT = 16 / 9;
+
+function applyCameraToRect(
+  rect: Rect,
+  viewport: Rect,
+): Rect {
+  const camera = getBattlefieldCameraState();
+  const centerX = viewport.x + viewport.width / 2;
+  const centerY = viewport.y + viewport.height / 2;
+
+  return {
+    x:
+      centerX +
+      (rect.x - centerX) * camera.zoom +
+      camera.panX,
+    y:
+      centerY +
+      (rect.y - centerY) * camera.zoom +
+      camera.panY,
+    width: rect.width * camera.zoom,
+    height: rect.height * camera.zoom,
+  };
+}
 
 export function createResponsiveBattlefieldLayout(
   viewportWidth: number,
@@ -72,7 +100,7 @@ export function createResponsiveBattlefieldLayout(
       renderHeight * ASPECT;
   }
 
-  const boardRender: Rect = {
+  const baseBoardRender: Rect = {
     x:
       (viewportWidth -
         renderWidth) /
@@ -91,12 +119,12 @@ export function createResponsiveBattlefieldLayout(
   };
 
   const scaleX =
-    boardRender.width / 1600;
+    baseBoardRender.width / 1600;
 
   const scaleY =
-    boardRender.height / 900;
+    baseBoardRender.height / 900;
 
-  const projection: BoardProjection = {
+  const baseProjection: BoardProjection = {
     // Presentation-only 90° rotation of the logical board.
     //
     // Logical y=15 (Victoria side) renders on the LEFT.
@@ -105,40 +133,51 @@ export function createResponsiveBattlefieldLayout(
     // Simulation coordinates remain unchanged.
     topLeft: {
       x:
-        boardRender.x +
+        baseBoardRender.x +
         1200 * scaleX,
       y:
-        boardRender.y +
+        baseBoardRender.y +
         180 * scaleY,
     },
 
     topRight: {
       x:
-        boardRender.x +
+        baseBoardRender.x +
         1480 * scaleX,
       y:
-        boardRender.y +
+        baseBoardRender.y +
         820 * scaleY,
     },
 
     bottomLeft: {
       x:
-        boardRender.x +
+        baseBoardRender.x +
         400 * scaleX,
       y:
-        boardRender.y +
+        baseBoardRender.y +
         180 * scaleY,
     },
 
     bottomRight: {
       x:
-        boardRender.x +
+        baseBoardRender.x +
         120 * scaleX,
       y:
-        boardRender.y +
+        baseBoardRender.y +
         820 * scaleY,
     },
   };
+
+  const camera = getBattlefieldCameraState();
+  const boardRender = applyCameraToRect(
+    baseBoardRender,
+    board,
+  );
+  const projection = applyCameraToProjection(
+    baseProjection,
+    camera,
+    board,
+  );
 
   return {
     board,
