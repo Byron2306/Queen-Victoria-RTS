@@ -286,6 +286,20 @@ export function createTriptychBattlefieldSceneClass<
       this.refreshGhostContacts(force);
     }
 
+    /**
+     * Camera-bound overlays must be regenerated from the same current
+     * projection as the board and units. Keeping this as one refresh boundary
+     * prevents selection, movement, strategic/watchtower, nodes, and
+     * intelligence layers from retaining pre-pan screen coordinates.
+     */
+    refreshCameraBoundPresentation(force = false): void {
+      const scene = this as any;
+      scene.redrawRoyalMoveMarkers?.();
+      scene.redrawStrategicOverlay?.(force);
+      this.redrawRoyalNodes(force);
+      this.refreshBattlefieldIntelligence(force);
+    }
+
     // Overrides the inherited Royal node renderer. The source PNGs stay
     // pristine; production geometry crops transparent atlas padding at runtime,
     // preserves aspect ratio, and anchors every state at the same ground point.
@@ -362,6 +376,7 @@ export function createTriptychBattlefieldSceneClass<
     layoutBattlefield(): void {
       super.layoutBattlefield();
       this.enforceTriptychUnitPresentation();
+      this.refreshCameraBoundPresentation(true);
     }
 
     create(): void {
@@ -415,7 +430,6 @@ export function createTriptychBattlefieldSceneClass<
 
           panStoredBattlefieldCamera(delta, this.cameraBounds());
           this.layoutBattlefield();
-          this.refreshBattlefieldIntelligence();
         },
       );
 
@@ -439,7 +453,6 @@ export function createTriptychBattlefieldSceneClass<
             wheelZoomTarget(current.zoom, deltaY),
           );
           this.layoutBattlefield();
-          this.refreshBattlefieldIntelligence();
         },
       );
     }
@@ -456,6 +469,7 @@ export function createTriptychBattlefieldSceneClass<
           keyboardDelta,
           this.cameraBounds(),
         );
+        this.layoutBattlefield();
       }
 
       super.update(time, delta);
