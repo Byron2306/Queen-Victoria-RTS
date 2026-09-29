@@ -24,6 +24,9 @@ import {
 import {
   createIntelligenceTileVisuals,
 } from '../render/intelligence-visuals';
+import {
+  createGhostContactVisuals,
+} from '../render/ghost-contacts';
 
 type PhaserSceneBase = new (config?: any) => object;
 
@@ -64,6 +67,8 @@ export function createTriptychBattlefieldSceneClass<
     private cameraDragPoint: CameraPoint | null = null;
     private intelligenceMarkers: any[] = [];
     private intelligenceVisualFingerprint = '';
+    private ghostMarkers: any[] = [];
+    private ghostVisualFingerprint = '';
 
     private cameraBounds(): {
       minX: number;
@@ -83,7 +88,10 @@ export function createTriptychBattlefieldSceneClass<
       };
     }
 
-    private refreshIntelligenceFrontier(force = false): void {
+    private currentPresentationRuntime(): {
+      layout: ReturnType<typeof createResponsiveBattlefieldLayout>;
+      runtime: ReturnType<typeof createBattlefieldSceneRuntime>;
+    } {
       const scene = this as any;
       const width = Number(scene.scale?.width) || 1600;
       const height = Number(scene.scale?.height) || 900;
@@ -93,6 +101,13 @@ export function createTriptychBattlefieldSceneClass<
         this.selectedUnitId,
         layout.projection,
       );
+
+      return { layout, runtime };
+    }
+
+    private refreshIntelligenceFrontier(force = false): void {
+      const scene = this as any;
+      const { layout, runtime } = this.currentPresentationRuntime();
       const visuals = createIntelligenceTileVisuals(
         runtime.intelligenceOverlay,
       ).filter(visual => visual.alpha > 0);
@@ -152,9 +167,81 @@ export function createTriptychBattlefieldSceneClass<
       }
     }
 
+    private refreshGhostContacts(force = false): void {
+      const scene = this as any;
+      const { layout, runtime } = this.currentPresentationRuntime();
+      const ghosts = createGhostContactVisuals(
+        runtime.presented,
+        layout.projection,
+      );
+      const camera = getBattlefieldCameraState();
+      const fingerprint = [
+        camera.panX.toFixed(2),
+        camera.panY.toFixed(2),
+        camera.zoom.toFixed(3),
+        ...ghosts.map(ghost =>
+          `${ghost.unitId}:${ghost.cell.x},${ghost.cell.y}:r${ghost.lastSeenRound}`,
+        ),
+      ].join('|');
+
+      if (!force && fingerprint === this.ghostVisualFingerprint) {
+        return;
+      }
+
+      this.ghostVisualFingerprint = fingerprint;
+
+      for (const marker of this.ghostMarkers) {
+        marker?.destroy?.();
+      }
+      this.ghostMarkers = [];
+
+      if (!scene.add?.ellipse) {
+        return;
+      }
+
+      for (const ghost of ghosts) {
+        const marker = scene.add.ellipse(
+          ghost.anchor.x,
+          ghost.anchor.y,
+          30,
+          30,
+          0xc3b8d8,
+          ghost.opacity,
+        );
+
+        marker
+          ?.setStrokeStyle?.(2, 0xd8ccef, 0.7)
+          ?.setDepth?.(ghost.depth);
+
+        this.ghostMarkers.push(marker);
+
+        if (scene.add?.text) {
+          const label = scene.add.text(
+            ghost.anchor.x,
+            ghost.anchor.y - 24,
+            `LAST SEEN R${ghost.lastSeenRound}`,
+            {
+              fontFamily: 'serif',
+              fontSize: '10px',
+              color: '#d8ccef',
+            },
+          );
+          label?.setOrigin?.(0.5, 1);
+          label?.setAlpha?.(0.72);
+          label?.setDepth?.(ghost.depth + 1);
+          this.ghostMarkers.push(label);
+        }
+      }
+    }
+
+    private refreshBattlefieldIntelligence(force = false): void {
+      this.refreshIntelligenceFrontier(force);
+      this.refreshGhostContacts(force);
+    }
+
     create(): void {
       super.create();
-      this.refreshIntelligenceFrontier(true);
+      this.refreshBattlefieldIntelligence(true);
 
       const scene = this as any;
       const keyboard = scene.input?.keyboard;
@@ -202,7 +289,7 @@ export function createTriptychBattlefieldSceneClass<
 
           panStoredBattlefieldCamera(delta, this.cameraBounds());
           this.layoutBattlefield();
-          this.refreshIntelligenceFrontier();
+          this.refreshBattlefieldIntelligence();
         },
       );
 
@@ -226,7 +313,7 @@ export function createTriptychBattlefieldSceneClass<
             wheelZoomTarget(current.zoom, deltaY),
           );
           this.layoutBattlefield();
-          this.refreshIntelligenceFrontier();
+          this.refreshBattlefieldIntelligence();
         },
       );
     }
@@ -246,7 +333,7 @@ export function createTriptychBattlefieldSceneClass<
       }
 
       super.update(time, delta);
-      this.refreshIntelligenceFrontier();
+      this.refreshBattlefieldIntelligence();
 
       const liveUnitIds = new Set<string>(
         Object.keys(this.controller.world.units),
