@@ -179,7 +179,7 @@ describe(
     it('uses the tactical-turn save schema version', () => {
       expect(
         SAVE_VERSION,
-      ).toBe(2);
+      ).toBe(3);
     });
 
     it('restores round, phase, Royal Commands, and exact pending order sequence', () => {
