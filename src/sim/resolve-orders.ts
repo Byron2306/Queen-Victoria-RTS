@@ -134,6 +134,20 @@ function rootDamage(
   };
 }
 
+function combatOrderTargetIsLegal(
+  world: WorldState,
+  order: AttackOrder | AssaultOrder,
+): boolean {
+  if (order.kind === 'attack') {
+    return canUnitAttackTarget(world, order.unitId, order.targetUnitId);
+  }
+
+  const attacker = world.units[order.unitId];
+  const target = world.units[order.targetUnitId];
+  if (!attacker || !target) return false;
+  return validateMoveGeometry(world, attacker, target.position).legal;
+}
+
 function resolveCombatOrder(
   world: WorldState,
   order: AttackOrder | AssaultOrder,
@@ -151,7 +165,7 @@ function resolveCombatOrder(
     return refused(world, order.orderId, 'target_missing');
   }
   if (attacker.faction === target.faction) return refused(world, order.orderId, 'friendly_target');
-  if (!canUnitAttackTarget(world, attacker.id, target.id)) {
+  if (!combatOrderTargetIsLegal(world, order)) {
     void effectiveAttackRange(world, attacker.id);
     return refused(world, order.orderId, 'illegal_attack');
   }
