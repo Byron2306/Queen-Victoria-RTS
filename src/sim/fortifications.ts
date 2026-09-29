@@ -1,4 +1,5 @@
 import { isPlayableCell, tileId } from './board-topology';
+import { strategicAbilityModifiers } from './strategic-ability-hooks';
 import { getTileFactionControl, type TriptychTerritoryState } from './territory';
 import type { Coord, Faction, WorldState } from './types';
 
@@ -87,7 +88,8 @@ export function buildFortification(
       id: order.id,
       faction: order.faction,
       cell: { ...order.cell },
-      durability: 3,
+      durability:
+        3 + strategicAbilityModifiers(world, order.faction).fortificationDurabilityBonus,
     },
   };
 
