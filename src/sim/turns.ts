@@ -5,6 +5,8 @@ import { evaluateNodeControlForRound } from './nodes';
 import { resolvePromotions } from './promotion';
 import { deployReinforcements } from './production';
 import { advanceHeroRoundState } from './turn-abilities';
+import { resolveSettlement } from './territory';
+import { applyMaturePolarityFlips, resolveBannerProgress } from './polarity';
 import type { WorldState } from './types';
 import type {
   Faction,
@@ -130,6 +132,11 @@ export function resolveReinforcementPhase(
 
   let working = world;
 
+  // Strategic geography becomes authoritative only at the round boundary.
+  // Settlement resolves before node control so freshly established supply
+  // can support a node capture in this boundary resolution.
+  working = resolveSettlement(working);
+
   const nodes =
     evaluateNodeControlForRound(working);
   working = nodes.state;
@@ -167,6 +174,14 @@ export function resolveReinforcementPhase(
     );
   working =
     sovereign.state;
+
+  const bannerProgress =
+    resolveBannerProgress(working);
+  working = bannerProgress.state;
+
+  const polarity =
+    applyMaturePolarityFlips(working);
+  working = polarity.state;
 
   return {
     ...working,
