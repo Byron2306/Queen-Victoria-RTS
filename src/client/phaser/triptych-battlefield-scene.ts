@@ -27,6 +27,10 @@ import {
 import {
   createGhostContactVisuals,
 } from '../render/ghost-contacts';
+import {
+  nodeArtPresentation,
+} from '../render/node-art-layout';
+import { BOARD_WIDTH } from '../../sim/board-topology';
 
 type PhaserSceneBase = new (config?: any) => object;
 
@@ -237,6 +241,79 @@ export function createTriptychBattlefieldSceneClass<
     private refreshBattlefieldIntelligence(force = false): void {
       this.refreshIntelligenceFrontier(force);
       this.refreshGhostContacts(force);
+    }
+
+    // Overrides the inherited Royal node renderer. The source PNGs stay
+    // pristine; production geometry crops transparent atlas padding at runtime,
+    // preserves aspect ratio, and anchors every state at the same ground point.
+    private redrawRoyalNodes(force = false): void {
+      const scene = this as any;
+      const width = Number(scene.scale?.width) || 1600;
+      const height = Number(scene.scale?.height) || 900;
+      const layout = createResponsiveBattlefieldLayout(width, height);
+      const runtime = createBattlefieldSceneRuntime(
+        scene.controller.world,
+        scene.selectedUnitId,
+        layout.projection,
+      );
+      const camera = getBattlefieldCameraState();
+      const signature = [
+        width,
+        height,
+        camera.panX.toFixed(2),
+        camera.panY.toFixed(2),
+        camera.zoom.toFixed(3),
+        ...runtime.frame.nodes.map((node: any) =>
+          `${node.id}:${node.owner ?? 'neutral'}:${node.contested ? 1 : 0}`,
+        ),
+      ].join('|');
+
+      if (!force && signature === scene.royalNodeSignature) return;
+      scene.royalNodeSignature = signature;
+
+      for (const sprite of scene.royalNodeSprites ?? []) {
+        sprite?.destroy?.();
+      }
+      scene.royalNodeSprites = [];
+
+      const tileWidth = layout.boardRender.width / BOARD_WIDTH;
+
+      for (const node of runtime.frame.nodes) {
+        const art = nodeArtPresentation(
+          node.kind,
+          node.owner,
+          node.contested,
+          tileWidth,
+        );
+        const groundY = node.y + art.displayWidth * 0.18;
+
+        if (node.contested && node.kind === 'crown') {
+          const contestedFloor = scene.add.image(
+            node.x,
+            groundY,
+            'royal-tile-contested',
+          );
+          contestedFloor
+            ?.setOrigin?.(0.5, 0.5)
+            ?.setDisplaySize?.(art.displayWidth * 1.15, art.displayWidth * 0.38)
+            ?.setAlpha?.(0.84)
+            ?.setDepth?.(42);
+          scene.royalNodeSprites.push(contestedFloor);
+        }
+
+        const sprite = scene.add.image(node.x, groundY, art.textureKey);
+        sprite?.setCrop?.(
+          art.crop.x,
+          art.crop.y,
+          art.crop.width,
+          art.crop.height,
+        );
+        sprite
+          ?.setOrigin?.(art.origin.x, art.origin.y)
+          ?.setDisplaySize?.(art.displayWidth, art.displayHeight)
+          ?.setDepth?.(45);
+        scene.royalNodeSprites.push(sprite);
+      }
     }
 
     create(): void {
