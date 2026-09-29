@@ -7,13 +7,28 @@ import {
 import { isPlayableCell } from '../../src/sim/board-topology';
 import { resolveSettlement } from '../../src/sim/territory';
 
+const APPROVED_NODES = {
+  crown: { id: 'crown', kind: 'crown', center: { x: 11, y: 1 } },
+  'crown-south': { id: 'crown-south', kind: 'crown', center: { x: 12, y: 22 } },
+  'minor-nw': { id: 'minor-nw', kind: 'minor', center: { x: 9, y: 7 } },
+  'minor-ne': { id: 'minor-ne', kind: 'minor', center: { x: 14, y: 7 } },
+  'minor-w': { id: 'minor-w', kind: 'minor', center: { x: 10, y: 11 } },
+  'minor-e': { id: 'minor-e', kind: 'minor', center: { x: 13, y: 12 } },
+  'minor-sw': { id: 'minor-sw', kind: 'minor', center: { x: 9, y: 16 } },
+  'minor-se': { id: 'minor-se', kind: 'minor', center: { x: 14, y: 16 } },
+} as const;
+
 describe('Royal Tactical node topology', () => {
-  it('has two major Crown nodes and six minor nodes, all on the cross battlefield', () => {
+  it('uses the eight approved Crown and minor node coordinates with no center node', () => {
+    expect(DEFAULT_CAPTURE_NODES).toEqual(APPROVED_NODES);
+
     const nodes = Object.values(DEFAULT_CAPTURE_NODES);
     expect(nodes).toHaveLength(8);
     expect(nodes.filter((node) => node.kind === 'crown')).toHaveLength(2);
     expect(nodes.filter((node) => node.kind === 'minor')).toHaveLength(6);
     expect(nodes.every((node) => isPlayableCell(node.center.x, node.center.y))).toBe(true);
+    expect(nodes.some((node) => node.center.x === 11 && node.center.y === 11)).toBe(false);
+    expect(nodes.some((node) => node.center.x === 12 && node.center.y === 12)).toBe(false);
   });
 
   it('refuses node capture without orthogonally adjacent faction supply', () => {
