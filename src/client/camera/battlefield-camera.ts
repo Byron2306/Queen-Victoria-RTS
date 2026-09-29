@@ -16,6 +16,11 @@ export interface CameraDelta {
   y: number;
 }
 
+export interface CameraPoint {
+  x: number;
+  y: number;
+}
+
 export const MIN_BATTLEFIELD_ZOOM = 0.6;
 export const MAX_BATTLEFIELD_ZOOM = 2.4;
 
@@ -53,6 +58,22 @@ export function zoomBattlefieldCamera(
       MIN_BATTLEFIELD_ZOOM,
       MAX_BATTLEFIELD_ZOOM,
     ),
+  };
+}
+
+export function centerBattlefieldCameraOn(
+  state: BattlefieldCameraState,
+  baseAnchor: CameraPoint,
+  viewportFocus: CameraPoint,
+): BattlefieldCameraState {
+  return {
+    ...state,
+    panX:
+      -(baseAnchor.x - viewportFocus.x) *
+      state.zoom,
+    panY:
+      -(baseAnchor.y - viewportFocus.y) *
+      state.zoom,
   };
 }
 
