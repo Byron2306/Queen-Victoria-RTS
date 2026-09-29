@@ -14,7 +14,7 @@ describe('Triptych node art layout', () => {
   it('normalizes every minor state to the same visible battlefield width while preserving crop aspect ratio', () => {
     const tileWidth = 100;
     const states = [
-      nodeArtPresentation('minor', 'neutral', false, tileWidth),
+      nodeArtPresentation('minor', null, false, tileWidth),
       nodeArtPresentation('minor', 'victoria', false, tileWidth),
       nodeArtPresentation('minor', 'obsidian', false, tileWidth),
       nodeArtPresentation('minor', null, true, tileWidth),
