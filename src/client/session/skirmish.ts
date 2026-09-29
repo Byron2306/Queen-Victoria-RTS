@@ -4,6 +4,7 @@ import {
 } from '../../sim';
 import {
   TRIPTYCH_OPENING_UNITS,
+  applyTriptychOpeningFortifications,
   createTriptychOpeningUnits,
 } from '../../sim/triptych-opening';
 
@@ -12,10 +13,12 @@ import {
 export const PHASE6_OPENING_UNITS = TRIPTYCH_OPENING_UNITS;
 
 export function createPhase6SkirmishWorld(): WorldState {
-  return createWorld(createTriptychOpeningUnits(), {
+  const world = createWorld(createTriptychOpeningUnits(), {
     heroIds: {
       victoria: 'victoria-queen',
     },
     aiFactions: ['obsidian'],
   });
+
+  return applyTriptychOpeningFortifications(world);
 }
