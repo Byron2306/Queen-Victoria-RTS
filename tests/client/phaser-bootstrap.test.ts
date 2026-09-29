@@ -5,7 +5,7 @@ import {
 } from '../../src/client/phaser/bootstrap';
 
 describe('Phase 6 Phaser bootstrap', () => {
-  it('builds the real Phaser-facing config from the shell contract', () => {
+  it('builds the real Phaser-facing config from the 4:3 shell contract', () => {
     const config = buildPhaserGameConfig(
       {
         AUTO: 0,
@@ -18,7 +18,7 @@ describe('Phase 6 Phaser bootstrap', () => {
     expect(config).toMatchObject({
       type: 0,
       width: 1600,
-      height: 900,
+      height: 1200,
       parent: 'queen-victoria-rts',
       backgroundColor: '#100d18',
       transparent: false,
@@ -26,7 +26,7 @@ describe('Phase 6 Phaser bootstrap', () => {
         mode: 5,
         autoCenter: 1,
         width: 1600,
-        height: 900,
+        height: 1200,
       },
     });
 
