@@ -5,8 +5,8 @@ import {
   createPhaserShellDescriptor,
 } from './shell';
 import {
-  createRoyalBattlefieldSceneClass,
-} from './royal-battlefield-scene';
+  createTriptychBattlefieldSceneClass,
+} from './triptych-battlefield-scene';
 import {
   createTitleSceneClass,
 } from './title-scene';
@@ -87,7 +87,7 @@ export async function startPhaserGame(): Promise<unknown> {
     );
 
   const BattlefieldScene =
-    createRoyalBattlefieldSceneClass(
+    createTriptychBattlefieldSceneClass(
       SceneBase,
     );
 
