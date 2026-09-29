@@ -8,6 +8,8 @@ export type MatchStatus = 'active' | 'victoria_won' | 'obsidian_won' | 'draw';
 export type HeroStatus = 'unbound' | 'alive' | 'respawning' | 'ready_to_respawn';
 export type HeroAbilityId = 'royal_decree' | 'hold_the_crown' | 'sovereign_line' | 'imperial_gambit';
 export type HeroLevel = 1 | 2 | 3 | 4 | 5;
+export type MilitaryRank = 'recruit' | 'proven' | 'veteran' | 'elite' | 'guard';
+export type UnitMilitaryRecord = Readonly<{ kills: number; rank: MilitaryRank }>;
 export type HeroAbilityState = Readonly<{ cooldownTicksRemaining: number; activeTicksRemaining: number }>;
 export type HeroState = Readonly<{
   heroUnitId: string | null;
@@ -113,7 +115,6 @@ export type AttackCommand = Readonly<{
   targetId: string;
 }>;
 
-
 export type RecruitCommand = Readonly<{
   type: 'recruit';
   sequence: number;
@@ -121,7 +122,6 @@ export type RecruitCommand = Readonly<{
   faction: Faction;
   unitKind: RecruitableUnitKind;
 }>;
-
 
 export type HeroAbilityCommand = Readonly<{
   type: 'hero_ability';
@@ -206,6 +206,7 @@ export type WorldState = Readonly<{
   units: Readonly<Record<string, UnitState>>;
   occupancy: Readonly<Record<string, string>>;
   combat: Readonly<Record<string, UnitCombatState>>;
+  military: Readonly<Record<string, UnitMilitaryRecord>>;
   match: MatchState;
   territory: TerritoryState;
   economy: EconomyState;
