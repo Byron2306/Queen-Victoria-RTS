@@ -133,7 +133,7 @@ describe('Royal War Triptych battlefield intelligence gauntlet', () => {
 
     expect(leeeeroooy).toEqual({
       legal: false,
-      reason: 'unknown_path',
+      reason: 'unknown_destination',
     });
 
     const hopWindow = { x: 7, y: 8 } as const;
