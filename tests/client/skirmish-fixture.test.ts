@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { createPhase6SkirmishWorld } from '../../src/client/session/skirmish';
 import { isPlayableCell } from '../../src/sim/board-topology';
-import { TRIPTYCH_OPENING_UNITS } from '../../src/sim/triptych-opening';
+import { DEFAULT_CAPTURE_NODES } from '../../src/sim/nodes';
+import {
+  TRIPTYCH_OPENING_UNITS,
+  createTriptychOpeningUnits,
+} from '../../src/sim/triptych-opening';
 
 const APPROVED_OPENING = [
   ['victoria-king', 'victoria', 'king', 1, 11],
@@ -45,6 +49,27 @@ describe('Phase 6 skirmish fixture', () => {
     )).toBe(true);
     expect(new Set(TRIPTYCH_OPENING_UNITS.map(unit => `${unit.position.x},${unit.position.y}`)).size)
       .toBe(12);
+  });
+
+  it('returns a deterministic fresh copy from the canonical opening constructor', () => {
+    const first = createTriptychOpeningUnits();
+    const second = createTriptychOpeningUnits();
+
+    expect(first).toEqual(TRIPTYCH_OPENING_UNITS);
+    expect(second).toEqual(first);
+    expect(first).not.toBe(second);
+    expect(first[0]?.position).not.toBe(TRIPTYCH_OPENING_UNITS[0]?.position);
+  });
+
+  it('starts no unit on an objective node', () => {
+    const nodeCells = new Set(
+      Object.values(DEFAULT_CAPTURE_NODES)
+        .map(node => `${node.center.x},${node.center.y}`),
+    );
+
+    expect(TRIPTYCH_OPENING_UNITS.every(unit =>
+      !nodeCells.has(`${unit.position.x},${unit.position.y}`),
+    )).toBe(true);
   });
 
   it('constructs the skirmish directly from the canonical opening', () => {
