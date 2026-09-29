@@ -1,5 +1,19 @@
 export type Coord = Readonly<{ x: number; y: number }>;
 export type Faction = 'victoria' | 'obsidian';
+export type VisibilityState = 'observed' | 'remembered' | 'unknown';
+export type TileMemory = Readonly<{
+  visibility: VisibilityState;
+  lastSeenRound: number | null;
+  lastKnownPolarity: import('./board-topology').TilePolarity | null;
+  lastKnownControl: import('./board-topology').FactionControl | null;
+  lastKnownUnitId: string | null;
+  lastKnownFortificationId: string | null;
+  lastKnownBannerId: string | null;
+}>;
+export type FactionIntelligenceState = Readonly<Record<import('./board-topology').TileId, TileMemory>>;
+export type IntelligenceState = Readonly<{
+  byFaction: Readonly<Record<Faction, FactionIntelligenceState>>;
+}>;
 export type UnitKind = 'pawn' | 'knight' | 'bishop' | 'rook' | 'queen' | 'king';
 export type CombatStance = 'guard';
 export type RecruitableUnitKind = 'pawn' | 'knight' | 'bishop' | 'rook';
@@ -222,6 +236,7 @@ export type WorldState = Readonly<{
   promotions: PromotionState;
   heroes: Readonly<Record<Faction, HeroState>>;
   ai: Readonly<Record<Faction, AICommanderState>>;
+  intelligence: IntelligenceState;
   turn: import('./turns').TurnState;
   pendingOrders: readonly import('./orders').TacticalOrder[];
 }>;
