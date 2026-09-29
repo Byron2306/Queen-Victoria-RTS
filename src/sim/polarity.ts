@@ -61,6 +61,17 @@ export function getBannerState(
   };
 }
 
+export function getBannerAt(
+  world: WorldState,
+  cell: Coord,
+): BannerState | null {
+  const key = tileId(cell);
+  const banner = Object.values(bannersFor(world))
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .find(candidate => tileId(candidate.cell) === key);
+  return banner ?? null;
+}
+
 export function getTilePolarity(
   world: WorldState,
   cell: Coord,
