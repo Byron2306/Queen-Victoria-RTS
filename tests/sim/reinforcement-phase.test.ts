@@ -298,7 +298,7 @@ describe(
       ).toBeUndefined();
     });
 
-    it('advances node control exactly once per round', () => {
+    it('advances node control exactly once per round when the occupation is territorially supplied', () => {
       const world =
         reinforcementWorld([
           unit(
@@ -306,7 +306,7 @@ describe(
             'victoria',
             'pawn',
             3,
-            3,
+            2,
           ),
         ]);
 
