@@ -1,0 +1,59 @@
+{
+  "files": [
+    {
+      "path": "public/assets/nodes/node-major-neutral.png",
+      "sha256": "48cc7888b49a3addf012fd9a2dcfd5f8bbfe5004124a119177bca4981c1e9289",
+      "bytes": 135994
+    },
+    {
+      "path": "public/assets/nodes/node-major-victoria.png",
+      "sha256": "1ec81c1a68944cca29ead47b9251f6c65b9fe11b27faffba247fcebeaadc21bf",
+      "bytes": 149940
+    },
+    {
+      "path": "public/assets/nodes/node-major-shadow.png",
+      "sha256": "311fc00ca40b344c65dc92f079a989ec6aac8ff0d10f85ae69efaf7d926cb22b",
+      "bytes": 150321
+    },
+    {
+      "path": "public/assets/nodes/node-minor-neutral.png",
+      "sha256": "2eb8c6775b886a2dd7c87cc715aac3c1f0252af539db1f8270167bff98cc1c50",
+      "bytes": 1011441
+    },
+    {
+      "path": "public/assets/nodes/node-minor-victoria.png",
+      "sha256": "c4a7b4ca9ff6761d115d3c471712043f84218fadd3cbb87e0f33170ecfd3f7c5",
+      "bytes": 1201758
+    },
+    {
+      "path": "public/assets/nodes/node-minor-shadow.png",
+      "sha256": "58d60382af7bc463e87104918de7a821639bc4311850ede88e52795b4cfbf4a8",
+      "bytes": 956752
+    },
+    {
+      "path": "public/assets/nodes/node-minor-contested.png",
+      "sha256": "f1345bb389807bd0acaf12ef47b348064ebc676e3cd3d20200d999152bf500c2",
+      "bytes": 1227427
+    },
+    {
+      "path": "public/assets/highlights/tile-neutral.png",
+      "sha256": "58ee14b4d4667f3e1c4b047e19089a21bceb6bec81ac6442c7e9e7a5dcfdef47",
+      "bytes": 894844
+    },
+    {
+      "path": "public/assets/highlights/tile-victoria.png",
+      "sha256": "569cb3c3b1ce3e795e67a5a9c61fdf8e226b9dd29628881661943e202db9c160",
+      "bytes": 1377405
+    },
+    {
+      "path": "public/assets/highlights/tile-shadow.png",
+      "sha256": "2476b621a1258b25c9a7764a579b8d1611ece502a8b99c0248c99eeb46743395",
+      "bytes": 1183047
+    },
+    {
+      "path": "public/assets/highlights/tile-contested.png",
+      "sha256": "38fa780122e0fa07e29fd8144fd761b91355fafdec41f28ea09e168f11c0e77b",
+      "bytes": 1446511
+    }
+  ]
+}
