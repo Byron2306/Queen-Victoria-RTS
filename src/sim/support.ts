@@ -1,6 +1,7 @@
 import { UNIT_COMBAT_PROFILES } from './combat';
 import { validateMoveGeometry } from './geometry';
 import { combatModifiersForRank, militaryRecordFor } from './rank';
+import { strategicAbilityModifiers } from './strategic-ability-hooks';
 import type {
   AttackOrder,
   AssaultOrder,
@@ -157,5 +158,11 @@ export function supportPressureForChain(
     const ranked = Math.floor((base * supportBps) / 10000);
     total += Math.floor((ranked * link.contributionBps) / 10000);
   }
-  return total;
+
+  const root = world.units[chain.rootUnitId];
+  if (!root) return total;
+  return Math.floor(
+    (total * strategicAbilityModifiers(world, root.faction).supportPressureBps) /
+      10000,
+  );
 }
