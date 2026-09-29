@@ -73,9 +73,9 @@ describe('Phase 1 chess geometry', () => {
   });
 
   it('invalidates a future knight landing when banner polarity makes origin and destination match', () => {
-    const knight = unit('knight', 7, 7, 'victoria', 'polarity-knight');
+    const knight = unit('knight', 11, 11, 'victoria', 'polarity-knight');
     let world = createWorld([knight]);
-    const destination = { x: 9, y: 8 } as const;
+    const destination = { x: 13, y: 12 } as const;
 
     expect(validateMoveGeometry(world, knight, destination)).toEqual({ legal: true });
     world = flipPolarity(world, destination.x, destination.y);
@@ -87,12 +87,12 @@ describe('Phase 1 chess geometry', () => {
   });
 
   it('breaks a bishop colour corridor when an intermediate diagonal tile flips polarity', () => {
-    const bishop = unit('bishop', 7, 7, 'victoria', 'polarity-bishop');
+    const bishop = unit('bishop', 11, 11, 'victoria', 'polarity-bishop');
     let world = createWorld([bishop]);
-    const destination = { x: 10, y: 10 } as const;
+    const destination = { x: 14, y: 14 } as const;
 
     expect(validateMoveGeometry(world, bishop, destination)).toEqual({ legal: true });
-    world = flipPolarity(world, 8, 8);
+    world = flipPolarity(world, 12, 12);
 
     expect(validateMoveGeometry(world, bishop, destination)).toEqual({
       legal: false,
