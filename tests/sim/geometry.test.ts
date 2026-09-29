@@ -1,8 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import { createWorld, validateMoveGeometry, type Faction, type UnitKind, type UnitState } from '../../src/sim';
+import {
+  applyMaturePolarityFlips,
+  queueBanner,
+  resolveBannerProgress,
+} from '../../src/sim/polarity';
 
 const unit = (kind: UnitKind, x = 7, y = 7, faction: Faction = 'victoria', id: string = kind): UnitState =>
   ({ id, faction, kind, position: { x, y } });
+
+function flipPolarity<T extends ReturnType<typeof createWorld>>(world: T, x: number, y: number): T {
+  let next = queueBanner(world, {
+    bannerId: `flip-${x}-${y}`,
+    faction: 'victoria',
+    cell: { x, y },
+  }).state;
+  next = resolveBannerProgress(next).state;
+  next = resolveBannerProgress(next).state;
+  return applyMaturePolarityFlips(next).state as T;
+}
 
 describe('Phase 1 chess geometry', () => {
   it.each([
@@ -54,5 +70,33 @@ describe('Phase 1 chess geometry', () => {
     const bishop = unit('bishop', 0, 0, 'victoria', 'b');
     expect(validateMoveGeometry(createWorld([rook]), rook, { x: 15, y: 0 }).legal).toBe(true);
     expect(validateMoveGeometry(createWorld([bishop]), bishop, { x: 15, y: 15 }).legal).toBe(true);
+  });
+
+  it('invalidates a future knight landing when banner polarity makes origin and destination match', () => {
+    const knight = unit('knight', 7, 7, 'victoria', 'polarity-knight');
+    let world = createWorld([knight]);
+    const destination = { x: 9, y: 8 } as const;
+
+    expect(validateMoveGeometry(world, knight, destination)).toEqual({ legal: true });
+    world = flipPolarity(world, destination.x, destination.y);
+
+    expect(validateMoveGeometry(world, knight, destination)).toEqual({
+      legal: false,
+      reason: 'polarity_mismatch',
+    });
+  });
+
+  it('breaks a bishop colour corridor when an intermediate diagonal tile flips polarity', () => {
+    const bishop = unit('bishop', 7, 7, 'victoria', 'polarity-bishop');
+    let world = createWorld([bishop]);
+    const destination = { x: 10, y: 10 } as const;
+
+    expect(validateMoveGeometry(world, bishop, destination)).toEqual({ legal: true });
+    world = flipPolarity(world, 8, 8);
+
+    expect(validateMoveGeometry(world, bishop, destination)).toEqual({
+      legal: false,
+      reason: 'polarity_break',
+    });
   });
 });
