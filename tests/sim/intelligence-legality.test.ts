@@ -98,6 +98,15 @@ describe('knowledge-bounded movement', () => {
           ...world.intelligence.byFaction,
           victoria: {
             ...intelligence,
+            '7,9': {
+              visibility: 'unknown',
+              lastSeenRound: null,
+              lastKnownPolarity: null,
+              lastKnownControl: null,
+              lastKnownUnitId: null,
+              lastKnownFortificationId: null,
+              lastKnownBannerId: null,
+            },
             '7,11': {
               ...intelligence['7,10']!,
               visibility: 'remembered',
