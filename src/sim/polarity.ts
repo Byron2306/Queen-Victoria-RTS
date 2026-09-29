@@ -37,11 +37,27 @@ function bannersFor(world: WorldState): Readonly<Record<string, BannerState>> {
   return (world.territory as TerritoryWithBanners).banners ?? {};
 }
 
+function occupyingEnemyFaction(
+  world: WorldState,
+  banner: BannerState,
+): Faction | null {
+  const occupantId = world.occupancy[coordKey(banner.cell)];
+  const occupant = occupantId ? world.units[occupantId] : undefined;
+  return occupant && occupant.faction !== banner.faction
+    ? occupant.faction
+    : null;
+}
+
 export function getBannerState(
   world: WorldState,
   bannerId: string,
 ): BannerState | undefined {
-  return bannersFor(world)[bannerId];
+  const banner = bannersFor(world)[bannerId];
+  if (!banner) return undefined;
+  return {
+    ...banner,
+    contestedBy: occupyingEnemyFaction(world, banner) ?? banner.contestedBy,
+  };
 }
 
 export function getTilePolarity(
@@ -127,12 +143,7 @@ export function resolveBannerProgress(world: WorldState): BannerResult {
   const banners: Record<string, BannerState> = {};
 
   for (const [id, banner] of Object.entries(bannersFor(world))) {
-    const occupantId = world.occupancy[coordKey(banner.cell)];
-    const occupant = occupantId ? world.units[occupantId] : undefined;
-    const contestedBy =
-      occupant && occupant.faction !== banner.faction
-        ? occupant.faction
-        : null;
+    const contestedBy = occupyingEnemyFaction(world, banner);
 
     if (contestedBy) {
       banners[id] = {
@@ -167,7 +178,7 @@ export function resolveBannerProgress(world: WorldState): BannerResult {
 export function applyMaturePolarityFlips(world: WorldState): BannerResult {
   const currentBanners = bannersFor(world);
   const mature = Object.values(currentBanners).filter(
-    (banner) => banner.mature && banner.contestedBy === null,
+    (banner) => banner.mature && occupyingEnemyFaction(world, banner) === null,
   );
 
   if (mature.length === 0) {
