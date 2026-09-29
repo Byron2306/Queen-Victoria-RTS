@@ -21,7 +21,7 @@ describe('Royal Tactical node topology', () => {
     const crown = world.territory.nodes.crown!;
     const queen = world.units['victoria-queen']!;
 
-    const positioned = {
+    const positioned = resolveSettlement({
       ...world,
       units: {
         ...world.units,
@@ -33,7 +33,7 @@ describe('Royal Tactical node topology', () => {
       occupancy: {
         [`${crown.center.x},${crown.center.y}`]: queen.id,
       },
-    };
+    });
 
     const result = evaluateNodeControlForRound(positioned);
     expect(result.state.territory.nodes.crown?.owner).toBeNull();
