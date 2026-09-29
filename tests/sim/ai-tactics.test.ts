@@ -10,11 +10,11 @@ describe('balanced AI tactics',()=>{
   it('prioritizes immediate King opportunity, then hero, rook, minor pieces, health/distance/id',()=>{
     let world=createWorld([
       {id:'oking',faction:'obsidian',kind:'king',position:{x:10,y:10}},
-      {id:'orook',faction:'obsidian',kind:'rook',position:{x:3,y:3}},
-      {id:'vking',faction:'victoria',kind:'king',position:{x:3,y:6}},
-      {id:'vhero',faction:'victoria',kind:'queen',position:{x:4,y:3}},
-      {id:'vrook',faction:'victoria',kind:'rook',position:{x:5,y:3}},
-      {id:'vpawn',faction:'victoria',kind:'pawn',position:{x:6,y:3}},
+      {id:'orook',faction:'obsidian',kind:'rook',position:{x:3,y:10}},
+      {id:'vking',faction:'victoria',kind:'king',position:{x:3,y:13}},
+      {id:'vhero',faction:'victoria',kind:'queen',position:{x:4,y:10}},
+      {id:'vrook',faction:'victoria',kind:'rook',position:{x:5,y:10}},
+      {id:'vpawn',faction:'victoria',kind:'pawn',position:{x:6,y:10}},
     ],{heroIds:{victoria:'vhero'},aiFactions:['obsidian']});
     expect(selectPriorityTarget(world,'obsidian','orook')).toBe('vking');
     world={...world,units:{...world.units,vking:{...world.units.vking!,position:{x:14,y:1}}}};
@@ -53,7 +53,7 @@ describe('balanced AI tactics',()=>{
       {id:'ohero',faction:'obsidian',kind:'queen',position:{x:10,y:10}},
       {id:'oa',faction:'obsidian',kind:'rook',position:{x:11,y:10}},
       {id:'ob',faction:'obsidian',kind:'bishop',position:{x:10,y:11}},
-      {id:'vking',faction:'victoria',kind:'king',position:{x:6,y:6}},
+      {id:'vking',faction:'victoria',kind:'king',position:{x:6,y:10}},
     ],{heroIds:{obsidian:'ohero'},aiFactions:['obsidian']});
     world={...world,heroes:{...world.heroes,obsidian:{...world.heroes.obsidian,level:5}}};
     const commands=commandsForCommitments(world,'obsidian',[commitment('pressure_position','vking')]);
@@ -69,7 +69,7 @@ describe('balanced AI hero-use heuristics',()=>{
       {id:'oa',faction:'obsidian',kind:'rook',position:{x:11,y:10}},
       {id:'ob',faction:'obsidian',kind:'bishop',position:{x:12,y:10}},
       {id:'oking',faction:'obsidian',kind:'king',position:{x:14,y:14}},
-      {id:'vking',faction:'victoria',kind:'king',position:{x:7,y:7}},
+      {id:'vking',faction:'victoria',kind:'king',position:{x:7,y:10}},
       ...extra,
     ],{heroIds:{obsidian:'ohero'},aiFactions:['obsidian']});
     return {...world,heroes:{...world.heroes,obsidian:{...world.heroes.obsidian,level}}};
