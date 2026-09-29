@@ -30,7 +30,16 @@ import {
 import {
   nodeArtPresentation,
 } from '../render/node-art-layout';
-import { BOARD_WIDTH } from '../../sim/board-topology';
+import {
+  UNIT_SPRITE_ORIGIN,
+} from '../render/unit-grounding';
+import {
+  unitVisualHeightForRank,
+} from '../render/unit-visual-footprint';
+import {
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+} from '../../sim/board-topology';
 
 type PhaserSceneBase = new (config?: any) => object;
 
@@ -107,6 +116,40 @@ export function createTriptychBattlefieldSceneClass<
       );
 
       return { layout, runtime };
+    }
+
+    /**
+     * Final Triptych presentation authority. The generic scene still contains
+     * legacy 16x16 sizing assumptions, so every visible Triptych frame is
+     * normalized here against the authoritative 24-row battlefield. Position
+     * comes from the render model's exact tile centre; this method changes only
+     * sprite origin, size, and facing, preserving movement interpolation.
+     */
+    private enforceTriptychUnitPresentation(): void {
+      const { layout, runtime } = this.currentPresentationRuntime();
+      const cellHeight = layout.boardRender.height / BOARD_HEIGHT;
+
+      for (const unit of runtime.frame.units) {
+        const sprite = (this.unitSprites as Map<string, any>).get(unit.id);
+        const worldUnit = this.controller.world.units[unit.id];
+        if (!sprite || !worldUnit) continue;
+
+        const visualHeight = unitVisualHeightForRank({
+          boardY: worldUnit.position.y,
+          cellHeight,
+        });
+        const rawWidth = Number(sprite.width) || visualHeight;
+        const rawHeight = Number(sprite.height) || visualHeight;
+        const aspect = rawHeight > 0 ? rawWidth / rawHeight : 1;
+
+        sprite
+          .setOrigin?.(UNIT_SPRITE_ORIGIN.x, UNIT_SPRITE_ORIGIN.y)
+          ?.setDisplaySize?.(visualHeight * aspect, visualHeight);
+
+        const scaleX = Math.abs(Number(sprite.scaleX) || 1);
+        const scaleY = Math.abs(Number(sprite.scaleY) || 1);
+        sprite.setScale?.(scaleX * unit.scaleX, scaleY);
+      }
     }
 
     private refreshIntelligenceFrontier(force = false): void {
@@ -316,8 +359,14 @@ export function createTriptychBattlefieldSceneClass<
       }
     }
 
+    layoutBattlefield(): void {
+      super.layoutBattlefield();
+      this.enforceTriptychUnitPresentation();
+    }
+
     create(): void {
       super.create();
+      this.enforceTriptychUnitPresentation();
       this.refreshBattlefieldIntelligence(true);
 
       const scene = this as any;
@@ -410,6 +459,7 @@ export function createTriptychBattlefieldSceneClass<
       }
 
       super.update(time, delta);
+      this.enforceTriptychUnitPresentation();
       this.refreshBattlefieldIntelligence();
 
       const liveUnitIds = new Set<string>(
