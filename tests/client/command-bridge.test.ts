@@ -16,10 +16,10 @@ describe('Royal Tactical client command bridge', () => {
   it('queues Move as a tactical order rather than a legacy SimCommand', () => {
     const world = createPhase6SkirmishWorld();
     const bridge = new ClientCommandBridge();
-    bridge.move(world, 'victoria-queen', { x: 4, y: 12 });
+    bridge.move(world, 'victoria-queen', { x: 6, y: 11 });
     expect(bridge.drainTactical()).toEqual([{
       orderId: 'victoria-r1-o0', kind: 'move', faction: 'victoria',
-      unitId: 'victoria-queen', destination: { x: 4, y: 12 },
+      unitId: 'victoria-queen', destination: { x: 6, y: 11 },
       issuedRound: 1, commandCost: 1,
     }]);
     expect(bridge.drainLegacy(world.tick + 1)).toEqual([]);
@@ -52,10 +52,10 @@ describe('Royal Tactical client command bridge', () => {
     const bridge = new ClientCommandBridge();
     bridge.assault(world, 'victoria-rook-a', 'obsidian-pawn-a');
     const root = bridge.peekTactical()[0]!;
-    bridge.reinforce(world, 'victoria-bishop-a', 'victoria-rook-a', root.orderId);
+    bridge.reinforce(world, 'victoria-knight-a', 'victoria-rook-a', root.orderId);
     expect(bridge.drainTactical()[1]).toEqual({
       orderId: 'victoria-r1-o1', kind: 'reinforce', faction: 'victoria',
-      unitId: 'victoria-bishop-a', supportedUnitId: 'victoria-rook-a',
+      unitId: 'victoria-knight-a', supportedUnitId: 'victoria-rook-a',
       rootOrderId: 'victoria-r1-o0', issuedRound: 1, commandCost: 1,
     });
   });
@@ -74,9 +74,9 @@ describe('Royal Tactical client command bridge', () => {
   it('assigns deterministic tactical order ids', () => {
     const world = createPhase6SkirmishWorld();
     const bridge = new ClientCommandBridge();
-    bridge.move(world, 'victoria-queen', { x: 4, y: 12 });
+    bridge.move(world, 'victoria-queen', { x: 6, y: 11 });
     bridge.attack(world, 'victoria-rook-a', 'obsidian-pawn-a');
-    bridge.guard(world, 'victoria-rook-b');
+    bridge.guard(world, 'victoria-knight-a');
     expect(bridge.drainTactical().map(order => order.orderId)).toEqual([
       'victoria-r1-o0', 'victoria-r1-o1', 'victoria-r1-o2',
     ]);
@@ -95,7 +95,7 @@ describe('Royal Tactical client command bridge', () => {
   it('drains tactical orders only once', () => {
     const world = createPhase6SkirmishWorld();
     const bridge = new ClientCommandBridge();
-    bridge.move(world, 'victoria-queen', { x: 4, y: 12 });
+    bridge.move(world, 'victoria-queen', { x: 6, y: 11 });
     expect(bridge.drainTactical()).toHaveLength(1);
     expect(bridge.drainTactical()).toEqual([]);
   });
@@ -119,7 +119,7 @@ describe('Royal Tactical staged command controls', () => {
   it('peeks and cancels staged tactical orders without draining them', () => {
     const world = createPhase6SkirmishWorld();
     const bridge = new ClientCommandBridge();
-    bridge.move(world, 'victoria-queen', { x: 4, y: 12 });
+    bridge.move(world, 'victoria-queen', { x: 6, y: 11 });
     bridge.guard(world, 'victoria-rook-a');
     expect(bridge.peekTactical().map(order => order.orderId)).toEqual(['victoria-r1-o0','victoria-r1-o1']);
     expect(bridge.cancelTactical('victoria-r1-o1')).toBe(true);
@@ -131,7 +131,7 @@ describe('Royal Tactical staged command controls', () => {
     const world = createPhase6SkirmishWorld();
     const bridge = new ClientCommandBridge();
     for (let i = 0; i < 5; i += 1) {
-      bridge.move(world, 'victoria-queen', { x: 4, y: 10 + i });
+      bridge.move(world, 'victoria-queen', { x: 6 + i, y: 11 });
     }
     expect(bridge.peekTactical()).toHaveLength(4);
   });
