@@ -27,7 +27,7 @@ describe('battlefield intelligence state', () => {
   });
 
   it('keeps visibility out of shared BoardTile truth', () => {
-    const tile = createBoardTile({ x: 7, y: 7 });
+    const tile = createBoardTile({ x: 11, y: 11 });
 
     expect(tile).not.toHaveProperty('visibility');
     expect(tile).not.toHaveProperty('lastSeenRound');
