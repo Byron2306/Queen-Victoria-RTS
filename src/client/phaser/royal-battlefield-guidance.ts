@@ -3,6 +3,7 @@ export type RoyalBattlefieldGuidanceInput = Readonly<{
   stagedOrders: number;
   royalCommandsRemaining: number;
   phase: string;
+  attackableTargets?: number;
 }>;
 
 export type RoyalBattlefieldGuidance = Readonly<{
@@ -41,16 +42,24 @@ export function createRoyalBattlefieldGuidance(
   }
 
   if (input.selectedUnitId) {
+    if ((input.attackableTargets ?? 0) > 0) {
+      return {
+        headline: 'YOUR TURN',
+        instruction: 'MOVE OR ATTACK',
+        detail: 'Crimson tiles are legal moves. Tap a highlighted Shadow unit to queue an attack.',
+      };
+    }
+
     return {
       headline: 'YOUR TURN',
-      instruction: 'TAP A GLOWING TILE',
-      detail: 'Gold markers are legal destinations. Tap one to queue the move.',
+      instruction: 'TAP A CRIMSON TILE',
+      detail: 'Premium crimson markers are legal destinations. Tap one to queue the move.',
     };
   }
 
   return {
     headline: 'YOUR TURN',
     instruction: 'TAP A UNIT',
-    detail: 'Choose a Victoria unit to reveal its legal moves.',
+    detail: 'Choose a Victoria unit to reveal legal moves and attack targets.',
   };
 }

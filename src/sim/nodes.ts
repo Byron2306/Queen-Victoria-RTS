@@ -1,7 +1,8 @@
 import type { CaptureNodeState, TerritoryState } from './types';
 
 export const DEFAULT_CAPTURE_NODES = {
-  crown: { id: 'crown', kind: 'crown', center: { x: 7, y: 7 } },
+  crown: { id: 'crown', kind: 'crown', center: { x: 1, y: 7 } },
+  'crown-south': { id: 'crown-south', kind: 'crown', center: { x: 14, y: 8 } },
   'minor-nw': { id: 'minor-nw', kind: 'minor', center: { x: 3, y: 3 } },
   'minor-ne': { id: 'minor-ne', kind: 'minor', center: { x: 12, y: 3 } },
   'minor-w': { id: 'minor-w', kind: 'minor', center: { x: 3, y: 8 } },
@@ -101,4 +102,23 @@ export function evaluateNodeControl(world: WorldState): { state: WorldState; eve
   }
 
   return { state: { ...world, territory: { nodes } }, events };
+}
+
+/**
+ * Royal Tactical resolves strategic territory once per round, not from the
+ * presentation clock. One round therefore advances the legacy capture meter
+ * by one complete capture window. Neutral nodes can be claimed in one round;
+ * an enemy-owned node is neutralized first and can be claimed on a later round.
+ */
+export function evaluateNodeControlForRound(world: WorldState): { state: WorldState; events: readonly SimEvent[] } {
+  let state = world;
+  const events: SimEvent[] = [];
+
+  for (let step = 0; step < NODE_CAPTURE_TICKS; step += 1) {
+    const result = evaluateNodeControl(state);
+    state = result.state;
+    events.push(...result.events);
+  }
+
+  return { state, events };
 }

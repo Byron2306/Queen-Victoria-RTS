@@ -1,7 +1,7 @@
 import { evaluateSovereignThreats } from './sovereign';
 import { applyCrownIncome } from './economy';
 import { advanceHeroRespawn, attemptHeroRespawns } from './hero';
-import { evaluateNodeControl } from './nodes';
+import { evaluateNodeControlForRound } from './nodes';
 import { resolvePromotions } from './promotion';
 import { deployReinforcements } from './production';
 import { advanceHeroRoundState } from './turn-abilities';
@@ -118,7 +118,6 @@ export function transitionTurnPhase(
   };
 }
 
-
 export function resolveReinforcementPhase(
   world: WorldState,
 ): WorldState {
@@ -132,7 +131,7 @@ export function resolveReinforcementPhase(
   let working = world;
 
   const nodes =
-    evaluateNodeControl(working);
+    evaluateNodeControlForRound(working);
   working = nodes.state;
 
   const income =

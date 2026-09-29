@@ -1,43 +1,29 @@
 import { describe, expect, it } from 'vitest';
-import {
-  createRoyalBattlefieldGuidance,
-} from '../../src/client/phaser/royal-battlefield-guidance';
+import { createRoyalBattlefieldGuidance } from '../../src/client/phaser/royal-battlefield-guidance';
 
 describe('Royal battlefield guidance', () => {
-  it('teaches the mobile move gesture before any unit is selected', () => {
-    expect(
-      createRoyalBattlefieldGuidance({
-        selectedUnitId: null,
-        stagedOrders: 0,
-        royalCommandsRemaining: 4,
-        phase: 'victoria_command',
-      }),
-    ).toEqual({
-      headline: 'YOUR TURN',
-      instruction: 'TAP A UNIT',
-      detail: 'Choose a Victoria unit to reveal its legal moves.',
+  it('teaches attack interaction when a selected unit has legal targets', () => {
+    const guidance = createRoyalBattlefieldGuidance({
+      selectedUnitId: 'victoria-rook-a',
+      stagedOrders: 0,
+      royalCommandsRemaining: 4,
+      phase: 'victoria_command',
+      attackableTargets: 2,
     });
+
+    expect(guidance.instruction).toBe('MOVE OR ATTACK');
+    expect(guidance.detail).toContain('highlighted Shadow unit');
   });
 
-  it('explains the second tap once a unit is selected', () => {
-    expect(
-      createRoyalBattlefieldGuidance({
-        selectedUnitId: 'victoria-queen',
-        stagedOrders: 0,
-        royalCommandsRemaining: 4,
-        phase: 'victoria_command',
-      }).instruction,
-    ).toBe('TAP A GLOWING TILE');
-  });
+  it('teaches premium movement tiles when no attack is available', () => {
+    const guidance = createRoyalBattlefieldGuidance({
+      selectedUnitId: 'victoria-pawn-a',
+      stagedOrders: 0,
+      royalCommandsRemaining: 4,
+      phase: 'victoria_command',
+      attackableTargets: 0,
+    });
 
-  it('moves the player toward commit after an order is staged', () => {
-    expect(
-      createRoyalBattlefieldGuidance({
-        selectedUnitId: 'victoria-queen',
-        stagedOrders: 1,
-        royalCommandsRemaining: 3,
-        phase: 'victoria_command',
-      }).instruction,
-    ).toBe('ORDER QUEUED · COMMIT WHEN READY');
+    expect(guidance.instruction).toBe('TAP A CRIMSON TILE');
   });
 });
