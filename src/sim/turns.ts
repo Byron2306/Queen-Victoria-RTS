@@ -7,6 +7,7 @@ import { deployReinforcements } from './production';
 import { advanceHeroRoundState } from './turn-abilities';
 import { resolveSettlement } from './territory';
 import { applyMaturePolarityFlips, resolveBannerProgress } from './polarity';
+import { resolveRankUps } from './rank';
 import type { WorldState } from './types';
 import type {
   Faction,
@@ -152,6 +153,10 @@ export function resolveReinforcementPhase(
   const promotions =
     resolvePromotions(working);
   working = promotions.state;
+
+  // Kills accrue during combat, but military standing changes only when the
+  // round closes. Class promotion and military rank therefore remain separate.
+  working = resolveRankUps(working);
 
   working =
     advanceHeroRoundState(
