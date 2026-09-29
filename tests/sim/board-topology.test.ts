@@ -26,23 +26,23 @@ describe('Royal War cross-board topology', () => {
     const cells = allPlayableCells();
     const ids = cells.map((cell) => tileId(cell));
 
-    expect(cells).toHaveLength(192);
+    expect(cells).toHaveLength(220);
     expect(new Set(ids).size).toBe(cells.length);
     expect(tileId({ x: 7, y: 0 })).toBe('7,0');
     expect(tileId({ x: 15, y: 7 })).toBe('15,7');
   });
 
   it('never returns an off-board void from orthogonal neighbor queries', () => {
-    const neighbors = orthogonalNeighbors(4, 3);
+    const neighbors = orthogonalNeighbors(3, 2);
 
     expect(neighbors).toEqual(
       expect.arrayContaining([
-        { x: 5, y: 3 },
         { x: 4, y: 2 },
-        { x: 4, y: 4 },
+        { x: 3, y: 1 },
+        { x: 3, y: 3 },
       ]),
     );
-    expect(neighbors).not.toContainEqual({ x: 3, y: 3 });
+    expect(neighbors).not.toContainEqual({ x: 2, y: 2 });
     expect(neighbors.every((cell) => isPlayableCell(cell.x, cell.y))).toBe(true);
   });
 });
