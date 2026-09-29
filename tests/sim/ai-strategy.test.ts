@@ -66,10 +66,10 @@ describe('balanced AI acceptance channels',()=>{
   it('exposes capture, reinforce, pressure, and legal King-attack opportunities from public board truth',()=>{
     const world=enabled([
       {id:'oking',faction:'obsidian',kind:'king',position:{x:14,y:14}},
-      {id:'orook',faction:'obsidian',kind:'rook',position:{x:7,y:7}},
-      {id:'opawn',faction:'obsidian',kind:'pawn',position:{x:8,y:7}},
-      {id:'vking',faction:'victoria',kind:'king',position:{x:7,y:4}},
-      {id:'vpawn',faction:'victoria',kind:'pawn',position:{x:8,y:8}},
+      {id:'orook',faction:'obsidian',kind:'rook',position:{x:7,y:10}},
+      {id:'opawn',faction:'obsidian',kind:'pawn',position:{x:8,y:10}},
+      {id:'vking',faction:'victoria',kind:'king',position:{x:7,y:13}},
+      {id:'vpawn',faction:'victoria',kind:'pawn',position:{x:8,y:11}},
     ]);
     const intentions=scoreStrategicIntentions(world,'obsidian').map(candidate=>candidate.intention);
     expect(intentions).toContain('capture_node');
