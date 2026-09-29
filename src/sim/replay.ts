@@ -1,6 +1,7 @@
 import type { ReplayResult, SimCommand, WorldState } from './types';
 import { stepWorld } from './step';
 import { compareSimCommands } from './commands';
+import type { TileId } from './board-topology';
 
 export function runReplay(initial: WorldState, frames: readonly (readonly SimCommand[])[]): ReplayResult {
   let state = initial;
@@ -101,7 +102,7 @@ export function canonicalSnapshot(result: ReplayResult): string {
     byFaction: Object.fromEntries(
       (['victoria', 'obsidian'] as const).map((faction) => {
         const memory = result.state.intelligence.byFaction[faction];
-        const tileIds = Object.keys(memory).sort();
+        const tileIds = Object.keys(memory).sort() as TileId[];
         return [
           faction,
           Object.fromEntries(
