@@ -2,17 +2,16 @@ import type { CaptureNodeState, TerritoryState } from './types';
 import { hasAdjacentFactionTile } from './territory';
 
 export const DEFAULT_CAPTURE_NODES = {
-  // Major-node sanctums live in the narrow north/south arms of the cross.
-  crown: { id: 'crown', kind: 'crown', center: { x: 7, y: 1 } },
-  'crown-south': { id: 'crown-south', kind: 'crown', center: { x: 8, y: 14 } },
-
-  // Minor nodes form a contested lattice through the central theatre/flanks.
-  'minor-nw': { id: 'minor-nw', kind: 'minor', center: { x: 5, y: 5 } },
-  'minor-ne': { id: 'minor-ne', kind: 'minor', center: { x: 10, y: 5 } },
-  'minor-w': { id: 'minor-w', kind: 'minor', center: { x: 2, y: 7 } },
-  'minor-e': { id: 'minor-e', kind: 'minor', center: { x: 13, y: 8 } },
-  'minor-sw': { id: 'minor-sw', kind: 'minor', center: { x: 5, y: 10 } },
-  'minor-se': { id: 'minor-se', kind: 'minor', center: { x: 10, y: 10 } },
+  // Keep the proven logical anchors. The battlefield presentation rotates the
+  // simulation, so these render in the successful top/bottom sanctuary nooks.
+  crown: { id: 'crown', kind: 'crown', center: { x: 1, y: 7 } },
+  'crown-south': { id: 'crown-south', kind: 'crown', center: { x: 14, y: 8 } },
+  'minor-nw': { id: 'minor-nw', kind: 'minor', center: { x: 3, y: 3 } },
+  'minor-ne': { id: 'minor-ne', kind: 'minor', center: { x: 12, y: 3 } },
+  'minor-w': { id: 'minor-w', kind: 'minor', center: { x: 3, y: 8 } },
+  'minor-e': { id: 'minor-e', kind: 'minor', center: { x: 12, y: 7 } },
+  'minor-sw': { id: 'minor-sw', kind: 'minor', center: { x: 3, y: 12 } },
+  'minor-se': { id: 'minor-se', kind: 'minor', center: { x: 12, y: 12 } },
 } as const;
 
 export function createInitialTerritoryState(): TerritoryState {
@@ -59,9 +58,8 @@ function suppliedFactions(
   node: CaptureNodeState,
   factions: readonly Faction[],
 ): readonly Faction[] {
-  // Legacy low-level fixtures without Triptych tile state keep exercising the
-  // capture clock in isolation. In real round resolution settlement creates
-  // tile state before this reducer, at which point supply is mandatory.
+  // Pure node-clock fixtures can remain isolated. In actual round resolution
+  // settlement has materialized tile state, and supply is then mandatory.
   if (!hasStrategicTileState(world)) return factions;
 
   return factions.filter((faction) =>
@@ -137,12 +135,6 @@ export function evaluateNodeControl(world: WorldState): { state: WorldState; eve
   };
 }
 
-/**
- * Royal Tactical resolves strategic territory once per round rather than from
- * wall-clock presentation ticks. One reinforcement boundary advances a full
- * legacy capture window. We retain progress=1 as a round-boundary receipt so
- * existing save/debug surfaces can distinguish a freshly captured node.
- */
 export function evaluateNodeControlForRound(world: WorldState): { state: WorldState; events: readonly SimEvent[] } {
   let state = world;
   const events: SimEvent[] = [];
