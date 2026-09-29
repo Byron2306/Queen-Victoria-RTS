@@ -18,202 +18,89 @@ import {
 
 describe('Royal Tactical battlefield input', () => {
   it('selects a Victoria unit without queuing an order', () => {
-    const world =
-      createPhase6SkirmishWorld();
+    const world = createPhase6SkirmishWorld();
+    const bridge = new ClientCommandBridge();
+    const input = new BattlefieldInput(bridge);
 
-    const bridge =
-      new ClientCommandBridge();
+    input.pointerDown(world, 0, { x: 5, y: 11 });
 
-    const input =
-      new BattlefieldInput(
-        bridge,
-      );
-
-    input.pointerDown(
-      world,
-      0,
-      { x: 3, y: 13 },
-    );
-
-    expect(
-      input.selectedUnitId,
-    ).toBe(
-      'victoria-queen',
-    );
-
-    expect(
-      bridge.drainTactical(),
-    ).toEqual([]);
+    expect(input.selectedUnitId).toBe('victoria-queen');
+    expect(bridge.drainTactical()).toEqual([]);
   });
 
   it('does not select an enemy unit', () => {
-    const world =
-      createPhase6SkirmishWorld();
+    const world = createPhase6SkirmishWorld();
+    const bridge = new ClientCommandBridge();
+    const input = new BattlefieldInput(bridge);
 
-    const bridge =
-      new ClientCommandBridge();
+    input.pointerDown(world, 0, { x: 18, y: 12 });
 
-    const input =
-      new BattlefieldInput(
-        bridge,
-      );
-
-    input.pointerDown(
-      world,
-      0,
-      { x: 12, y: 2 },
-    );
-
-    expect(
-      input.selectedUnitId,
-    ).toBeNull();
-
-    expect(
-      bridge.drainTactical(),
-    ).toEqual([]);
+    expect(input.selectedUnitId).toBeNull();
+    expect(bridge.drainTactical()).toEqual([]);
   });
 
   it('queues Move rather than mutating the battlefield', () => {
-    const world =
-      createPhase6SkirmishWorld();
+    const world = createPhase6SkirmishWorld();
+    const bridge = new ClientCommandBridge();
+    const input = new BattlefieldInput(bridge);
 
-    const bridge =
-      new ClientCommandBridge();
+    input.pointerDown(world, 5, { x: 5, y: 11 });
+    input.pointerDown(world, 5, { x: 6, y: 11 });
 
-    const input =
-      new BattlefieldInput(
-        bridge,
-      );
-
-    input.pointerDown(
-      world,
-      5,
-      { x: 3, y: 13 },
-    );
-
-    input.pointerDown(
-      world,
-      5,
-      { x: 4, y: 12 },
-    );
-
-    expect(
-      bridge.drainTactical(),
-    ).toEqual([
+    expect(bridge.drainTactical()).toEqual([
       {
-        orderId:
-          'victoria-r1-o0',
+        orderId: 'victoria-r1-o0',
         kind: 'move',
-        faction:
-          'victoria',
-        unitId:
-          'victoria-queen',
-        destination:
-          { x: 4, y: 12 },
+        faction: 'victoria',
+        unitId: 'victoria-queen',
+        destination: { x: 6, y: 11 },
         issuedRound: 1,
         commandCost: 1,
       },
     ]);
 
-    expect(
-      world.units[
-        'victoria-queen'
-      ]?.position,
-    ).toEqual({
-      x: 3,
-      y: 13,
-    });
+    expect(world.units['victoria-queen']?.position).toEqual({ x: 5, y: 11 });
   });
 
   it('queues Attack rather than applying damage immediately', () => {
-    const world =
-      createPhase6SkirmishWorld();
+    const world = createPhase6SkirmishWorld();
+    const beforeHealth = world.combat['obsidian-queen']!.health;
+    const bridge = new ClientCommandBridge();
+    const input = new BattlefieldInput(bridge);
 
-    const beforeHealth =
-      world.combat[
-        'obsidian-queen'
-      ]!.health;
+    input.pointerDown(world, 9, { x: 5, y: 11 });
+    input.pointerDown(world, 9, { x: 18, y: 12 });
 
-    const bridge =
-      new ClientCommandBridge();
-
-    const input =
-      new BattlefieldInput(
-        bridge,
-      );
-
-    input.pointerDown(
-      world,
-      9,
-      { x: 3, y: 13 },
-    );
-
-    input.pointerDown(
-      world,
-      9,
-      { x: 12, y: 2 },
-    );
-
-    expect(
-      bridge.drainTactical(),
-    ).toEqual([
+    expect(bridge.drainTactical()).toEqual([
       {
-        orderId:
-          'victoria-r1-o0',
+        orderId: 'victoria-r1-o0',
         kind: 'attack',
-        faction:
-          'victoria',
-        unitId:
-          'victoria-queen',
-        targetUnitId:
-          'obsidian-queen',
+        faction: 'victoria',
+        unitId: 'victoria-queen',
+        targetUnitId: 'obsidian-queen',
         issuedRound: 1,
         commandCost: 1,
       },
     ]);
 
-    expect(
-      world.combat[
-        'obsidian-queen'
-      ]?.health,
-    ).toBe(beforeHealth);
+    expect(world.combat['obsidian-queen']?.health).toBe(beforeHealth);
   });
 
   it('queues Guard for the selected unit', () => {
-    const world =
-      createPhase6SkirmishWorld();
+    const world = createPhase6SkirmishWorld();
+    const bridge = new ClientCommandBridge();
+    const input = new BattlefieldInput(bridge);
 
-    const bridge =
-      new ClientCommandBridge();
+    input.pointerDown(world, 0, { x: 3, y: 9 });
+    input.guardSelected(world);
 
-    const input =
-      new BattlefieldInput(
-        bridge,
-      );
-
-    input.pointerDown(
-      world,
-      0,
-      { x: 5, y: 14 },
-    );
-
-    input.guardSelected(
-      world,
-    );
-
-    expect(
-      bridge.drainTactical(),
-    ).toEqual([
+    expect(bridge.drainTactical()).toEqual([
       {
-        orderId:
-          'victoria-r1-o0',
+        orderId: 'victoria-r1-o0',
         kind: 'guard',
-        faction:
-          'victoria',
-        unitId:
-          'victoria-rook-a',
-        anchor:
-          { x: 5, y: 14 },
+        faction: 'victoria',
+        unitId: 'victoria-rook-a',
+        anchor: { x: 3, y: 9 },
         issuedRound: 1,
         commandCost: 1,
       },
@@ -221,164 +108,64 @@ describe('Royal Tactical battlefield input', () => {
   });
 
   it('switches selection when another Victoria unit is tapped', () => {
-    const world =
-      createPhase6SkirmishWorld();
+    const world = createPhase6SkirmishWorld();
+    const bridge = new ClientCommandBridge();
+    const input = new BattlefieldInput(bridge);
 
-    const bridge =
-      new ClientCommandBridge();
+    input.pointerDown(world, 2, { x: 5, y: 11 });
+    input.pointerDown(world, 2, { x: 3, y: 9 });
 
-    const input =
-      new BattlefieldInput(
-        bridge,
-      );
-
-    input.pointerDown(
-      world,
-      2,
-      { x: 3, y: 13 },
-    );
-
-    input.pointerDown(
-      world,
-      2,
-      { x: 5, y: 14 },
-    );
-
-    expect(
-      input.selectedUnitId,
-    ).toBe(
-      'victoria-rook-a',
-    );
-
-    expect(
-      bridge.drainTactical(),
-    ).toEqual([]);
+    expect(input.selectedUnitId).toBe('victoria-rook-a');
+    expect(bridge.drainTactical()).toEqual([]);
   });
 
   it('clears stale selection without queuing an order', () => {
-    const world =
-      createPhase6SkirmishWorld();
+    const world = createPhase6SkirmishWorld();
+    const bridge = new ClientCommandBridge();
+    const input = new BattlefieldInput(bridge);
 
-    const bridge =
-      new ClientCommandBridge();
+    input.pointerDown(world, 0, { x: 5, y: 11 });
 
-    const input =
-      new BattlefieldInput(
-        bridge,
-      );
+    const units = { ...world.units };
+    delete units['victoria-queen'];
 
-    input.pointerDown(
-      world,
-      0,
-      { x: 3, y: 13 },
-    );
+    input.pointerDown({ ...world, units }, 0, { x: 6, y: 11 });
 
-    const units = {
-      ...world.units,
-    };
-
-    delete units[
-      'victoria-queen'
-    ];
-
-    input.pointerDown(
-      {
-        ...world,
-        units,
-      },
-      0,
-      { x: 4, y: 12 },
-    );
-
-    expect(
-      input.selectedUnitId,
-    ).toBeNull();
-
-    expect(
-      bridge.drainTactical(),
-    ).toEqual([]);
+    expect(input.selectedUnitId).toBeNull();
+    expect(bridge.drainTactical()).toEqual([]);
   });
 });
 
 describe('Royal Tactical screen-space battlefield input', () => {
   it('converts a screen tap into a tactical Move order', async () => {
-    const {
-      screenToBoardCell,
-    } = await import(
-      '../../src/client/board/projection'
-    );
-
-    const world =
-      createPhase6SkirmishWorld();
-
-    const bridge =
-      new ClientCommandBridge();
-
-    const input =
-      new BattlefieldInput(
-        bridge,
-      );
+    const { screenToBoardCell, tileCenter } = await import('../../src/client/board/projection');
+    const world = createPhase6SkirmishWorld();
+    const bridge = new ClientCommandBridge();
+    const input = new BattlefieldInput(bridge);
 
     const projection = {
-      topLeft:
-        { x: 0, y: 0 },
-      topRight:
-        { x: 1600, y: 0 },
-      bottomLeft:
-        { x: 0, y: 1600 },
-      bottomRight:
-        { x: 1600, y: 1600 },
+      topLeft: { x: 0, y: 0 },
+      topRight: { x: 1600, y: 0 },
+      bottomLeft: { x: 0, y: 1600 },
+      bottomRight: { x: 1600, y: 1600 },
     };
 
-    const selectCell =
-      screenToBoardCell(
-        { x: 350, y: 1350 },
-        projection,
-      );
+    const selectCell = screenToBoardCell(tileCenter({ x: 5, y: 11 }, projection), projection);
+    const moveCell = screenToBoardCell(tileCenter({ x: 6, y: 11 }, projection), projection);
 
-    const moveCell =
-      screenToBoardCell(
-        { x: 450, y: 1250 },
-        projection,
-      );
+    expect(selectCell).toEqual({ x: 5, y: 11 });
+    expect(moveCell).toEqual({ x: 6, y: 11 });
 
-    expect(selectCell)
-      .toEqual({
-        x: 3,
-        y: 13,
-      });
+    input.pointerDown(world, 4, selectCell!);
+    input.pointerDown(world, 4, moveCell!);
 
-    expect(moveCell)
-      .toEqual({
-        x: 4,
-        y: 12,
-      });
-
-    input.pointerDown(
-      world,
-      4,
-      selectCell!,
-    );
-
-    input.pointerDown(
-      world,
-      4,
-      moveCell!,
-    );
-
-    expect(
-      bridge.drainTactical(),
-    ).toEqual([
+    expect(bridge.drainTactical()).toEqual([
       {
-        orderId:
-          'victoria-r1-o0',
+        orderId: 'victoria-r1-o0',
         kind: 'move',
-        faction:
-          'victoria',
-        unitId:
-          'victoria-queen',
-        destination:
-          { x: 4, y: 12 },
+        faction: 'victoria',
+        unitId: 'victoria-queen',
+        destination: { x: 6, y: 11 },
         issuedRound: 1,
         commandCost: 1,
       },
