@@ -51,4 +51,33 @@ describe('Attack versus Assault resolution', () => {
     expect(result.world.occupancy['7,8']).toBe('rook');
     expect(result.world.occupancy['7,7']).toBeUndefined();
   });
+
+  it('lets a knight Assault along its legal chess landing geometry even beyond its real-time attack radius', () => {
+    const world = createWorld([
+      { id: 'knight', faction: 'victoria', kind: 'knight', position: { x: 5, y: 5 } },
+      { id: 'pawn', faction: 'obsidian', kind: 'pawn', position: { x: 7, y: 6 } },
+    ]);
+    const lethal = {
+      ...world,
+      combat: {
+        ...world.combat,
+        pawn: { ...world.combat.pawn!, health: 1 },
+      },
+    };
+    const order: AssaultOrder = {
+      orderId: 'knight-assault',
+      kind: 'assault',
+      faction: 'victoria',
+      unitId: 'knight',
+      targetUnitId: 'pawn',
+      issuedRound: 1,
+      commandCost: 1,
+    };
+
+    const result = resolveCommittedOrders(lethal, [order]);
+
+    expect(result.outcomes[0]).toMatchObject({ status: 'RESOLVED' });
+    expect(result.world.units.knight?.position).toEqual({ x: 7, y: 6 });
+    expect(result.world.units.pawn).toBeUndefined();
+  });
 });
