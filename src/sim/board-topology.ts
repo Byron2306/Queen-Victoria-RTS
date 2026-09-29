@@ -16,10 +16,12 @@ export interface BoardTile {
 export const BOARD_WIDTH = 16 as const;
 export const BOARD_HEIGHT = 16 as const;
 
-const SPINE_MIN = 4;
-const SPINE_MAX = 11;
-const THEATRE_MIN = 4;
-const THEATRE_MAX = 11;
+// Ten-tile-wide arms preserve the existing, visually successful node anchors
+// while leaving four corner quadrants outside the playable battlefield.
+const SPINE_MIN = 3;
+const SPINE_MAX = 12;
+const THEATRE_MIN = 3;
+const THEATRE_MAX = 12;
 
 export function isPlayableCell(x: number, y: number): boolean {
   if (
