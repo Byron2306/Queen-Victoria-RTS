@@ -42,8 +42,8 @@ describe('Triptych strategic round boundary', () => {
   });
 
   it('publishes settlement, banner mutation and rank-up together before the next command phase', () => {
-    const knightStart = { x: 7, y: 7 } as const;
-    const futureLanding = { x: 9, y: 8 } as const;
+    const knightStart = { x: 11, y: 11 } as const;
+    const futureLanding = { x: 13, y: 12 } as const;
     const settlementCell = { x: 7, y: 10 } as const;
 
     let world = createWorld([
