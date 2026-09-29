@@ -23,7 +23,7 @@ describe('Phase 6 battlefield render model', () => {
     );
 
     expect(model.boardAsset)
-      .toBe('/assets/battlefield/palace-board.png');
+      .toBe('/Queen-Victoria-RTS/assets/battlefield/palace-board.png');
   });
 
   it('projects every live simulation unit into screen space', () => {
@@ -59,7 +59,7 @@ describe('Phase 6 battlefield render model', () => {
     );
 
     expect(victoria?.asset)
-      .toBe('/assets/units/victoria.png');
+      .toBe('/Queen-Victoria-RTS/assets/units/victoria.png');
   });
 
   it('binds the Obsidian sovereign to Shadow King V3', () => {
@@ -76,7 +76,7 @@ describe('Phase 6 battlefield render model', () => {
     );
 
     expect(shadowKing?.asset)
-      .toBe('/assets/units/shadow-king-v3.png');
+      .toBe('/Queen-Victoria-RTS/assets/units/shadow-king-v3.png');
   });
 
   it('marks the selected unit without mutating world state', () => {
@@ -137,25 +137,25 @@ describe('Phase 6 canonical troop render bindings', () => {
       model.units.find(
         unit => unit.id === 'victoria-pawn-a',
       )?.asset,
-    ).toBe('/assets/units/victoria-pawn.png');
+    ).toBe('/Queen-Victoria-RTS/assets/units/victoria-pawn.png');
 
     expect(
       model.units.find(
         unit => unit.id === 'victoria-knight-a',
       )?.asset,
-    ).toBe('/assets/units/victoria-knight.png');
+    ).toBe('/Queen-Victoria-RTS/assets/units/victoria-knight.png');
 
     expect(
       model.units.find(
         unit => unit.id === 'victoria-bishop-a',
       )?.asset,
-    ).toBe('/assets/units/victoria-bishop.png');
+    ).toBe('/Queen-Victoria-RTS/assets/units/victoria-bishop.png');
 
     expect(
       model.units.find(
         unit => unit.id === 'victoria-rook-a',
       )?.asset,
-    ).toBe('/assets/units/victoria-rook.png');
+    ).toBe('/Queen-Victoria-RTS/assets/units/victoria-rook.png');
   });
 
   it('binds Shadow troop kinds to canonical assets', () => {
@@ -171,25 +171,25 @@ describe('Phase 6 canonical troop render bindings', () => {
       model.units.find(
         unit => unit.id === 'obsidian-knight-a',
       )?.asset,
-    ).toBe('/assets/units/shadow-knight.png');
+    ).toBe('/Queen-Victoria-RTS/assets/units/shadow-knight.png');
 
     expect(
       model.units.find(
         unit => unit.id === 'obsidian-bishop-a',
       )?.asset,
-    ).toBe('/assets/units/shadow-bishop.png');
+    ).toBe('/Queen-Victoria-RTS/assets/units/shadow-bishop.png');
 
     expect(
       model.units.find(
         unit => unit.id === 'obsidian-rook-a',
       )?.asset,
-    ).toBe('/assets/units/shadow-rook.png');
+    ).toBe('/Queen-Victoria-RTS/assets/units/shadow-rook.png');
 
     expect(
       model.units.find(
         unit => unit.id === 'obsidian-queen',
       )?.asset,
-    ).toBe('/assets/units/shadow-queen.png');
+    ).toBe('/Queen-Victoria-RTS/assets/units/shadow-queen.png');
   });
 
   it('gives every opening unit canonical art', () => {
