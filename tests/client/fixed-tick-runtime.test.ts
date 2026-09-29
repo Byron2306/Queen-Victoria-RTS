@@ -9,8 +9,8 @@ describe('Royal Tactical fixed-tick runtime', () => {
     const runtime = new FixedTickRuntime();
 
     expect(runtime.world.tick).toBe(0);
-    expect(runtime.world.width).toBe(16);
-    expect(runtime.world.height).toBe(16);
+    expect(runtime.world.width).toBe(24);
+    expect(runtime.world.height).toBe(24);
   });
 
   it('does nothing before one presentation tick', () => {
