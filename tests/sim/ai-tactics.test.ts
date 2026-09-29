@@ -69,7 +69,7 @@ describe('balanced AI hero-use heuristics',()=>{
       {id:'oa',faction:'obsidian',kind:'rook',position:{x:11,y:10}},
       {id:'ob',faction:'obsidian',kind:'bishop',position:{x:12,y:10}},
       {id:'oking',faction:'obsidian',kind:'king',position:{x:14,y:14}},
-      {id:'vking',faction:'victoria',kind:'king',position:{x:6,y:6}},
+      {id:'vking',faction:'victoria',kind:'king',position:{x:7,y:7}},
       ...extra,
     ],{heroIds:{obsidian:'ohero'},aiFactions:['obsidian']});
     return {...world,heroes:{...world.heroes,obsidian:{...world.heroes.obsidian,level}}};
@@ -93,7 +93,7 @@ describe('balanced AI hero-use heuristics',()=>{
     expect(commands.find(c=>c.type==='hero_ability')).toMatchObject({type:'hero_ability',ability:'sovereign_line'});
   });
 
-  it('uses Imperial Gambit only when local force is favourable and the enemy sovereign is meaningfully close',()=>{
+  it('uses Imperial Gambit only when local force is favourable and the enemy sovereign is meaningfully close and observed',()=>{
     const world=heroWorld(5);
     const commands=commandsForCommitments(world,'obsidian',[commitment('attack_king','vking')]);
     expect(commands.find(c=>c.type==='hero_ability')).toMatchObject({type:'hero_ability',ability:'imperial_gambit'});
