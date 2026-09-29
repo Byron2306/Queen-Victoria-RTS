@@ -7,18 +7,20 @@ import {
   applyTriptychOpeningFortifications,
   createTriptychOpeningUnits,
 } from '../../sim/triptych-opening';
+import { applyTriptychOpeningTerritory } from '../../sim/triptych-territory';
 
 // Compatibility alias for older client/tests while the final Triptych opening
 // becomes the single authoritative source of scenario units.
 export const PHASE6_OPENING_UNITS = TRIPTYCH_OPENING_UNITS;
 
 export function createPhase6SkirmishWorld(): WorldState {
-  const world = createWorld(createTriptychOpeningUnits(), {
+  let world = createWorld(createTriptychOpeningUnits(), {
     heroIds: {
       victoria: 'victoria-queen',
     },
     aiFactions: ['obsidian'],
   });
 
+  world = applyTriptychOpeningTerritory(world);
   return applyTriptychOpeningFortifications(world);
 }
