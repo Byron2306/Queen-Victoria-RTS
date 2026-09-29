@@ -4,6 +4,9 @@ import {
 import {
   createRoyalBattlefieldGuidance,
 } from './royal-battlefield-guidance';
+import {
+  findVictoriaUnitAtPoint,
+} from '../input/unit-tap-target';
 
 type PhaserSceneBase = new (
   config?: any,
@@ -100,12 +103,6 @@ export function createRoyalBattlefieldSceneClass<
           .setOrigin?.(0.5)
           ?.setDepth?.(5200);
 
-      self.hudRegions
-        ?.selectedUnit
-        ?.setTexture?.(
-          'hud-victoria-status',
-        );
-
       this.tuneHudReadability();
       this.refreshRoyalGuidance();
       this.redrawRoyalMoveMarkers();
@@ -126,6 +123,41 @@ export function createRoyalBattlefieldSceneClass<
       }>,
     ): void {
       const self = this as any;
+
+      const candidates = Array.from(
+        self.unitSprites?.entries?.() ?? [],
+      ).map((entry: any) => {
+        const [id, sprite] = entry;
+        return {
+          id,
+          faction:
+            self.controller.world.units[id]
+              ?.faction ?? 'obsidian',
+          x: Number(sprite.x) || 0,
+          y: Number(sprite.y) || 0,
+        };
+      });
+
+      const touchRadius = Math.max(
+        42,
+        Math.min(
+          Number(self.scale?.width) || 1600,
+          Number(self.scale?.height) || 1200,
+        ) * 0.055,
+      );
+
+      const tappedUnitId =
+        findVictoriaUnitAtPoint(
+          point,
+          candidates,
+          touchRadius,
+        );
+
+      if (tappedUnitId) {
+        this.selectUnit(tappedUnitId);
+        return;
+      }
+
       const before =
         self.controller.runtime.commands
           .peekTactical()
@@ -261,24 +293,47 @@ export function createRoyalBattlefieldSceneClass<
         return;
       }
 
+      const selectedHalo =
+        self.add.ellipse(
+          overlay.selectedAnchor.x,
+          overlay.selectedAnchor.y,
+          76,
+          38,
+          0xffd447,
+          0.16,
+        );
+
+      selectedHalo
+        ?.setStrokeStyle?.(
+          5,
+          0xfff0a6,
+          1,
+        )
+        ?.setDepth?.(873);
+
+      this.royalMoveMarkers.push(
+        selectedHalo,
+      );
+
       for (
         const destination of
         overlay.destinations
       ) {
         const marker =
-          self.add.circle(
+          self.add.ellipse(
             destination.anchor.x,
             destination.anchor.y,
-            13,
+            42,
+            24,
             0xf3c84b,
-            0.16,
+            0.42,
           );
 
         marker
           .setStrokeStyle?.(
-            3,
-            0xffe891,
-            0.95,
+            4,
+            0xffef93,
+            1,
           )
           ?.setDepth?.(875);
 
@@ -286,9 +341,9 @@ export function createRoyalBattlefieldSceneClass<
           self.add.circle(
             destination.anchor.x,
             destination.anchor.y,
-            3,
+            5,
             0xfff1a8,
-            0.95,
+            1,
           );
 
         pip.setDepth?.(876);
@@ -334,9 +389,9 @@ export function createRoyalBattlefieldSceneClass<
 
           graphics
             ?.lineStyle?.(
-              4,
+              5,
               0xffd34f,
-              0.82,
+              0.95,
             );
           graphics
             ?.lineBetween?.(
@@ -350,19 +405,19 @@ export function createRoyalBattlefieldSceneClass<
           const badge =
             self.add.text(
               destination.anchor.x,
-              destination.anchor.y - 18,
+              destination.anchor.y - 22,
               String(index + 1),
               {
                 fontFamily:
                   'Georgia, serif',
-                fontSize: '14px',
+                fontSize: '16px',
                 fontStyle: 'bold',
                 color: '#1b0a07',
                 backgroundColor:
                   '#ffd75e',
                 padding: {
-                  x: 6,
-                  y: 2,
+                  x: 7,
+                  y: 3,
                 },
               },
             );
