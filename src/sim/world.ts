@@ -30,7 +30,10 @@ export function createWorld(units: readonly UnitState[] = [], options: WorldOpti
     production: {
       queues: { victoria: [], obsidian: [] },
       nextEntryOrdinal: { victoria: 1, obsidian: 1 },
-      reinforcementAnchors: { victoria: { x: 1, y: 1 }, obsidian: { x: 14, y: 14 } },
+      reinforcementAnchors: {
+        victoria: { x: 7, y: 14 },
+        obsidian: { x: 8, y: 1 },
+      },
     },
     promotions: { pending: [] },
     heroes: createInitialHeroState({}, options.heroIds ?? {}),
