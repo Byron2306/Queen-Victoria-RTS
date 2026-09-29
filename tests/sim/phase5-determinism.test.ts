@@ -95,7 +95,7 @@ describe('Phase 5 determinism and fairness murder chamber', () => {
     const nodeCenters = new Set(Object.values(world.territory.nodes).map(node => `${node.center.x},${node.center.y}`));
     const blockers = [] as Array<{id:string;faction:'victoria';kind:'pawn';position:{x:number;y:number}}>;
     let n = 0;
-    for (let y = 0; y < 16; y += 1) for (let x = 0; x < 16; x += 1) {
+    for (let y = 0; y < 24; y += 1) for (let x = 0; x < 24; x += 1) {
       if ((x === 1 && y === 1) || nodeCenters.has(`${x},${y}`)) continue;
       blockers.push({ id: `b${n++}`, faction: 'victoria', kind: 'pawn', position: { x, y } });
     }
@@ -109,31 +109,12 @@ describe('Phase 5 determinism and fairness murder chamber', () => {
       },
     };
 
-    const first =
-      resolveReinforcementPhase(
-        world,
-      );
+    const first = resolveReinforcementPhase(world);
 
-    expect(
-      first.heroes
-        .victoria
-        .status,
-    ).toBe(
-      'ready_to_respawn',
-    );
+    expect(first.heroes.victoria.status).toBe('ready_to_respawn');
 
-    const second =
-      stepWorld(
-        first,
-        [],
-      );
+    const second = stepWorld(first, []);
 
-    expect(
-      second.state.heroes
-        .victoria
-        .status,
-    ).toBe(
-      'ready_to_respawn',
-    );
+    expect(second.state.heroes.victoria.status).toBe('ready_to_respawn');
   });
 });
