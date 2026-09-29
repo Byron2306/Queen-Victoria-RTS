@@ -26,7 +26,7 @@ export interface SelectionGeometryDestination {
 export interface SelectionGeometryOverlay {
   selectedCell: Coord | null;
   selectedAnchor: ScreenPoint | null;
-  selectedPolygon: readonly ScreenPoint[] | null;
+  selectedPolygon?: readonly ScreenPoint[] | null;
   destinations: readonly SelectionGeometryDestination[];
 }
 
