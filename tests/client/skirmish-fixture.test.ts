@@ -5,26 +5,50 @@ describe('Phase 6 skirmish fixture', () => {
   it('creates the authoritative 16x16 battlefield', () => {
     const world = createPhase6SkirmishWorld();
 
-    expect(world.board).toEqual({ width: 16, height: 16 });
+    expect(world.width).toBe(16);
+    expect(world.height).toBe(16);
+    expect(world.tick).toBe(0);
+    expect(world.match.status).toBe('active');
   });
 
   it('binds Victoria as the player hero', () => {
     const world = createPhase6SkirmishWorld();
 
-    expect(world.heroes.victoria.heroUnitId).toBe('victoria-queen');
-    expect(world.units['victoria-queen']?.kind).toBe('queen');
+    expect(world.heroes.victoria).toMatchObject({
+      heroUnitId: 'victoria-queen',
+      status: 'alive',
+      level: 1,
+      xp: 0,
+    });
+
+    expect(world.units['victoria-queen']).toMatchObject({
+      faction: 'victoria',
+      kind: 'queen',
+      position: { x: 3, y: 13 },
+    });
   });
 
   it('enables only the balanced Obsidian AI', () => {
     const world = createPhase6SkirmishWorld();
 
     expect(world.ai.victoria.enabled).toBe(false);
-    expect(world.ai.obsidian.enabled).toBe(true);
-    expect(world.ai.obsidian.mode).toBe('balanced');
+
+    expect(world.ai.obsidian).toMatchObject({
+      enabled: true,
+      profile: 'balanced',
+      commitments: [],
+      pendingCommands: [],
+    });
   });
 
   it('places both sovereign kings', () => {
     const world = createPhase6SkirmishWorld();
+
+    expect(world.match.sovereigns.victoria.kingId)
+      .toBe('victoria-king');
+
+    expect(world.match.sovereigns.obsidian.kingId)
+      .toBe('obsidian-king');
 
     expect(world.units['victoria-king']?.position)
       .toEqual({ x: 7, y: 15 });
