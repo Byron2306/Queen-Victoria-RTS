@@ -101,7 +101,16 @@ export function evaluateNodeControl(world: WorldState): { state: WorldState; eve
     nodes[nodeId] = { ...node, owner: faction, capturingFaction: null, captureProgressTicks: 0 };
   }
 
-  return { state: { ...world, territory: { nodes } }, events };
+  return {
+    state: {
+      ...world,
+      territory: {
+        ...world.territory,
+        nodes,
+      },
+    },
+    events,
+  };
 }
 
 /**
@@ -132,7 +141,13 @@ export function evaluateNodeControlForRound(world: WorldState): { state: WorldSt
       const node = nodes[nodeId];
       if (node) nodes[nodeId] = { ...node, captureProgressTicks: 1 };
     }
-    state = { ...state, territory: { nodes } };
+    state = {
+      ...state,
+      territory: {
+        ...state.territory,
+        nodes,
+      },
+    };
   }
 
   return { state, events };
