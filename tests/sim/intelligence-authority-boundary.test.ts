@@ -79,10 +79,10 @@ describe('intelligence never becomes simulation authority', () => {
 
   it('does not let a ghost satisfy Reinforce support links', () => {
     let world = createWorld([
-      unit('victoria-rook', 'victoria', 'rook', 7, 7),
-      unit('enemy', 'obsidian', 'pawn', 7, 8),
+      unit('victoria-rook', 'victoria', 'rook', 11, 11),
+      unit('enemy', 'obsidian', 'pawn', 11, 12),
     ]);
-    world = withGhost(world, 'victoria', 6, 7, 'ghost-supporter');
+    world = withGhost(world, 'victoria', 10, 11, 'ghost-supporter');
 
     const root: AttackOrder = {
       orderId: 'root', kind: 'attack', faction: 'victoria', unitId: 'victoria-rook',
