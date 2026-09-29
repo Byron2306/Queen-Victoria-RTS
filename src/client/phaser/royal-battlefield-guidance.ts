@@ -1,9 +1,12 @@
+import type { ProductionReceipt } from '../../sim/production';
+
 export type RoyalBattlefieldGuidanceInput = Readonly<{
   selectedUnitId: string | null;
   stagedOrders: number;
   royalCommandsRemaining: number;
   phase: string;
   attackableTargets?: number;
+  productionFeedback?: ProductionReceipt | null;
 }>;
 
 export type RoyalBattlefieldGuidance = Readonly<{
@@ -11,6 +14,37 @@ export type RoyalBattlefieldGuidance = Readonly<{
   instruction: string;
   detail: string;
 }>;
+
+function productionGuidance(
+  feedback: ProductionReceipt,
+): RoyalBattlefieldGuidance {
+  const unit = feedback.unitKind.toUpperCase();
+
+  if (feedback.accepted) {
+    return {
+      headline: 'YOUR TURN',
+      instruction: `${unit} QUEUED`,
+      detail: `${feedback.cost} Crown committed · ${feedback.remainingCurrency} Crown remaining · deployment resolves at reinforcement.`,
+    };
+  }
+
+  const instructions: Record<string, string> = {
+    insufficient_crown: 'NEED MORE CROWN',
+    locked: 'UNIT LOCKED',
+    capacity_exceeded: 'COMMAND CAPACITY FULL',
+    piece_cap_reached: 'PIECE CAP REACHED',
+    invalid_deployment_territory: 'DEPLOYMENT TERRITORY INVALID',
+    blocked_spawn: 'DEPLOYMENT BLOCKED',
+    deployment_relocked: 'DEPLOYMENT RELOCKED',
+    match_ended: 'MATCH COMPLETE',
+  };
+
+  return {
+    headline: 'DEPLOYMENT REFUSED',
+    instruction: instructions[feedback.reason ?? ''] ?? 'DEPLOYMENT REFUSED',
+    detail: `${unit} costs ${feedback.cost} Crown · ${feedback.remainingCurrency} Crown available.`,
+  };
+}
 
 export function createRoyalBattlefieldGuidance(
   input: RoyalBattlefieldGuidanceInput,
@@ -23,6 +57,10 @@ export function createRoyalBattlefieldGuidance(
       instruction: 'RESOLVING THE ROUND',
       detail: 'Orders are being resolved through the Royal Tactical system.',
     };
+  }
+
+  if (input.productionFeedback) {
+    return productionGuidance(input.productionFeedback);
   }
 
   if (input.royalCommandsRemaining <= 0) {
