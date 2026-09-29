@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { createWorld, evaluatePositionalAttack, resolveCombatTick, type UnitState, type WorldState } from '../../src/sim';
+import {
+  createWorld,
+  evaluatePositionalAttack,
+  OutOfBoundsError,
+  resolveCombatTick,
+  type UnitState,
+  type WorldState,
+} from '../../src/sim';
 
 const unit = (id: string, kind: UnitState['kind'], faction: UnitState['faction'], x: number, y: number): UnitState => ({
   id, kind, faction, position: { x, y },
@@ -10,6 +17,19 @@ function target(world: WorldState, attackerId: string, targetId: string): WorldS
 }
 
 describe('Phase 2 positional attack bonuses', () => {
+  it('uses the canonical 24x24 world bounds', () => {
+    const world = createWorld([
+      unit('edge', 'rook', 'victoria', 23, 15),
+    ]);
+
+    expect(world.width).toBe(24);
+    expect(world.height).toBe(24);
+    expect(world.units.edge?.position).toEqual({ x: 23, y: 15 });
+    expect(() => createWorld([
+      unit('outside', 'rook', 'victoria', 24, 15),
+    ])).toThrow(OutOfBoundsError);
+  });
+
   it('recognises a protected Pawn chain', () => {
     const world = createWorld([
       unit('p', 'pawn', 'victoria', 5, 5),
