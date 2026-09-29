@@ -1,5 +1,6 @@
 import type {
   BoardProjection,
+  ScreenPoint,
 } from '../board/projection';
 import {
   getBattlefieldCameraState,
@@ -25,6 +26,40 @@ export interface ResponsiveBattlefieldLayout {
 }
 
 const ASPECT = 16 / 9;
+const WORLD_EXPANSION = 24 / 16;
+
+function scalePointAroundViewport(
+  point: ScreenPoint,
+  viewport: Rect,
+  scale: number,
+): ScreenPoint {
+  const centerX = viewport.x + viewport.width / 2;
+  const centerY = viewport.y + viewport.height / 2;
+
+  return {
+    x: centerX + (point.x - centerX) * scale,
+    y: centerY + (point.y - centerY) * scale,
+  };
+}
+
+function scaleRectAroundViewport(
+  rect: Rect,
+  viewport: Rect,
+  scale: number,
+): Rect {
+  const topLeft = scalePointAroundViewport(
+    { x: rect.x, y: rect.y },
+    viewport,
+    scale,
+  );
+
+  return {
+    x: topLeft.x,
+    y: topLeft.y,
+    width: rect.width * scale,
+    height: rect.height * scale,
+  };
+}
 
 function applyCameraToRect(
   rect: Rect,
@@ -100,7 +135,7 @@ export function createResponsiveBattlefieldLayout(
       renderHeight * ASPECT;
   }
 
-  const baseBoardRender: Rect = {
+  const fittedBoardRender: Rect = {
     x:
       (viewportWidth -
         renderWidth) /
@@ -118,63 +153,94 @@ export function createResponsiveBattlefieldLayout(
       renderHeight,
   };
 
-  const scaleX =
-    baseBoardRender.width / 1600;
+  const fittedScaleX =
+    fittedBoardRender.width / 1600;
 
-  const scaleY =
-    baseBoardRender.height / 900;
+  const fittedScaleY =
+    fittedBoardRender.height / 900;
 
-  const baseProjection: BoardProjection = {
+  const fittedProjection: BoardProjection = {
     // Presentation-only 90° rotation of the logical board.
     //
-    // Logical y=15 (Victoria side) renders on the LEFT.
+    // Logical y=23 (Victoria side) renders on the LEFT.
     // Logical y=0  (Shadow side) renders on the RIGHT.
     //
     // Simulation coordinates remain unchanged.
     topLeft: {
       x:
-        baseBoardRender.x +
-        1200 * scaleX,
+        fittedBoardRender.x +
+        1200 * fittedScaleX,
       y:
-        baseBoardRender.y +
-        180 * scaleY,
+        fittedBoardRender.y +
+        180 * fittedScaleY,
     },
 
     topRight: {
       x:
-        baseBoardRender.x +
-        1480 * scaleX,
+        fittedBoardRender.x +
+        1480 * fittedScaleX,
       y:
-        baseBoardRender.y +
-        820 * scaleY,
+        fittedBoardRender.y +
+        820 * fittedScaleY,
     },
 
     bottomLeft: {
       x:
-        baseBoardRender.x +
-        400 * scaleX,
+        fittedBoardRender.x +
+        400 * fittedScaleX,
       y:
-        baseBoardRender.y +
-        180 * scaleY,
+        fittedBoardRender.y +
+        180 * fittedScaleY,
     },
 
     bottomRight: {
       x:
-        baseBoardRender.x +
-        120 * scaleX,
+        fittedBoardRender.x +
+        120 * fittedScaleX,
       y:
-        baseBoardRender.y +
-        820 * scaleY,
+        fittedBoardRender.y +
+        820 * fittedScaleY,
     },
+  };
+
+  // The logical battlefield grew from 16 to 24 cells. Expand the rendered
+  // world by the same 1.5x factor so the apparent tile and unit footprint
+  // remains unchanged; the free-roam camera reveals the additional world.
+  const expandedBoardRender = scaleRectAroundViewport(
+    fittedBoardRender,
+    board,
+    WORLD_EXPANSION,
+  );
+  const expandedProjection: BoardProjection = {
+    topLeft: scalePointAroundViewport(
+      fittedProjection.topLeft,
+      board,
+      WORLD_EXPANSION,
+    ),
+    topRight: scalePointAroundViewport(
+      fittedProjection.topRight,
+      board,
+      WORLD_EXPANSION,
+    ),
+    bottomLeft: scalePointAroundViewport(
+      fittedProjection.bottomLeft,
+      board,
+      WORLD_EXPANSION,
+    ),
+    bottomRight: scalePointAroundViewport(
+      fittedProjection.bottomRight,
+      board,
+      WORLD_EXPANSION,
+    ),
   };
 
   const camera = getBattlefieldCameraState();
   const boardRender = applyCameraToRect(
-    baseBoardRender,
+    expandedBoardRender,
     board,
   );
   const projection = applyCameraToProjection(
-    baseProjection,
+    expandedProjection,
     camera,
     board,
   );
