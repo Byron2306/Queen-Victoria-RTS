@@ -33,14 +33,14 @@ describe('Phase 6 skirmish fixture', () => {
       .toEqual({ x: 7, y: 0 });
   });
 
-  it('loads eight capture nodes with major objectives in the north/south sanctums', () => {
+  it('loads eight capture nodes while preserving the proven major-objective anchors', () => {
     const world = createPhase6SkirmishWorld();
 
     expect(Object.keys(world.territory.nodes)).toHaveLength(8);
     expect(world.territory.nodes.crown?.center)
-      .toEqual({ x: 7, y: 1 });
+      .toEqual({ x: 1, y: 7 });
     expect(world.territory.nodes['crown-south']?.center)
-      .toEqual({ x: 8, y: 14 });
+      .toEqual({ x: 14, y: 8 });
     expect(
       Object.values(world.territory.nodes)
         .filter(node => node.kind === 'crown'),
