@@ -61,9 +61,7 @@ export function targetIsObserved(
   targetId: string,
 ): boolean {
   const target = world.units[targetId];
-  return Boolean(
-    target &&
-    isPlayableCell(target.position.x, target.position.y) &&
-    isTileObserved(world, faction, target.position),
-  );
+  if (!target) return false;
+  if (!isPlayableCell(target.position.x, target.position.y)) return true;
+  return isTileObserved(world, faction, target.position);
 }
