@@ -13,6 +13,10 @@ import {
   createPhase6SkirmishWorld,
 } from '../../src/client/session/skirmish';
 
+import {
+  createPhaserBattlefieldFrame,
+} from '../../src/client/phaser/battlefield-renderer';
+
 const projection:
   BattlefieldRenderProjection = {
     topLeft: {
@@ -107,3 +111,26 @@ describe(
     });
   },
 );
+
+describe('Phaser frame facing propagation', () => {
+  it('preserves faction-facing scaleX from the render model', () => {
+    const world = createPhase6SkirmishWorld();
+
+    const frame = createPhaserBattlefieldFrame(
+      world,
+      projection,
+      null,
+    );
+
+    const victoria = frame.units.find(
+      unit => unit.id === 'victoria-queen',
+    );
+
+    const shadow = frame.units.find(
+      unit => unit.id === 'obsidian-king',
+    );
+
+    expect(victoria?.scaleX).toBeGreaterThan(0);
+    expect(shadow?.scaleX).toBeLessThan(0);
+  });
+});

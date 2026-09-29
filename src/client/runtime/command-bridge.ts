@@ -55,6 +55,38 @@ export class ClientCommandBridge {
     });
   }
 
+  private stagedCommandCost(
+    faction: Faction,
+  ): number {
+    return this.pendingTactical
+      .filter(
+        order =>
+          order.faction === faction,
+      )
+      .reduce(
+        (total, order) =>
+          total + order.commandCost,
+        0,
+      );
+  }
+
+  private canStageTactical(
+    world: WorldState,
+    faction: Faction,
+    commandCost = 1,
+  ): boolean {
+    return (
+      this.stagedCommandCost(
+        faction,
+      ) +
+        commandCost <=
+      world.turn
+        .royalCommandsRemaining[
+          faction
+        ]
+    );
+  }
+
   private tacticalOrderId(
     world: WorldState,
     faction: Faction,
@@ -75,6 +107,15 @@ export class ClientCommandBridge {
       world.units[unitId];
 
     if (!unit) return;
+
+    if (
+      !this.canStageTactical(
+        world,
+        unit.faction,
+      )
+    ) {
+      return;
+    }
 
     this.pendingTactical.push({
       orderId:
@@ -104,6 +145,15 @@ export class ClientCommandBridge {
 
     if (!unit) return;
 
+    if (
+      !this.canStageTactical(
+        world,
+        unit.faction,
+      )
+    ) {
+      return;
+    }
+
     this.pendingTactical.push({
       orderId:
         this.tacticalOrderId(
@@ -129,6 +179,15 @@ export class ClientCommandBridge {
       world.units[unitId];
 
     if (!unit) return;
+
+    if (
+      !this.canStageTactical(
+        world,
+        unit.faction,
+      )
+    ) {
+      return;
+    }
 
     this.pendingTactical.push({
       orderId:
@@ -203,6 +262,15 @@ export class ClientCommandBridge {
       return;
     }
 
+    if (
+      !this.canStageTactical(
+        worldOrTick,
+        faction,
+      )
+    ) {
+      return;
+    }
+
     this.pendingTactical.push({
       orderId:
         this.tacticalOrderId(
@@ -235,6 +303,34 @@ export class ClientCommandBridge {
         targetKind,
       },
     );
+  }
+
+  peekTactical():
+    readonly TacticalOrder[] {
+    return [
+      ...this.pendingTactical,
+    ];
+  }
+
+  cancelTactical(
+    orderId: string,
+  ): boolean {
+    const index =
+      this.pendingTactical.findIndex(
+        order =>
+          order.orderId === orderId,
+      );
+
+    if (index < 0) {
+      return false;
+    }
+
+    this.pendingTactical.splice(
+      index,
+      1,
+    );
+
+    return true;
   }
 
   drainTactical():

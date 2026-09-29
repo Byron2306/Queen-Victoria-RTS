@@ -252,3 +252,68 @@ describe('Royal Tactical Victoria ability bridge', () => {
     ).toEqual([]);
   });
 });
+
+describe('Royal Tactical staged command controls', () => {
+  it('peeks and cancels staged tactical orders without draining them', () => {
+    const world = createPhase6SkirmishWorld();
+    const bridge = new ClientCommandBridge();
+
+    bridge.move(
+      world,
+      'victoria-queen',
+      { x: 4, y: 12 },
+    );
+
+    bridge.guard(
+      world,
+      'victoria-rook-a',
+    );
+
+    expect(
+      bridge.peekTactical().map(
+        order => order.orderId,
+      ),
+    ).toEqual([
+      'victoria-r1-o0',
+      'victoria-r1-o1',
+    ]);
+
+    expect(
+      bridge.cancelTactical(
+        'victoria-r1-o1',
+      ),
+    ).toBe(true);
+
+    expect(
+      bridge.peekTactical().map(
+        order => order.orderId,
+      ),
+    ).toEqual([
+      'victoria-r1-o0',
+    ]);
+
+    expect(
+      bridge.drainTactical(),
+    ).toHaveLength(1);
+  });
+
+  it('does not stage more orders than remaining Royal Commands', () => {
+    const world = createPhase6SkirmishWorld();
+    const bridge = new ClientCommandBridge();
+
+    for (let i = 0; i < 5; i += 1) {
+      bridge.move(
+        world,
+        'victoria-queen',
+        {
+          x: 4,
+          y: 10 + i,
+        },
+      );
+    }
+
+    expect(
+      bridge.peekTactical(),
+    ).toHaveLength(4);
+  });
+});
