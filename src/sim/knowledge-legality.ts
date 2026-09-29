@@ -15,6 +15,20 @@ function isSlidingKind(kind: UnitKind): boolean {
   return kind === 'rook' || kind === 'bishop' || kind === 'queen';
 }
 
+function isLineShape(kind: UnitKind, from: Coord, to: Coord): boolean {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const ax = Math.abs(dx);
+  const ay = Math.abs(dy);
+  const orthogonal = (dx === 0) !== (dy === 0);
+  const diagonal = ax > 0 && ax === ay;
+
+  if (kind === 'rook') return orthogonal;
+  if (kind === 'bishop') return diagonal;
+  if (kind === 'queen') return orthogonal || diagonal;
+  return false;
+}
+
 export function validateMoveKnowledge(
   world: WorldState,
   faction: Faction,
@@ -35,6 +49,13 @@ export function validateMoveKnowledge(
   // A Knight knows its hop-window destination directly. It never occupies or
   // needs knowledge of the cells between the origin and the L destination.
   if (kind === 'knight' || !isSlidingKind(kind)) {
+    return { legal: true };
+  }
+
+  // Geometry owns whether the shape is legal. Knowledge only constrains a
+  // valid sliding ray, so malformed rook/bishop/queen shapes must never be
+  // path-walked here.
+  if (!isLineShape(kind, from, to)) {
     return { legal: true };
   }
 
