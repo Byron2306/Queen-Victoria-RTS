@@ -1,6 +1,7 @@
 import { evaluatePositionalAttack } from './position';
 import { effectiveAttackRange, effectiveCooldownReload, incomingHeroDamageBps, outgoingHeroDamageBps } from './abilities';
-import type { CombatProfile, CombatTickResult, SimEvent, UnitCombatState, UnitKind, UnitState, WorldState } from './types';
+import { combatModifiersForRank, militaryRecordFor } from './rank';
+import type { CombatProfile, CombatTickResult, SimEvent, UnitCombatState, UnitKind, UnitMilitaryRecord, UnitState, WorldState } from './types';
 import { coordKey } from './world';
 
 export const UNIT_COMBAT_PROFILES: Readonly<Record<UnitKind, CombatProfile>> = {
@@ -66,7 +67,9 @@ export function resolveCombatTick(world: WorldState): CombatTickResult {
     const positional = evaluatePositionalAttack(world, unitId, target.id);
     const positionalDamage = Math.floor((profile.damage * positional.multiplierBps) / 10000);
     const outgoingDamage = Math.floor((positionalDamage * outgoingHeroDamageBps(world, unitId)) / 10000);
-    const damage = Math.max(1, Math.floor((outgoingDamage * incomingHeroDamageBps(world, target.id)) / 10000));
+    const rankedDamage = Math.floor((outgoingDamage * combatModifiersForRank(militaryRecordFor(world, unitId).rank).damageBps) / 10000);
+    const heroAdjusted = Math.floor((rankedDamage * incomingHeroDamageBps(world, target.id)) / 10000);
+    const damage = Math.max(1, Math.floor((heroAdjusted * combatModifiersForRank(militaryRecordFor(world, target.id).rank).defenseBps) / 10000));
     intents.push({ unitId, targetId: target.id, damage, positionalTags: [...positional.tags].sort() });
     nextCombat[unitId] = { ...nextState, cooldownTicks: effectiveCooldownReload(world, unitId) };
   }
@@ -123,11 +126,26 @@ export function resolveCombatTick(world: WorldState): CombatTickResult {
   const units = { ...world.units };
   const occupancy = { ...world.occupancy };
   const combat = { ...nextCombat };
+  const military: Record<string, UnitMilitaryRecord> = { ...world.military };
+
+  for (const deadId of deadIds.sort()) {
+    const aggregate = damageByTarget.get(deadId);
+    for (const attackerId of [...(aggregate?.attackers ?? [])].sort()) {
+      if (!world.units[attackerId]) continue;
+      const record = militaryRecordFor(world, attackerId);
+      military[attackerId] = {
+        ...record,
+        kills: record.kills + 1,
+      };
+    }
+  }
+
   for (const deadId of deadIds.sort()) {
     const deadUnit = units[deadId];
     if (deadUnit) delete occupancy[coordKey(deadUnit.position)];
     delete units[deadId];
     delete combat[deadId];
+    delete military[deadId];
   }
   for (const id of Object.keys(combat)) {
     const state = combat[id];
@@ -136,5 +154,5 @@ export function resolveCombatTick(world: WorldState): CombatTickResult {
     }
   }
 
-  return { state: { ...world, units, occupancy, combat }, events };
+  return { state: { ...world, units, occupancy, combat, military }, events };
 }
