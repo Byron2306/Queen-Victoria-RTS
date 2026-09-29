@@ -7,6 +7,8 @@ import {
 } from './abilities';
 import { evaluatePositionalAttack } from './position';
 import { validateMoveGeometry } from './geometry';
+import { refreshAllIntelligence } from './intelligence';
+import { targetIsObserved, validateMoveKnowledge } from './knowledge-legality';
 import {
   detectKnightFork,
   detectOpenFile,
@@ -84,6 +86,15 @@ function resolveMove(world: WorldState, order: MoveOrder): SingleResolution {
 
   const geometry = validateMoveGeometry(world, actor, order.destination);
   if (!geometry.legal) return refused(world, order.orderId, geometry.reason);
+
+  const knowledge = validateMoveKnowledge(
+    world,
+    actor.faction,
+    actor.position,
+    order.destination,
+    actor.kind,
+  );
+  if (!knowledge.legal) return refused(world, order.orderId, knowledge.reason);
 
   const oldKey = coordKey(actor.position);
   const units = {
@@ -165,6 +176,9 @@ function resolveCombatOrder(
     return refused(world, order.orderId, 'target_missing');
   }
   if (attacker.faction === target.faction) return refused(world, order.orderId, 'friendly_target');
+  if (!targetIsObserved(world, order.faction, target.id)) {
+    return refused(world, order.orderId, 'target_not_observed');
+  }
   if (!combatOrderTargetIsLegal(world, order)) {
     void effectiveAttackRange(world, attacker.id);
     return refused(world, order.orderId, 'illegal_attack');
@@ -353,7 +367,7 @@ export function resolveCommittedOrders(
   world: WorldState,
   orders: readonly TacticalOrder[],
 ): OrderResolutionResult {
-  let current = world;
+  let current = refreshAllIntelligence(world);
   const outcomes: OrderResolutionOutcome[] = [];
   const events: SimEvent[] = [];
   const usedSupportOrderIds = new Set<string>();
@@ -383,7 +397,9 @@ export function resolveCommittedOrders(
       result = refused(current, order.orderId, 'unsupported_order_kind');
     }
 
-    current = result.world;
+    current = result.outcome.status === 'RESOLVED'
+      ? refreshAllIntelligence(result.world)
+      : result.world;
     outcomes.push(result.outcome);
     events.push(...result.events);
 
