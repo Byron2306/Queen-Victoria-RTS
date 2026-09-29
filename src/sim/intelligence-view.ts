@@ -33,7 +33,9 @@ function otherFaction(faction: Faction): Faction {
 }
 
 function coordFromTileId(id: TileId): Coord {
-  const [x, y] = id.split(',').map(Number);
+  const parts = id.split(',');
+  const x = Number(parts[0]!);
+  const y = Number(parts[1]!);
   return { x, y };
 }
 
