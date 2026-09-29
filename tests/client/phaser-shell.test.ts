@@ -19,10 +19,11 @@ describe('Phase 6 Phaser shell', () => {
       .toBe(PHASER_PARENT_ID);
   });
 
-  it('declares one battlefield root scene', () => {
+  it('boots through the title screen before the battlefield', () => {
     const shell = createPhaserShellDescriptor();
 
     expect(shell.sceneKeys).toEqual([
+      'title',
       'battlefield',
     ]);
   });
@@ -34,7 +35,7 @@ describe('Phase 6 Phaser shell', () => {
     expect(shell.autoCenter).toBe(true);
   });
 
-  it('declares the fixed-tick runtime as scene-owned', () => {
+  it('declares the fixed-tick runtime as battlefield-owned', () => {
     const shell = createPhaserShellDescriptor();
 
     expect(shell.runtimeOwner).toBe('battlefield');

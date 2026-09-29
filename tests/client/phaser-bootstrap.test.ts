@@ -6,13 +6,17 @@ import {
 
 describe('Phase 6 Phaser bootstrap', () => {
   it('builds the real Phaser-facing config from the 4:3 shell contract', () => {
+    class TitleScene {}
+    class BattlefieldScene {}
+
     const config = buildPhaserGameConfig(
       {
         AUTO: 0,
         RESIZE: 5,
         CENTER_BOTH: 1,
       },
-      class BattlefieldScene {},
+      TitleScene,
+      BattlefieldScene,
     );
 
     expect(config).toMatchObject({
@@ -30,7 +34,10 @@ describe('Phase 6 Phaser bootstrap', () => {
       },
     });
 
-    expect(config.scene).toHaveLength(1);
+    expect(config.scene).toEqual([
+      TitleScene,
+      BattlefieldScene,
+    ]);
   });
 
   it('refuses to boot Phaser when no browser DOM exists', async () => {

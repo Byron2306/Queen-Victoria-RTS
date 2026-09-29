@@ -20,7 +20,10 @@ export function createPhaserShellDescriptor(): PhaserShellDescriptor {
     width: GAME_WIDTH,
     height: GAME_HEIGHT,
     parentId: PHASER_PARENT_ID,
-    sceneKeys: ['battlefield'],
+    sceneKeys: [
+      'title',
+      'battlefield',
+    ],
     resizePolicy: 'resize',
     autoCenter: true,
     runtimeOwner: 'battlefield',
