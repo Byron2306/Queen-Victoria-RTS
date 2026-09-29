@@ -5,6 +5,7 @@ import {
   type TileId,
   type TilePolarity,
 } from './board-topology';
+import { strategicAbilityModifiers } from './strategic-ability-hooks';
 import { strategicTiles, type TriptychTerritoryState } from './territory';
 import { coordKey } from './world';
 import type { Coord, Faction, WorldState } from './types';
@@ -154,7 +155,11 @@ export function resolveBannerProgress(world: WorldState): BannerResult {
       continue;
     }
 
-    const roundsHeld = Math.min(2, banner.roundsHeld + 1);
+    const bonus = strategicAbilityModifiers(
+      world,
+      banner.faction,
+    ).bannerProgressBonus;
+    const roundsHeld = Math.min(2, banner.roundsHeld + 1 + bonus);
     banners[id] = {
       ...banner,
       roundsHeld,
