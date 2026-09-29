@@ -5,13 +5,15 @@ import type {
 } from '../../sim/types';
 import {
   tileCenter,
-  tileFootpoint,
   type BoardProjection,
   type ScreenPoint,
 } from '../board/projection';
 import {
   CANONICAL_ASSET_PATHS,
 } from '../assets/canonical';
+import {
+  unitGroundAnchor,
+} from './unit-grounding';
 
 export type BattlefieldRenderProjection = BoardProjection;
 
@@ -119,7 +121,7 @@ export function createBattlefieldRenderModel(
       id: unit.id,
       faction: unit.faction,
       kind: unit.kind,
-      screen: tileFootpoint(
+      screen: unitGroundAnchor(
         unit.position,
         projection,
       ),
