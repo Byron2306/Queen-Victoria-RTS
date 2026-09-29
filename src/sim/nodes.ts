@@ -1,14 +1,18 @@
 import type { CaptureNodeState, TerritoryState } from './types';
+import { hasAdjacentFactionTile } from './territory';
 
 export const DEFAULT_CAPTURE_NODES = {
-  crown: { id: 'crown', kind: 'crown', center: { x: 1, y: 7 } },
-  'crown-south': { id: 'crown-south', kind: 'crown', center: { x: 14, y: 8 } },
-  'minor-nw': { id: 'minor-nw', kind: 'minor', center: { x: 3, y: 3 } },
-  'minor-ne': { id: 'minor-ne', kind: 'minor', center: { x: 12, y: 3 } },
-  'minor-w': { id: 'minor-w', kind: 'minor', center: { x: 3, y: 8 } },
-  'minor-e': { id: 'minor-e', kind: 'minor', center: { x: 12, y: 7 } },
-  'minor-sw': { id: 'minor-sw', kind: 'minor', center: { x: 3, y: 12 } },
-  'minor-se': { id: 'minor-se', kind: 'minor', center: { x: 12, y: 12 } },
+  // Major-node sanctums live in the narrow north/south arms of the cross.
+  crown: { id: 'crown', kind: 'crown', center: { x: 7, y: 1 } },
+  'crown-south': { id: 'crown-south', kind: 'crown', center: { x: 8, y: 14 } },
+
+  // Minor nodes form a contested lattice through the central theatre/flanks.
+  'minor-nw': { id: 'minor-nw', kind: 'minor', center: { x: 5, y: 5 } },
+  'minor-ne': { id: 'minor-ne', kind: 'minor', center: { x: 10, y: 5 } },
+  'minor-w': { id: 'minor-w', kind: 'minor', center: { x: 2, y: 7 } },
+  'minor-e': { id: 'minor-e', kind: 'minor', center: { x: 13, y: 8 } },
+  'minor-sw': { id: 'minor-sw', kind: 'minor', center: { x: 5, y: 10 } },
+  'minor-se': { id: 'minor-se', kind: 'minor', center: { x: 10, y: 10 } },
 } as const;
 
 export function createInitialTerritoryState(): TerritoryState {
@@ -46,6 +50,25 @@ function presentFactions(world: WorldState, node: CaptureNodeState): readonly Fa
   return (['victoria', 'obsidian'] as const).filter((faction) => found.has(faction));
 }
 
+function hasStrategicTileState(world: WorldState): boolean {
+  return Object.prototype.hasOwnProperty.call(world.territory, 'tiles');
+}
+
+function suppliedFactions(
+  world: WorldState,
+  node: CaptureNodeState,
+  factions: readonly Faction[],
+): readonly Faction[] {
+  // Legacy low-level fixtures without Triptych tile state keep exercising the
+  // capture clock in isolation. In real round resolution settlement creates
+  // tile state before this reducer, at which point supply is mandatory.
+  if (!hasStrategicTileState(world)) return factions;
+
+  return factions.filter((faction) =>
+    hasAdjacentFactionTile(world, node.center, faction),
+  );
+}
+
 function decayProgress(node: CaptureNodeState): CaptureNodeState {
   if (node.captureProgressTicks <= 0) return { ...node, capturingFaction: null, captureProgressTicks: 0 };
   const next = node.captureProgressTicks - 1;
@@ -58,8 +81,8 @@ export function evaluateNodeControl(world: WorldState): { state: WorldState; eve
 
   for (const nodeId of Object.keys(nodes).sort()) {
     const original = nodes[nodeId]!;
-    const factions = presentFactions(world, original);
-    const nowContested = factions.length > 1;
+    const present = presentFactions(world, original);
+    const nowContested = present.length > 1;
     let node: CaptureNodeState = { ...original, contested: nowContested };
     if (nowContested) {
       if (!original.contested) events.push({ type: 'node.contested', tick: world.tick, nodeId });
@@ -68,6 +91,7 @@ export function evaluateNodeControl(world: WorldState): { state: WorldState; eve
     }
     if (original.contested) events.push({ type: 'node.uncontested', tick: world.tick, nodeId });
 
+    const factions = suppliedFactions(world, original, present);
     const faction = factions[0];
     if (!faction) {
       node = decayProgress(node);
