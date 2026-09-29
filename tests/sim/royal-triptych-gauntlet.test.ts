@@ -20,17 +20,17 @@ const unit = (
 ): UnitState => ({ id, faction, kind, position: { x, y } });
 
 function scenario() {
-  const matureCell = { x: 9, y: 8 } as const;
-  const contestedCell = { x: 7, y: 8 } as const;
-  const supplyCell = { x: 3, y: 4 } as const;
+  const matureCell = { x: 9, y: 13 } as const;
+  const contestedCell = { x: 7, y: 12 } as const;
+  const supplyCell = { x: 9, y: 8 } as const;
 
   let world = createWorld([
-    unit('victoria-knight', 'victoria', 'knight', 5, 5),
-    unit('victoria-rook', 'victoria', 'rook', 5, 7),
-    unit('victoria-bishop', 'victoria', 'bishop', 3, 5),
+    unit('victoria-knight', 'victoria', 'knight', 5, 9),
+    unit('victoria-rook', 'victoria', 'rook', 5, 11),
+    unit('victoria-bishop', 'victoria', 'bishop', 3, 9),
     unit('victoria-settler', 'victoria', 'pawn', supplyCell.x, supplyCell.y),
-    unit('shadow-pawn', 'obsidian', 'pawn', 7, 6),
-    unit('shadow-knight', 'obsidian', 'knight', 9, 7),
+    unit('shadow-pawn', 'obsidian', 'pawn', 7, 10),
+    unit('shadow-knight', 'obsidian', 'knight', 9, 11),
   ]);
 
   // This is not a bare opening position. Victoria begins with previously held
@@ -157,7 +157,7 @@ describe('Royal War Triptych whole-system gauntlet', () => {
     expect(result.supportPressure).toBeGreaterThan(0);
     expect(result.assaultOutcomes[0]?.status).toBe('RESOLVED');
     expect(result.world.units['shadow-pawn']).toBeUndefined();
-    expect(result.world.units['victoria-knight']?.position).toEqual({ x: 7, y: 6 });
+    expect(result.world.units['victoria-knight']?.position).toEqual({ x: 7, y: 10 });
     expect(militaryRecordFor(result.world, 'victoria-knight')).toMatchObject({
       kills: 2,
       rank: 'proven',
@@ -200,10 +200,10 @@ describe('Royal War Triptych whole-system gauntlet', () => {
       { orderId:'s5', kind:'reinforce', faction:'victoria', unitId:'u5', supportedUnitId:'u4', rootOrderId:'root', issuedRound:1, commandCost:1 },
     ];
     const chainWorld = createWorld([
-      unit('u0','victoria','rook',7,7), unit('u1','victoria','rook',7,8),
-      unit('u2','victoria','rook',7,9), unit('u3','victoria','rook',7,10),
-      unit('u4','victoria','rook',7,11), unit('u5','victoria','rook',7,12),
-      unit('enemy','obsidian','pawn',7,6),
+      unit('u0','victoria','rook',7,9), unit('u1','victoria','rook',7,10),
+      unit('u2','victoria','rook',7,11), unit('u3','victoria','rook',7,12),
+      unit('u4','victoria','rook',7,13), unit('u5','victoria','rook',7,14),
+      unit('enemy','obsidian','pawn',7,8),
     ]);
     expect(validateSupportGraph(chainWorld, tooDeep)).toMatchObject({
       valid: false,
