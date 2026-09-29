@@ -97,6 +97,21 @@ export function canonicalSnapshot(result: ReplayResult): string {
     ...result.state.pendingOrders,
   ];
 
+  const intelligence = {
+    byFaction: Object.fromEntries(
+      (['victoria', 'obsidian'] as const).map((faction) => {
+        const memory = result.state.intelligence.byFaction[faction];
+        const tileIds = Object.keys(memory).sort();
+        return [
+          faction,
+          Object.fromEntries(
+            tileIds.map((id) => [id, memory[id]]),
+          ),
+        ];
+      }),
+    ),
+  };
+
   return JSON.stringify({
     state: {
       tick: result.state.tick,
@@ -114,6 +129,7 @@ export function canonicalSnapshot(result: ReplayResult): string {
       ai,
       turn,
       pendingOrders,
+      intelligence,
     },
     eventsByTick: result.eventsByTick,
   });
