@@ -2,13 +2,14 @@ import { assetUrl } from '../assets/base-url';
 
 export const TITLE_SCENE_KEY = 'title';
 
+type SceneBaseConstructor =
+  new (...args: any[]) => object;
+
 export function createTitleSceneClass<
-  BaseScene extends new (
-    config?: any,
-  ) => object,
+  BaseScene extends SceneBaseConstructor,
 >(SceneBase: BaseScene) {
   return class TitleScene extends SceneBase {
-    constructor() {
+    constructor(..._args: any[]) {
       super({
         key: TITLE_SCENE_KEY,
       });
@@ -96,33 +97,27 @@ export function createTitleSceneClass<
         width * 0.70,
         height * 0.50,
         'START SKIRMISH',
-        () => {
-          scene.scene.start(
-            'battlefield',
-          );
-        },
+        () => scene.scene.start(
+          'battlefield',
+        ),
       );
 
       this.createMenuButton(
         width * 0.70,
         height * 0.61,
         'OPTIONS',
-        () => {
-          this.showNotice(
-            'OPTIONS · COMING WITH THE UI PASS',
-          );
-        },
+        () => this.showNotice(
+          'OPTIONS · COMING WITH THE UI PASS',
+        ),
       );
 
       this.createMenuButton(
         width * 0.70,
         height * 0.72,
         'CREDITS',
-        () => {
-          this.showNotice(
-            'QUEEN VICTORIA RTS · ROYAL TACTICAL STRATEGY',
-          );
-        },
+        () => this.showNotice(
+          'QUEEN VICTORIA RTS · ROYAL TACTICAL STRATEGY',
+        ),
       );
     }
 
@@ -157,20 +152,19 @@ export function createTitleSceneClass<
           useHandCursor: true,
         });
 
-      const text = scene.add.text(
-        x,
-        y,
-        label,
-        {
-          fontFamily:
-            'Georgia, Times New Roman, serif',
-          fontSize: '30px',
-          fontStyle: 'bold',
-          color: '#fff0c2',
-        },
-      );
-
-      text
+      scene.add
+        .text(
+          x,
+          y,
+          label,
+          {
+            fontFamily:
+              'Georgia, Times New Roman, serif',
+            fontSize: '30px',
+            fontStyle: 'bold',
+            color: '#fff0c2',
+          },
+        )
         .setOrigin?.(0.5)
         ?.setDepth?.(3);
 
@@ -211,25 +205,24 @@ export function createTitleSceneClass<
         )
         ?.destroy?.();
 
-      const notice = scene.add.text(
-        width * 0.70,
-        height * 0.84,
-        message,
-        {
-          fontFamily:
-            'Georgia, Times New Roman, serif',
-          fontSize: '18px',
-          color: '#f4d98a',
-          backgroundColor:
-            'rgba(20, 9, 16, 0.78)',
-          padding: {
-            x: 18,
-            y: 10,
+      scene.add
+        .text(
+          width * 0.70,
+          height * 0.84,
+          message,
+          {
+            fontFamily:
+              'Georgia, Times New Roman, serif',
+            fontSize: '18px',
+            color: '#f4d98a',
+            backgroundColor:
+              'rgba(20, 9, 16, 0.78)',
+            padding: {
+              x: 18,
+              y: 10,
+            },
           },
-        },
-      );
-
-      notice
+        )
         .setOrigin?.(0.5)
         ?.setName?.('title-notice')
         ?.setDepth?.(4);
