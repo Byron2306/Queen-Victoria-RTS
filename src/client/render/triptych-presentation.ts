@@ -4,18 +4,10 @@ import {
   type BoardProjection,
   type ScreenPoint,
 } from '../board/projection';
-import type {
-  TacticalOrder,
-} from '../../sim/orders';
-import type {
-  BannerState,
-} from '../../sim/polarity';
-import type {
-  FortificationState,
-} from '../../sim/fortifications';
-import {
-  strategicTiles,
-} from '../../sim/territory';
+import type { TacticalOrder } from '../../sim/orders';
+import type { BannerState } from '../../sim/polarity';
+import type { FortificationState } from '../../sim/fortifications';
+import { strategicTiles } from '../../sim/territory';
 import type {
   Coord,
   Faction,
@@ -109,7 +101,6 @@ export function createTriptychOrderVisuals(
         to: tileCenter(order.destination, projection),
       };
     }
-
     if (order.kind === 'attack' || order.kind === 'assault') {
       return {
         orderId: order.orderId,
@@ -120,7 +111,6 @@ export function createTriptychOrderVisuals(
         to: unitAnchor(world, order.targetUnitId, projection),
       };
     }
-
     if (order.kind === 'reinforce') {
       return {
         orderId: order.orderId,
@@ -131,7 +121,6 @@ export function createTriptychOrderVisuals(
         to: unitAnchor(world, order.supportedUnitId, projection),
       };
     }
-
     if (order.kind === 'guard') {
       return {
         orderId: order.orderId,
@@ -141,7 +130,6 @@ export function createTriptychOrderVisuals(
         to: tileCenter(order.anchor, projection),
       };
     }
-
     if (order.kind === 'ability') {
       return {
         orderId: order.orderId,
@@ -151,7 +139,6 @@ export function createTriptychOrderVisuals(
         to: null,
       };
     }
-
     return {
       orderId: order.orderId,
       style: 'recruit',
@@ -170,32 +157,33 @@ export function createTriptychStrategicOverlay(
 
   const territory = tiles
     .filter((tile) => tile.factionControl !== 'neutral')
-    .map<TerritoryOverlayRecord>((tile) => ({
-      cell: { ...tile.cell },
-      faction: tile.factionControl as Faction,
-      polygon: tilePolygon(tile.cell, projection),
-    }));
+    .map<TerritoryOverlayRecord>((tile) => {
+      const cell = { x: tile.x, y: tile.y };
+      return {
+        cell,
+        faction: tile.factionControl as Faction,
+        polygon: tilePolygon(cell, projection),
+      };
+    });
 
-  const banners = Object.values(extras.banners ?? {})
-    .map<BannerOverlayRecord>((banner) => ({
-      id: banner.id,
-      faction: banner.faction,
-      cell: { ...banner.cell },
-      roundsHeld: banner.roundsHeld,
-      mature: banner.mature,
-      contestedBy: banner.contestedBy,
-      anchor: tileCenter(banner.cell, projection),
-    }));
+  const banners = Object.values(extras.banners ?? {}).map<BannerOverlayRecord>((banner) => ({
+    id: banner.id,
+    faction: banner.faction,
+    cell: { ...banner.cell },
+    roundsHeld: banner.roundsHeld,
+    mature: banner.mature,
+    contestedBy: banner.contestedBy,
+    anchor: tileCenter(banner.cell, projection),
+  }));
 
-  const fortifications = Object.values(extras.fortifications ?? {})
-    .map<FortificationOverlayRecord>((fortification) => ({
-      id: fortification.id,
-      faction: fortification.faction,
-      cell: { ...fortification.cell },
-      durability: fortification.durability,
-      polygon: tilePolygon(fortification.cell, projection),
-      anchor: tileCenter(fortification.cell, projection),
-    }));
+  const fortifications = Object.values(extras.fortifications ?? {}).map<FortificationOverlayRecord>((fortification) => ({
+    id: fortification.id,
+    faction: fortification.faction,
+    cell: { ...fortification.cell },
+    durability: fortification.durability,
+    polygon: tilePolygon(fortification.cell, projection),
+    anchor: tileCenter(fortification.cell, projection),
+  }));
 
   const ranks = Object.entries(world.military)
     .filter(([unitId]) => world.units[unitId] !== undefined)
