@@ -8,9 +8,12 @@ export type FortificationRejectReason =
   | 'not_friendly_territory'
   | 'already_fortified';
 
+export type FortificationKind = 'bastion' | 'redoubt';
+
 export type FortificationState = Readonly<{
   id: string;
   faction: Faction;
+  kind: FortificationKind;
   cell: Coord;
   durability: number;
 }>;
@@ -23,6 +26,7 @@ export type FortificationBuildOrder = Readonly<{
   id: string;
   faction: Faction;
   cell: Coord;
+  kind?: FortificationKind;
 }>;
 
 export type FortificationResult = Readonly<{
@@ -35,7 +39,7 @@ type TerritoryWithFortifications = TriptychTerritoryState & Readonly<{
   fortifications?: Readonly<Record<string, FortificationState>>;
 }>;
 
-function fortificationsFor(world: WorldState): Readonly<Record<string, FortificationState>> {
+export function fortificationsFor(world: WorldState): Readonly<Record<string, FortificationState>> {
   return (world.territory as TerritoryWithFortifications).fortifications ?? {};
 }
 
@@ -87,6 +91,7 @@ export function buildFortification(
     [order.id]: {
       id: order.id,
       faction: order.faction,
+      kind: order.kind ?? 'bastion',
       cell: { ...order.cell },
       durability:
         3 + strategicAbilityModifiers(world, order.faction).fortificationDurabilityBonus,
