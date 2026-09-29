@@ -1,8 +1,7 @@
-import { isPlayableCell } from './board-topology';
+import { BOARD_HEIGHT, BOARD_WIDTH, isPlayableCell } from './board-topology';
 import { DEFAULT_CAPTURE_NODES } from './nodes';
 import type { Coord, Faction, WorldState } from './types';
 
-const BOARD_SIZE = 16;
 const NODE_CENTER_KEYS = new Set(
   Object.values(DEFAULT_CAPTURE_NODES).map(
     node => `${node.center.x},${node.center.y}`,
@@ -17,11 +16,13 @@ export function findReinforcementSpawn(
 
   if (!isPlayableCell(anchor.x, anchor.y)) return null;
 
-  for (let radius = 0; radius < BOARD_SIZE; radius += 1) {
+  const maxRadius = Math.max(BOARD_WIDTH, BOARD_HEIGHT);
+
+  for (let radius = 0; radius < maxRadius; radius += 1) {
     const candidates: Coord[] = [];
 
-    for (let y = 0; y < BOARD_SIZE; y += 1) {
-      for (let x = 0; x < BOARD_SIZE; x += 1) {
+    for (let y = 0; y < BOARD_HEIGHT; y += 1) {
+      for (let x = 0; x < BOARD_WIDTH; x += 1) {
         if (!isPlayableCell(x, y)) continue;
         if (
           Math.max(
