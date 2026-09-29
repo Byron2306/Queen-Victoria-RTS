@@ -1,5 +1,16 @@
-import { allPlayableCells, tileId, type TileId, type TilePolarity, type FactionControl } from './board-topology';
-import type { Coord, Faction, IntelligenceState, TileMemory, WorldState } from './types';
+import { allPlayableCells, tileId, type TileId } from './board-topology';
+import { getFortificationAt } from './fortifications';
+import { getBannerAt, getTilePolarity } from './polarity';
+import { getTileFactionControl } from './territory';
+import { computeFactionVisibleCells } from './vision';
+import { coordKey } from './world';
+import type {
+  Coord,
+  Faction,
+  IntelligenceState,
+  TileMemory,
+  WorldState,
+} from './types';
 
 const UNKNOWN_MEMORY: TileMemory = {
   visibility: 'unknown',
@@ -40,4 +51,75 @@ export function getTileMemory(
   return memory;
 }
 
-export type { TilePolarity, FactionControl };
+export function isTileObserved(
+  world: WorldState,
+  faction: Faction,
+  cell: Coord,
+): boolean {
+  return getTileMemory(world, faction, cell).visibility === 'observed';
+}
+
+export function isTileKnown(
+  world: WorldState,
+  faction: Faction,
+  cell: Coord,
+): boolean {
+  return getTileMemory(world, faction, cell).visibility !== 'unknown';
+}
+
+function observedMemory(world: WorldState, cell: Coord): TileMemory {
+  const occupantId = world.occupancy[coordKey(cell)] ?? null;
+  const fortification = getFortificationAt(world, cell);
+  const banner = getBannerAt(world, cell);
+
+  return {
+    visibility: 'observed',
+    lastSeenRound: world.turn.round,
+    lastKnownPolarity: getTilePolarity(world, cell),
+    lastKnownControl: getTileFactionControl(world, cell),
+    lastKnownUnitId: occupantId,
+    lastKnownFortificationId: fortification?.id ?? null,
+    lastKnownBannerId: banner?.id ?? null,
+  };
+}
+
+export function refreshFactionIntelligence(
+  world: WorldState,
+  faction: Faction,
+): WorldState {
+  const visible = computeFactionVisibleCells(world, faction);
+  const previous = world.intelligence.byFaction[faction];
+  const next: Partial<Record<TileId, TileMemory>> = {};
+
+  for (const cell of allPlayableCells()) {
+    const id = tileId(cell);
+    const oldMemory = previous[id] ?? UNKNOWN_MEMORY;
+
+    if (visible.has(id)) {
+      next[id] = observedMemory(world, cell);
+      continue;
+    }
+
+    next[id] = oldMemory.visibility === 'observed'
+      ? { ...oldMemory, visibility: 'remembered' }
+      : oldMemory;
+  }
+
+  return {
+    ...world,
+    intelligence: {
+      ...world.intelligence,
+      byFaction: {
+        ...world.intelligence.byFaction,
+        [faction]: next as Record<TileId, TileMemory>,
+      },
+    },
+  };
+}
+
+export function refreshAllIntelligence(world: WorldState): WorldState {
+  return refreshFactionIntelligence(
+    refreshFactionIntelligence(world, 'victoria'),
+    'obsidian',
+  );
+}
