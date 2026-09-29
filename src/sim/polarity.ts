@@ -6,6 +6,7 @@ import {
   type TilePolarity,
 } from './board-topology';
 import { strategicTiles, type TriptychTerritoryState } from './territory';
+import { coordKey } from './world';
 import type { Coord, Faction, WorldState } from './types';
 
 export type BannerState = Readonly<{
@@ -14,6 +15,7 @@ export type BannerState = Readonly<{
   cell: Coord;
   roundsHeld: number;
   mature: boolean;
+  contestedBy: Faction | null;
 }>;
 
 export type BannerOrder = Readonly<{
@@ -33,6 +35,13 @@ type TerritoryWithBanners = TriptychTerritoryState & Readonly<{
 
 function bannersFor(world: WorldState): Readonly<Record<string, BannerState>> {
   return (world.territory as TerritoryWithBanners).banners ?? {};
+}
+
+export function getBannerState(
+  world: WorldState,
+  bannerId: string,
+): BannerState | undefined {
+  return bannersFor(world)[bannerId];
 }
 
 export function getTilePolarity(
@@ -61,6 +70,7 @@ export function queueBanner(
       cell: { ...order.cell },
       roundsHeld: 0,
       mature: false,
+      contestedBy: null,
     },
   };
 
@@ -76,15 +86,69 @@ export function queueBanner(
   };
 }
 
+export function contestBannerAtLanding(
+  world: WorldState,
+  faction: Faction,
+  cell: Coord,
+): WorldState {
+  const current = bannersFor(world);
+  let changed = false;
+  const banners: Record<string, BannerState> = { ...current };
+
+  for (const [id, banner] of Object.entries(current)) {
+    if (
+      banner.cell.x !== cell.x ||
+      banner.cell.y !== cell.y ||
+      banner.faction === faction
+    ) {
+      continue;
+    }
+
+    banners[id] = {
+      ...banner,
+      mature: false,
+      contestedBy: faction,
+    };
+    changed = true;
+  }
+
+  if (!changed) return world;
+
+  return {
+    ...world,
+    territory: {
+      ...world.territory,
+      banners,
+    } as TerritoryWithBanners,
+  };
+}
+
 export function resolveBannerProgress(world: WorldState): BannerResult {
   const banners: Record<string, BannerState> = {};
 
   for (const [id, banner] of Object.entries(bannersFor(world))) {
+    const occupantId = world.occupancy[coordKey(banner.cell)];
+    const occupant = occupantId ? world.units[occupantId] : undefined;
+    const contestedBy =
+      occupant && occupant.faction !== banner.faction
+        ? occupant.faction
+        : null;
+
+    if (contestedBy) {
+      banners[id] = {
+        ...banner,
+        mature: false,
+        contestedBy,
+      };
+      continue;
+    }
+
     const roundsHeld = Math.min(2, banner.roundsHeld + 1);
     banners[id] = {
       ...banner,
       roundsHeld,
       mature: roundsHeld >= 2,
+      contestedBy: null,
     };
   }
 
@@ -102,7 +166,9 @@ export function resolveBannerProgress(world: WorldState): BannerResult {
 
 export function applyMaturePolarityFlips(world: WorldState): BannerResult {
   const currentBanners = bannersFor(world);
-  const mature = Object.values(currentBanners).filter((banner) => banner.mature);
+  const mature = Object.values(currentBanners).filter(
+    (banner) => banner.mature && banner.contestedBy === null,
+  );
 
   if (mature.length === 0) {
     return { state: world, accepted: true };
