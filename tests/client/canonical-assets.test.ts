@@ -4,9 +4,11 @@ import {
 } from '../../src/client/assets/canonical';
 
 describe('Phase 6 canonical battlefield assets', () => {
-  it('locks the palace battlefield artwork', () => {
+  it('locks the Triptych battlefield artwork to its own canonical identity', () => {
     expect(CANONICAL_ASSET_PATHS.board)
-      .toBe('/Queen-Victoria-RTS/assets/battlefield/palace-board.png');
+      .toBe('/Queen-Victoria-RTS/assets/battlefield/triptych-board.png');
+    expect(CANONICAL_ASSET_PATHS.board.includes('palace-board'))
+      .toBe(false);
   });
 
   it('locks Victoria to her canonical battlefield art', () => {
