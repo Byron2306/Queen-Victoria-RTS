@@ -1,4 +1,5 @@
 import type {
+  Faction,
   WorldState,
 } from '../../sim/types';
 import type {
@@ -8,6 +9,15 @@ import {
   createPhaserBattlefieldFrame,
   type PhaserBattlefieldFrame,
 } from './battlefield-renderer';
+import {
+  createPresentedWorld,
+  createPresentedWorldState,
+  type PresentedWorld,
+} from '../intelligence/presented-world';
+import {
+  createIntelligenceOverlayModel,
+  type IntelligenceOverlayModel,
+} from '../render/intelligence-overlay';
 
 export const BATTLEFIELD_PROJECTION: BattlefieldRenderProjection = {
   topLeft: { x: 1200, y: 180 },
@@ -24,6 +34,8 @@ export interface PhaserTextureDefinition {
 export interface BattlefieldSceneRuntime {
   textures: readonly PhaserTextureDefinition[];
   frame: PhaserBattlefieldFrame;
+  presented: PresentedWorld;
+  intelligenceOverlay: IntelligenceOverlayModel;
 }
 
 function textureKeyFromAsset(
@@ -41,9 +53,18 @@ export function createBattlefieldSceneRuntime(
   world: WorldState,
   selectedUnitId: string | null,
   projection: BattlefieldRenderProjection = BATTLEFIELD_PROJECTION,
+  faction: Faction = 'victoria',
 ): BattlefieldSceneRuntime {
-  const frame = createPhaserBattlefieldFrame(
+  const presented = createPresentedWorld(
     world,
+    faction,
+  );
+  const presentationWorld = createPresentedWorldState(
+    world,
+    presented,
+  );
+  const frame = createPhaserBattlefieldFrame(
+    presentationWorld,
     projection,
     selectedUnitId,
   );
@@ -73,5 +94,10 @@ export function createBattlefieldSceneRuntime(
   return {
     textures: [...textures.values()],
     frame,
+    presented,
+    intelligenceOverlay:
+      createIntelligenceOverlayModel(
+        presented,
+      ),
   };
 }
