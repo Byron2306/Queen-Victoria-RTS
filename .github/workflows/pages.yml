@@ -3,7 +3,7 @@ name: Deploy Queen Victoria RTS
 on:
   push:
     branches:
-      - phase12-playable-visual-integration
+      - agent/royal-war-triptych
   workflow_dispatch:
 
 permissions:
