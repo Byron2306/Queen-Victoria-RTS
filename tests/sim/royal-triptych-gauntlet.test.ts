@@ -33,8 +33,25 @@ function scenario() {
     unit('shadow-knight', 'obsidian', 'knight', 9, 7),
   ]);
 
+  // This is not a bare opening position. Victoria begins with previously held
+  // infrastructure sufficient to sustain the existing force. The gauntlet
+  // then proves acquisition of a *new* supplied node at minor-nw.
   world = {
     ...world,
+    territory: {
+      ...world.territory,
+      nodes: {
+        ...world.territory.nodes,
+        crown: {
+          ...world.territory.nodes.crown!,
+          owner: 'victoria',
+        },
+        'minor-ne': {
+          ...world.territory.nodes['minor-ne']!,
+          owner: 'victoria',
+        },
+      },
+    },
     economy: {
       crownPower: { victoria: 50, obsidian: 35 },
     },
