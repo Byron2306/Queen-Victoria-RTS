@@ -4,6 +4,7 @@ import { createPresentedWorld } from '../../src/client/intelligence/presented-wo
 import {
   refreshFactionIntelligence,
 } from '../../src/sim/intelligence';
+import { strategicTiles } from '../../src/sim/territory';
 import { createWorld } from '../../src/sim/world';
 
 function worldWithObservedAndHiddenEnemies() {
@@ -75,27 +76,20 @@ describe('faction-safe presented battlefield world', () => {
   it('uses stale remembered polarity rather than hidden authoritative polarity', () => {
     let world = worldWithObservedAndHiddenEnemies();
     const memory = world.intelligence.byFaction.victoria['7,10']!;
-    const territory = world.territory as typeof world.territory & {
-      tiles: Record<string, {
-        id: string;
-        cell: { x: number; y: number };
-        polarity: 'black' | 'white';
-        factionControl: 'neutral' | 'victoria' | 'obsidian';
-      }>;
-    };
+    const tiles = strategicTiles(world);
 
     world = {
       ...world,
       territory: {
-        ...territory,
+        ...world.territory,
         tiles: {
-          ...territory.tiles,
+          ...tiles,
           '7,10': {
-            ...territory.tiles['7,10']!,
+            ...tiles['7,10']!,
             polarity: 'black',
           },
         },
-      },
+      } as typeof world.territory,
       intelligence: {
         ...world.intelligence,
         byFaction: {
