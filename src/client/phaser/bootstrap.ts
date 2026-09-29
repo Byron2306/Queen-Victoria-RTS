@@ -4,7 +4,12 @@ import {
   PHASER_PARENT_ID,
   createPhaserShellDescriptor,
 } from './shell';
-import { createBattlefieldSceneClass } from './phaser-scene';
+import {
+  createRoyalBattlefieldSceneClass,
+} from './royal-battlefield-scene';
+import {
+  createTitleSceneClass,
+} from './title-scene';
 
 type PhaserConstants = Readonly<{
   AUTO: number;
@@ -76,12 +81,17 @@ export async function startPhaserGame(): Promise<unknown> {
       sceneConfig?: unknown;
     };
 
-  const BattlefieldScene =
-    createBattlefieldSceneClass(
+  const TitleScene =
+    createTitleSceneClass(
       SceneBase,
     );
 
-  const config = buildPhaserGameConfig(
+  const BattlefieldScene =
+    createRoyalBattlefieldSceneClass(
+      SceneBase,
+    );
+
+  const baseConfig = buildPhaserGameConfig(
     {
       AUTO: Phaser.AUTO,
       RESIZE: Phaser.Scale.RESIZE,
@@ -89,6 +99,14 @@ export async function startPhaserGame(): Promise<unknown> {
     },
     BattlefieldScene,
   );
+
+  const config: PhaserGameConfigLike = {
+    ...baseConfig,
+    scene: [
+      TitleScene,
+      BattlefieldScene,
+    ],
+  };
 
   return new Phaser.Game(
     config as Phaser.Types.Core.GameConfig,
