@@ -11,7 +11,7 @@ const move = (sequence: number, unitId: string, x: number, y: number, issuedTick
 
 describe('Phase 0 contracts', () => {
   it('locks the royal board and fixed clock', () => {
-    expect(BOARD_SIZE).toBe(16);
+    expect(BOARD_SIZE).toBe(24);
     expect(TICK_MS).toBe(100);
     let world = createWorld();
     for (let i = 0; i < 10; i++) world = advanceTick(world);
@@ -24,7 +24,7 @@ describe('Phase 0 contracts', () => {
     expect(empty.units).toEqual({});
     expect(placed.occupancy['1,1']).toBe('p1');
     expect(() => placeUnit(placed, pawn('p2', 1, 1))).toThrow(CellOccupiedError);
-    expect(() => placeUnit(placed, pawn('p3', 16, 0))).toThrow(OutOfBoundsError);
+    expect(() => placeUnit(placed, pawn('p3', 24, 0))).toThrow(OutOfBoundsError);
     expect(placed.occupancy).toEqual({ '1,1': 'p1' });
   });
 
