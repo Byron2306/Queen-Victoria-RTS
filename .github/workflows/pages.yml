@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - phase12-playable-visual-integration
+      - phase13-ui-asset-integration
   workflow_dispatch:
 
 permissions:
