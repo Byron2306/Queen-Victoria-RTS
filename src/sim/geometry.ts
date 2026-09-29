@@ -1,5 +1,6 @@
 import type { Coord, UnitState, WorldState } from './types';
 import { coordKey } from './world';
+import { isFortificationBlockingCell } from './fortifications';
 
 export type GeometryRejectReason = 'illegal_geometry' | 'blocked';
 export type GeometryResult =
@@ -16,7 +17,13 @@ function rayIsClear(world: WorldState, from: Coord, to: Coord): boolean {
   let x = from.x + stepX;
   let y = from.y + stepY;
   while (x !== to.x || y !== to.y) {
-    if (world.occupancy[coordKey({ x, y })]) return false;
+    const cell = { x, y };
+    if (
+      world.occupancy[coordKey(cell)] ||
+      isFortificationBlockingCell(world, cell)
+    ) {
+      return false;
+    }
     x += stepX;
     y += stepY;
   }
@@ -29,6 +36,10 @@ export function validateMoveGeometry(world: WorldState, unit: UnitState, to: Coo
   const ax = Math.abs(dx);
   const ay = Math.abs(dy);
   if (ax === 0 && ay === 0) return { legal: false, reason: 'illegal_geometry' };
+
+  if (isFortificationBlockingCell(world, to)) {
+    return { legal: false, reason: 'blocked' };
+  }
 
   switch (unit.kind) {
     case 'pawn': {
