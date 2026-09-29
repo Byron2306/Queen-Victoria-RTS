@@ -23,7 +23,7 @@ const unit = (
 describe('Triptych banner polarity', () => {
   it('flips black to white or white to black only after two defended round boundaries', () => {
     let world = createWorld();
-    const cell = { x: 7, y: 7 } as const;
+    const cell = { x: 11, y: 11 } as const;
     const initialPolarity = getTilePolarity(world, cell);
 
     world = queueBanner(world, {
@@ -43,7 +43,7 @@ describe('Triptych banner polarity', () => {
 
   it('never changes faction control when polarity flips', () => {
     let world = createWorld();
-    const cell = { x: 7, y: 7 } as const;
+    const cell = { x: 11, y: 11 } as const;
     const factionBefore = getTileFactionControl(world, cell);
 
     world = queueBanner(world, {
@@ -60,9 +60,9 @@ describe('Triptych banner polarity', () => {
 
   it('is not contested by adjacency or threat, only by a completed legal enemy landing', () => {
     let world = createWorld([
-      unit('shadow-knight', 'obsidian', 'knight', 5, 6),
+      unit('shadow-knight', 'obsidian', 'knight', 9, 10),
     ]);
-    const cell = { x: 7, y: 7 } as const;
+    const cell = { x: 11, y: 11 } as const;
 
     world = queueBanner(world, {
       bannerId: 'banner-v-contest',
