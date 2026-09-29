@@ -74,11 +74,11 @@ describe('battlefield intelligence persistence', () => {
 
   it('migrates a version-2 save into valid current intelligence without inventing ghosts', () => {
     const storage = new MemoryStorage();
-    let world = createWorld([
+    const world = createWorld([
       { id: 'v-rook', faction: 'victoria', kind: 'rook', position: { x: 7, y: 7 } },
       { id: 'shadow-pawn', faction: 'obsidian', kind: 'pawn', position: { x: 7, y: 10 } },
     ]);
-    const legacy = { ...world } as Partial<WorldState>;
+    const legacy = { ...world } as Record<string, unknown>;
     delete legacy.intelligence;
 
     storage.setItem(SAVE_KEY, JSON.stringify({ version: 2, world: legacy }));
