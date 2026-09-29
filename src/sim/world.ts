@@ -23,7 +23,7 @@ export const isInBounds = ({ x, y }: Coord): boolean => Number.isInteger(x) && N
 
 export function createWorld(units: readonly UnitState[] = [], options: WorldOptions = {}): WorldState {
   let world: WorldState = {
-    tick: 0, width: BOARD_SIZE, height: BOARD_SIZE, units: {}, occupancy: {}, combat: {},
+    tick: 0, width: BOARD_SIZE, height: BOARD_SIZE, units: {}, occupancy: {}, combat: {}, military: {},
     match: createInitialMatchState({}),
     territory: createInitialTerritoryState(),
     economy: { crownPower: { victoria: 0, obsidian: 0 } },
@@ -57,5 +57,6 @@ export function placeUnit(world: WorldState, unit: UnitState): WorldState {
     units: { ...world.units, [unit.id]: { ...unit, position: { ...unit.position } } },
     occupancy: { ...world.occupancy, [key]: unit.id },
     combat: { ...world.combat, [unit.id]: combatStateFor(unit) },
+    military: { ...world.military, [unit.id]: { kills: 0, rank: 'recruit' } },
   };
 }
