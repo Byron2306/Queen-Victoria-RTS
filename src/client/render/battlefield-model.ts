@@ -4,7 +4,8 @@ import type {
   WorldState,
 } from '../../sim/types';
 import {
-  boardCellToScreen,
+  tileCenter,
+  tileFootpoint,
   type BoardProjection,
   type ScreenPoint,
 } from '../board/projection';
@@ -118,7 +119,7 @@ export function createBattlefieldRenderModel(
       id: unit.id,
       faction: unit.faction,
       kind: unit.kind,
-      screen: boardCellToScreen(
+      screen: tileFootpoint(
         unit.position,
         projection,
       ),
@@ -144,7 +145,7 @@ export function createBattlefieldRenderModel(
       kind: node.kind,
       owner: node.owner,
       contested: node.contested,
-      screen: boardCellToScreen(
+      screen: tileCenter(
         node.center,
         projection,
       ),
