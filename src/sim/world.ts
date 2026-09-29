@@ -5,9 +5,10 @@ import { createInitialHeroState } from './hero';
 import { createInitialAIState } from './ai';
 import { createInitialIntelligenceState } from './intelligence';
 import { createInitialTurnState } from './turns';
+import { BOARD_HEIGHT, BOARD_WIDTH } from './board-topology';
 import type { Coord, UnitState, WorldOptions, WorldState } from './types';
 
-export const BOARD_SIZE = 16 as const;
+export const BOARD_SIZE = BOARD_WIDTH;
 
 export class OutOfBoundsError extends Error {
   constructor(coord: Coord) { super(`Coordinate out of bounds: ${coord.x},${coord.y}`); this.name = 'OutOfBoundsError'; }
@@ -20,11 +21,11 @@ export class DuplicateUnitError extends Error {
 }
 
 export const coordKey = ({ x, y }: Coord): string => `${x},${y}`;
-export const isInBounds = ({ x, y }: Coord): boolean => Number.isInteger(x) && Number.isInteger(y) && x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE;
+export const isInBounds = ({ x, y }: Coord): boolean => Number.isInteger(x) && Number.isInteger(y) && x >= 0 && x < BOARD_WIDTH && y >= 0 && y < BOARD_HEIGHT;
 
 export function createWorld(units: readonly UnitState[] = [], options: WorldOptions = {}): WorldState {
   let world: WorldState = {
-    tick: 0, width: BOARD_SIZE, height: BOARD_SIZE, units: {}, occupancy: {}, combat: {}, military: {},
+    tick: 0, width: BOARD_WIDTH, height: BOARD_HEIGHT, units: {}, occupancy: {}, combat: {}, military: {},
     match: createInitialMatchState({}),
     territory: createInitialTerritoryState(),
     economy: { crownPower: { victoria: 0, obsidian: 0 } },
