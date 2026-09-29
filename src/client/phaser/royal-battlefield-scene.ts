@@ -21,7 +21,7 @@ export function createRoyalBattlefieldSceneClass<
   const BattlefieldBase =
     createBattlefieldSceneClass(
       BaseScene,
-    );
+    ) as any;
 
   return class RoyalBattlefieldScene extends BattlefieldBase {
     private royalGuideHeadline: any = null;
@@ -32,14 +32,14 @@ export function createRoyalBattlefieldSceneClass<
     create(): void {
       super.create();
 
-      const scene = this as any;
+      const self = this as any;
       const width =
-        Number(scene.scale?.width) || 1600;
+        Number(self.scale?.width) || 1600;
       const height =
-        Number(scene.scale?.height) || 1200;
+        Number(self.scale?.height) || 1200;
 
       this.royalGuideHeadline =
-        scene.add.text(
+        self.add.text(
           width / 2,
           height * 0.735,
           '',
@@ -58,7 +58,7 @@ export function createRoyalBattlefieldSceneClass<
           ?.setDepth?.(5200);
 
       this.royalGuideInstruction =
-        scene.add.text(
+        self.add.text(
           width / 2,
           height * 0.765,
           '',
@@ -83,7 +83,7 @@ export function createRoyalBattlefieldSceneClass<
           ?.setDepth?.(5200);
 
       this.royalGuideDetail =
-        scene.add.text(
+        self.add.text(
           width / 2,
           height * 0.795,
           '',
@@ -100,10 +100,7 @@ export function createRoyalBattlefieldSceneClass<
           .setOrigin?.(0.5)
           ?.setDepth?.(5200);
 
-      // The approved spec puts Victoria's sovereign profile in the
-      // bottom-left command deck. Reuse the existing portrait-backed
-      // Victoria status art there until the generated atlas is promoted.
-      (this as any).hudRegions
+      self.hudRegions
         ?.selectedUnit
         ?.setTexture?.(
           'hud-victoria-status',
@@ -128,21 +125,21 @@ export function createRoyalBattlefieldSceneClass<
         y: number;
       }>,
     ): void {
+      const self = this as any;
       const before =
-        this.controller.runtime.commands
+        self.controller.runtime.commands
           .peekTactical()
           .length;
 
       super.handleBoardPointer(point);
 
       const after =
-        this.controller.runtime.commands
+        self.controller.runtime.commands
           .peekTactical()
           .length;
 
       if (after !== before) {
-        (this as any)
-          .refreshHudText?.();
+        self.refreshHudText?.();
       }
 
       this.refreshRoyalGuidance();
@@ -171,10 +168,8 @@ export function createRoyalBattlefieldSceneClass<
         ?.setFontSize?.(10);
       hudText.pendingOrders
         ?.setFontSize?.(10);
-
       hudText.turnBanner
         ?.setVisible?.(false);
-
       hudText.cancelLast
         ?.setFontSize?.(14);
       hudText.commitOrders
@@ -186,18 +181,22 @@ export function createRoyalBattlefieldSceneClass<
         return;
       }
 
+      const self = this as any;
       const stagedOrders =
-        this.controller.runtime.commands
+        self.controller.runtime.commands
           .peekTactical()
           .filter(
-            order =>
+            (order: any) =>
               order.faction ===
               'victoria',
           );
 
       const stagedCost =
         stagedOrders.reduce(
-          (total, order) =>
+          (
+            total: number,
+            order: any,
+          ) =>
             total +
             order.commandCost,
           0,
@@ -205,7 +204,7 @@ export function createRoyalBattlefieldSceneClass<
 
       const remaining = Math.max(
         0,
-        this.controller.world.turn
+        self.controller.world.turn
           .royalCommandsRemaining
           .victoria - stagedCost,
       );
@@ -213,13 +212,13 @@ export function createRoyalBattlefieldSceneClass<
       const guidance =
         createRoyalBattlefieldGuidance({
           selectedUnitId:
-            this.selectedUnitId,
+            self.selectedUnitId,
           stagedOrders:
             stagedOrders.length,
           royalCommandsRemaining:
             remaining,
           phase:
-            this.controller.world
+            self.controller.world
               .turn.phase,
         });
 
@@ -251,13 +250,13 @@ export function createRoyalBattlefieldSceneClass<
     private redrawRoyalMoveMarkers(): void {
       this.clearRoyalMoveMarkers();
 
-      const scene = this as any;
+      const self = this as any;
       const overlay =
-        this.currentSelectionOverlay;
+        self.currentSelectionOverlay;
 
       if (
-        !this.selectedUnitId ||
-        !overlay.selectedAnchor
+        !self.selectedUnitId ||
+        !overlay?.selectedAnchor
       ) {
         return;
       }
@@ -267,7 +266,7 @@ export function createRoyalBattlefieldSceneClass<
         overlay.destinations
       ) {
         const marker =
-          scene.add.circle(
+          self.add.circle(
             destination.anchor.x,
             destination.anchor.y,
             13,
@@ -284,7 +283,7 @@ export function createRoyalBattlefieldSceneClass<
           ?.setDepth?.(875);
 
         const pip =
-          scene.add.circle(
+          self.add.circle(
             destination.anchor.x,
             destination.anchor.y,
             3,
@@ -301,28 +300,25 @@ export function createRoyalBattlefieldSceneClass<
       }
 
       const stagedOrders =
-        this.controller.runtime.commands
+        self.controller.runtime.commands
           .peekTactical()
           .filter(
-            order =>
+            (order: any) =>
               order.faction ===
                 'victoria' &&
               order.kind === 'move' &&
               order.unitId ===
-                this.selectedUnitId,
+                self.selectedUnitId,
           );
 
       stagedOrders.forEach(
-        (order, index) => {
-          if (
-            order.kind !== 'move'
-          ) {
-            return;
-          }
-
+        (
+          order: any,
+          index: number,
+        ) => {
           const destination =
             overlay.destinations.find(
-              candidate =>
+              (candidate: any) =>
                 candidate.cell.x ===
                   order.destination.x &&
                 candidate.cell.y ===
@@ -334,7 +330,7 @@ export function createRoyalBattlefieldSceneClass<
           }
 
           const graphics =
-            scene.add.graphics?.();
+            self.add.graphics?.();
 
           graphics
             ?.lineStyle?.(
@@ -344,15 +340,15 @@ export function createRoyalBattlefieldSceneClass<
             );
           graphics
             ?.lineBetween?.(
-              overlay.selectedAnchor!.x,
-              overlay.selectedAnchor!.y,
+              overlay.selectedAnchor.x,
+              overlay.selectedAnchor.y,
               destination.anchor.x,
               destination.anchor.y,
             );
           graphics?.setDepth?.(874);
 
           const badge =
-            scene.add.text(
+            self.add.text(
               destination.anchor.x,
               destination.anchor.y - 18,
               String(index + 1),
