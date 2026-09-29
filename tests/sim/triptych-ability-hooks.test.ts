@@ -87,9 +87,9 @@ describe('Victoria abilities modify shared Triptych verbs', () => {
   });
 
   it('Imperial Gambit accelerates the existing banner hold clock without changing faction ownership', () => {
-    const cell = { x: 7, y: 7 } as const;
+    const cell = { x: 11, y: 11 } as const;
     let baseline = createWorld([
-      unit('victoria-queen', 'victoria', 'queen', 4, 4),
+      unit('victoria-queen', 'victoria', 'queen', 11, 10),
     ]);
     let gambit = withVictoriaAbility(baseline, 'imperial_gambit');
 
