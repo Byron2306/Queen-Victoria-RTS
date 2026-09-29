@@ -10,7 +10,7 @@ describe('Phase 4 initial state', () => {
     expect(world.economy.crownPower).toEqual({ victoria: 0, obsidian: 0 });
     expect(world.production.queues).toEqual({ victoria: [], obsidian: [] });
     expect(world.production.nextEntryOrdinal).toEqual({ victoria: 1, obsidian: 1 });
-    expect(world.production.reinforcementAnchors).toEqual({ victoria: { x: 7, y: 14 }, obsidian: { x: 8, y: 1 } });
+    expect(world.production.reinforcementAnchors).toEqual({ victoria: { x: 2, y: 12 }, obsidian: { x: 21, y: 11 } });
     expect(world.promotions.pending).toEqual([]);
     for (const node of Object.values(world.territory.nodes)) {
       expect(node.owner).toBeNull();
