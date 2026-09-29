@@ -13,15 +13,16 @@ export interface BoardTile {
   factionControl: FactionControl;
 }
 
-export const BOARD_WIDTH = 16 as const;
-export const BOARD_HEIGHT = 16 as const;
+export const BOARD_WIDTH = 24 as const;
+export const BOARD_HEIGHT = 24 as const;
 
-// Ten-tile-wide arms preserve the existing, visually successful node anchors
-// while leaving four corner quadrants outside the playable battlefield.
-const SPINE_MIN = 3;
-const SPINE_MAX = 12;
-const THEATRE_MIN = 3;
-const THEATRE_MAX = 12;
+// Final Triptych geometry: a full-width eight-row war theatre crossed by a
+// six-tile north/south strategic corridor. The unit scale remains unchanged;
+// the battlefield grows by adding logical tiles around it.
+const SPINE_MIN = 9;
+const SPINE_MAX = 14;
+const THEATRE_MIN = 8;
+const THEATRE_MAX = 15;
 
 export function isPlayableCell(x: number, y: number): boolean {
   if (
