@@ -105,8 +105,8 @@ describe('Triptych production feedback', () => {
       recruit('pawn'),
     ).state;
     const occupancy: Record<string, string> = {};
-    for (let y = 0; y < 16; y += 1) {
-      for (let x = 0; x < 16; x += 1) occupancy[`${x},${y}`] = 'blocked';
+    for (let y = 0; y < 24; y += 1) {
+      for (let x = 0; x < 24; x += 1) occupancy[`${x},${y}`] = 'blocked';
     }
 
     const result = deployReinforcements({ ...queued, occupancy });
