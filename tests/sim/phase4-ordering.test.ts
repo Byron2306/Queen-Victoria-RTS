@@ -74,8 +74,8 @@ describe(
             'p',
             'pawn',
             'victoria',
-            3,
-            1,
+            9,
+            7,
           ),
         ]);
 
@@ -87,7 +87,7 @@ describe(
             sequence: 1,
             issuedTick: 0,
             unitId: 'p',
-            to: { x: 3, y: 2 },
+            to: { x: 9, y: 8 },
           }],
         );
 
