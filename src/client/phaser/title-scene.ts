@@ -1,9 +1,37 @@
 import { assetUrl } from '../assets/base-url';
 
 export const TITLE_SCENE_KEY = 'title';
+export const TITLE_BACKGROUND_ASSET =
+  'assets/title/title-screen.png';
+
+export const TITLE_MENU_HITBOXES = {
+  start: {
+    x: 0.68,
+    y: 0.56,
+    width: 0.32,
+    height: 0.078,
+  },
+  options: {
+    x: 0.68,
+    y: 0.65,
+    width: 0.32,
+    height: 0.078,
+  },
+  credits: {
+    x: 0.68,
+    y: 0.74,
+    width: 0.32,
+    height: 0.078,
+  },
+} as const;
 
 type SceneBaseConstructor =
   new (...args: any[]) => object;
+
+type MenuHitbox =
+  (typeof TITLE_MENU_HITBOXES)[
+    keyof typeof TITLE_MENU_HITBOXES
+  ];
 
 export function createTitleSceneClass<
   BaseScene extends SceneBaseConstructor,
@@ -19,10 +47,8 @@ export function createTitleSceneClass<
       const scene = this as any;
 
       scene.load.image(
-        'title-palace',
-        assetUrl(
-          'assets/battlefield/palace-board.png',
-        ),
+        'title-screen',
+        assetUrl(TITLE_BACKGROUND_ASSET),
       );
     }
 
@@ -36,7 +62,7 @@ export function createTitleSceneClass<
       const background = scene.add.image(
         width / 2,
         height / 2,
-        'title-palace',
+        'title-screen',
       );
 
       background.setDisplaySize?.(
@@ -45,86 +71,30 @@ export function createTitleSceneClass<
       );
       background.setDepth?.(0);
 
-      scene.add
-        .rectangle?.(
-          width * 0.70,
-          height * 0.5,
-          width * 0.54,
-          height,
-          0x120a12,
-          0.42,
-        )
-        ?.setDepth?.(1);
-
-      const title = scene.add.text(
-        width * 0.70,
-        height * 0.26,
-        'QUEEN VICTORIA RTS',
-        {
-          fontFamily:
-            'Georgia, Times New Roman, serif',
-          fontSize: '72px',
-          fontStyle: 'bold',
-          color: '#fff0c2',
-          stroke: '#4c120d',
-          strokeThickness: 8,
-          align: 'center',
-        },
-      );
-
-      title
-        .setOrigin?.(0.5)
-        ?.setDepth?.(2);
-
-      const subtitle = scene.add.text(
-        width * 0.70,
-        height * 0.34,
-        'ROYAL TACTICAL STRATEGY',
-        {
-          fontFamily:
-            'Georgia, Times New Roman, serif',
-          fontSize: '26px',
-          color: '#f4d98a',
-          letterSpacing: 5,
-        },
-      );
-
-      subtitle
-        .setOrigin?.(0.5)
-        ?.setDepth?.(2);
-
-      this.createMenuButton(
-        width * 0.70,
-        height * 0.50,
-        'START SKIRMISH',
+      this.createMenuHitbox(
+        TITLE_MENU_HITBOXES.start,
         () => scene.scene.start(
           'battlefield',
         ),
       );
 
-      this.createMenuButton(
-        width * 0.70,
-        height * 0.61,
-        'OPTIONS',
+      this.createMenuHitbox(
+        TITLE_MENU_HITBOXES.options,
         () => this.showNotice(
           'OPTIONS · COMING WITH THE UI PASS',
         ),
       );
 
-      this.createMenuButton(
-        width * 0.70,
-        height * 0.72,
-        'CREDITS',
+      this.createMenuHitbox(
+        TITLE_MENU_HITBOXES.credits,
         () => this.showNotice(
           'QUEEN VICTORIA RTS · ROYAL TACTICAL STRATEGY',
         ),
       );
     }
 
-    private createMenuButton(
-      x: number,
-      y: number,
-      label: string,
+    private createMenuHitbox(
+      box: MenuHitbox,
       action: () => void,
     ): void {
       const scene = this as any;
@@ -133,61 +103,23 @@ export function createTitleSceneClass<
       const height =
         Number(scene.scale?.height) || 1200;
 
-      const frame = scene.add
+      scene.add
         .rectangle?.(
-          x,
-          y,
-          width * 0.31,
-          height * 0.072,
-          0x471313,
-          0.96,
-        )
-        ?.setStrokeStyle?.(
-          4,
-          0xd6ad55,
-          1,
+          width * box.x,
+          height * box.y,
+          width * box.width,
+          height * box.height,
+          0xffffff,
+          0.001,
         )
         ?.setDepth?.(2)
         ?.setInteractive?.({
           useHandCursor: true,
-        });
-
-      scene.add
-        .text(
-          x,
-          y,
-          label,
-          {
-            fontFamily:
-              'Georgia, Times New Roman, serif',
-            fontSize: '30px',
-            fontStyle: 'bold',
-            color: '#fff0c2',
-          },
-        )
-        .setOrigin?.(0.5)
-        ?.setDepth?.(3);
-
-      frame?.on?.(
-        'pointerover',
-        () => frame.setFillStyle?.(
-          0x7c1f22,
-          1,
-        ),
-      );
-
-      frame?.on?.(
-        'pointerout',
-        () => frame.setFillStyle?.(
-          0x471313,
-          0.96,
-        ),
-      );
-
-      frame?.on?.(
-        'pointerdown',
-        action,
-      );
+        })
+        ?.on?.(
+          'pointerdown',
+          action,
+        );
     }
 
     private showNotice(
@@ -207,7 +139,7 @@ export function createTitleSceneClass<
 
       scene.add
         .text(
-          width * 0.70,
+          width * 0.68,
           height * 0.84,
           message,
           {
@@ -216,7 +148,7 @@ export function createTitleSceneClass<
             fontSize: '18px',
             color: '#f4d98a',
             backgroundColor:
-              'rgba(20, 9, 16, 0.78)',
+              'rgba(20, 9, 16, 0.84)',
             padding: {
               x: 18,
               y: 10,
