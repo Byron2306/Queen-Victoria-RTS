@@ -12,6 +12,18 @@ import {
   panStoredBattlefieldCamera,
   zoomStoredBattlefieldCamera,
 } from '../camera/battlefield-camera-store';
+import {
+  tilePolygon,
+} from '../board/projection';
+import {
+  createResponsiveBattlefieldLayout,
+} from '../render/responsive-battlefield';
+import {
+  createBattlefieldSceneRuntime,
+} from './scene-rendering';
+import {
+  createIntelligenceTileVisuals,
+} from '../render/intelligence-visuals';
 
 type PhaserSceneBase = new (config?: any) => object;
 
@@ -50,6 +62,8 @@ export function createTriptychBattlefieldSceneClass<
     };
 
     private cameraDragPoint: CameraPoint | null = null;
+    private intelligenceMarkers: any[] = [];
+    private intelligenceVisualFingerprint = '';
 
     private cameraBounds(): {
       minX: number;
@@ -69,8 +83,78 @@ export function createTriptychBattlefieldSceneClass<
       };
     }
 
+    private refreshIntelligenceFrontier(force = false): void {
+      const scene = this as any;
+      const width = Number(scene.scale?.width) || 1600;
+      const height = Number(scene.scale?.height) || 900;
+      const layout = createResponsiveBattlefieldLayout(width, height);
+      const runtime = createBattlefieldSceneRuntime(
+        this.controller.world,
+        this.selectedUnitId,
+        layout.projection,
+      );
+      const visuals = createIntelligenceTileVisuals(
+        runtime.intelligenceOverlay,
+      ).filter(visual => visual.alpha > 0);
+      const camera = getBattlefieldCameraState();
+      const fingerprint = [
+        camera.panX.toFixed(2),
+        camera.panY.toFixed(2),
+        camera.zoom.toFixed(3),
+        ...visuals.map(visual => `${visual.id}:${visual.treatment}`),
+      ].join('|');
+
+      if (!force && fingerprint === this.intelligenceVisualFingerprint) {
+        return;
+      }
+
+      this.intelligenceVisualFingerprint = fingerprint;
+
+      for (const marker of this.intelligenceMarkers) {
+        marker?.destroy?.();
+      }
+      this.intelligenceMarkers = [];
+
+      if (!scene.add?.polygon) {
+        return;
+      }
+
+      for (const visual of visuals) {
+        const points = tilePolygon(visual.cell, layout.projection);
+        const center = points.reduce(
+          (sum, point) => ({
+            x: sum.x + point.x / points.length,
+            y: sum.y + point.y / points.length,
+          }),
+          { x: 0, y: 0 },
+        );
+        const localPoints = points.flatMap(point => [
+          point.x - center.x,
+          point.y - center.y,
+        ]);
+        const marker = scene.add.polygon(
+          center.x,
+          center.y,
+          localPoints,
+          visual.fill,
+          visual.alpha,
+        );
+
+        marker
+          ?.setStrokeStyle?.(
+            1,
+            visual.stroke,
+            visual.strokeAlpha,
+          )
+          ?.setDepth?.(visual.depth);
+
+        this.intelligenceMarkers.push(marker);
+      }
+    }
+
     create(): void {
       super.create();
+      this.refreshIntelligenceFrontier(true);
 
       const scene = this as any;
       const keyboard = scene.input?.keyboard;
@@ -118,6 +202,7 @@ export function createTriptychBattlefieldSceneClass<
 
           panStoredBattlefieldCamera(delta, this.cameraBounds());
           this.layoutBattlefield();
+          this.refreshIntelligenceFrontier();
         },
       );
 
@@ -141,6 +226,7 @@ export function createTriptychBattlefieldSceneClass<
             wheelZoomTarget(current.zoom, deltaY),
           );
           this.layoutBattlefield();
+          this.refreshIntelligenceFrontier();
         },
       );
     }
@@ -160,6 +246,7 @@ export function createTriptychBattlefieldSceneClass<
       }
 
       super.update(time, delta);
+      this.refreshIntelligenceFrontier();
 
       const liveUnitIds = new Set<string>(
         Object.keys(this.controller.world.units),
