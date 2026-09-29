@@ -225,3 +225,7 @@ export type WorldState = Readonly<{
   turn: import('./turns').TurnState;
   pendingOrders: readonly import('./orders').TacticalOrder[];
 }>;
+
+export type StepResult = Readonly<{ state: WorldState; events: readonly SimEvent[] }>;
+export type CombatTickResult = Readonly<{ state: WorldState; events: readonly SimEvent[] }>;
+export type ReplayResult = Readonly<{ state: WorldState; eventsByTick: readonly (readonly SimEvent[])[] }>;
