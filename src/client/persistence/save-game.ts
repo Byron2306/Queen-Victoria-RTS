@@ -1,7 +1,11 @@
+import {
+  createInitialIntelligenceState,
+  refreshAllIntelligence,
+} from '../../sim/intelligence';
 import { createInitialTurnState } from '../../sim/turns';
 import type { WorldState } from '../../sim/types';
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 export const SAVE_KEY = 'queen-victoria-rts.save';
 
 export interface StorageLike {
@@ -30,6 +34,16 @@ export function saveGame(
   );
 }
 
+function reconstructCurrentIntelligence(
+  world: WorldState,
+): WorldState {
+  return refreshAllIntelligence({
+    ...world,
+    intelligence:
+      createInitialIntelligenceState(),
+  });
+}
+
 export function loadGame(
   storage: StorageLike,
 ): WorldState | null {
@@ -50,11 +64,17 @@ export function loadGame(
       return parsed.world;
     }
 
+    if (parsed.version === 2) {
+      return reconstructCurrentIntelligence(
+        parsed.world,
+      );
+    }
+
     if (parsed.version === 1) {
       const legacy =
         parsed.world as Partial<WorldState>;
 
-      return {
+      const migrated = {
         ...(legacy as WorldState),
 
         turn:
@@ -65,6 +85,10 @@ export function loadGame(
           legacy.pendingOrders ??
           [],
       };
+
+      return reconstructCurrentIntelligence(
+        migrated,
+      );
     }
 
     return null;
