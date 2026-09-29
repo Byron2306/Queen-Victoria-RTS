@@ -42,9 +42,9 @@ describe('hero respawn',()=>{
     const again=attemptHeroRespawns(blocked.state);
     expect(again.events).toHaveLength(0);
     const opened={...again.state,occupancy:{...again.state.occupancy}};
-    delete (opened.occupancy as Record<string,string>)['1,1'];
+    delete (opened.occupancy as Record<string,string>)['7,14'];
     const returned=attemptHeroRespawns(opened);
     expect(returned.events[0]?.type).toBe('hero.respawned');
-    expect(returned.state.units.vhero!.position).toEqual({x:1,y:1});
+    expect(returned.state.units.vhero!.position).toEqual({x:7,y:14});
   });
 });
