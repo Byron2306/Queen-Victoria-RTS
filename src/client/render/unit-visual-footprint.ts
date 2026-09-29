@@ -1,3 +1,5 @@
+import { BOARD_HEIGHT } from '../../sim/board-topology';
+
 export interface UnitVisualFootprintInput {
   boardY: number;
   cellHeight: number;
@@ -6,15 +8,17 @@ export interface UnitVisualFootprintInput {
 export function unitVisualHeightForRank(
   input: UnitVisualFootprintInput,
 ): number {
+  const maxRow = BOARD_HEIGHT - 1;
   const clampedY = Math.max(
     0,
-    Math.min(15, input.boardY),
+    Math.min(maxRow, input.boardY),
   );
 
-  const t = clampedY / 15;
+  const t = maxRow > 0 ? clampedY / maxRow : 0;
 
-  // Visual board reads as 8x8, while simulation is 16x16.
-  // So one visible marble tile is roughly 2 logical cells high.
+  // Perspective remains intentionally subtle: far-side pieces are slightly
+  // smaller than near-side pieces, but the logical cell height now comes from
+  // the authoritative 24-row Triptych battlefield.
   const farScale = 1.82;
   const nearScale = 2.10;
 
