@@ -12,6 +12,15 @@ afterEach(() => {
 });
 
 describe('Triptych live camera layout runtime', () => {
+  it('expands the 24x24 world 1.5x before camera zoom so tile footprint stays stable', () => {
+    const layout = createResponsiveBattlefieldLayout(1600, 900);
+
+    expect(layout.boardRender.width).toBeCloseTo(2400);
+    expect(layout.boardRender.height).toBeCloseTo(1350);
+    expect(layout.boardRender.x).toBeCloseTo(-400);
+    expect(layout.boardRender.y).toBeCloseTo(-252);
+  });
+
   it('moves and zooms the battlefield while leaving the HUD rectangle anchored', () => {
     const base = createResponsiveBattlefieldLayout(1600, 900);
 
@@ -54,6 +63,6 @@ describe('Triptych live camera layout runtime', () => {
     };
 
     expect(screenToBoardCell(centre, layout.projection))
-      .toEqual({ x: 8, y: 8 });
+      .toEqual({ x: 12, y: 12 });
   });
 });
