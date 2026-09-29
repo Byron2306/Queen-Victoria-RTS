@@ -1,6 +1,9 @@
-import { isPlayableCell } from '../../sim/board-topology';
+import {
+  BOARD_WIDTH,
+  isPlayableCell,
+} from '../../sim/board-topology';
 
-export const BOARD_SIZE = 16;
+export const BOARD_SIZE = BOARD_WIDTH;
 
 export interface ScreenPoint {
   x: number;
