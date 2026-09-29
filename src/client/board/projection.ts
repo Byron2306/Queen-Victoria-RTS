@@ -1,3 +1,5 @@
+import { isPlayableCell } from '../../sim/board-topology';
+
 export const BOARD_SIZE = 16;
 
 export interface ScreenPoint {
@@ -36,27 +38,6 @@ function assertValidCell(cell: BoardCell): void {
   }
 }
 
-export function boardCellToScreen(
-  cell: BoardCell,
-  projection: BoardProjection,
-): ScreenPoint {
-  assertValidCell(cell);
-
-  const u = (cell.x + 0.5) / BOARD_SIZE;
-  const v = (cell.y + 0.5) / BOARD_SIZE;
-
-  const leftX = lerp(projection.topLeft.x, projection.bottomLeft.x, v);
-  const leftY = lerp(projection.topLeft.y, projection.bottomLeft.y, v);
-
-  const rightX = lerp(projection.topRight.x, projection.bottomRight.x, v);
-  const rightY = lerp(projection.topRight.y, projection.bottomRight.y, v);
-
-  return {
-    x: lerp(leftX, rightX, u),
-    y: lerp(leftY, rightY, u),
-  };
-}
-
 function bilinearPoint(
   projection: BoardProjection,
   u: number,
@@ -76,6 +57,59 @@ function bilinearPoint(
     x: lerp(top.x, bottom.x, v),
     y: lerp(top.y, bottom.y, v),
   };
+}
+
+export function boardCellToScreen(
+  cell: BoardCell,
+  projection: BoardProjection,
+): ScreenPoint {
+  assertValidCell(cell);
+  return tileCenter(cell, projection);
+}
+
+export function tilePolygon(
+  cell: BoardCell,
+  projection: BoardProjection,
+): ScreenPoint[] {
+  assertValidCell(cell);
+
+  const u0 = cell.x / BOARD_SIZE;
+  const u1 = (cell.x + 1) / BOARD_SIZE;
+  const v0 = cell.y / BOARD_SIZE;
+  const v1 = (cell.y + 1) / BOARD_SIZE;
+
+  return [
+    bilinearPoint(projection, u0, v0),
+    bilinearPoint(projection, u1, v0),
+    bilinearPoint(projection, u1, v1),
+    bilinearPoint(projection, u0, v1),
+  ];
+}
+
+export function tileCenter(
+  cell: BoardCell,
+  projection: BoardProjection,
+): ScreenPoint {
+  assertValidCell(cell);
+
+  return bilinearPoint(
+    projection,
+    (cell.x + 0.5) / BOARD_SIZE,
+    (cell.y + 0.5) / BOARD_SIZE,
+  );
+}
+
+export function tileFootpoint(
+  cell: BoardCell,
+  projection: BoardProjection,
+): ScreenPoint {
+  assertValidCell(cell);
+
+  return bilinearPoint(
+    projection,
+    (cell.x + 0.5) / BOARD_SIZE,
+    (cell.y + 0.72) / BOARD_SIZE,
+  );
 }
 
 export function screenToBoardCell(
@@ -166,6 +200,15 @@ export function screenToBoardCell(
       Math.floor(boundedV * BOARD_SIZE),
     ),
   };
+}
+
+export function screenPointToPlayableCell(
+  point: ScreenPoint,
+  projection: BoardProjection,
+): BoardCell | null {
+  const cell = screenToBoardCell(point, projection);
+  if (!cell) return null;
+  return isPlayableCell(cell.x, cell.y) ? cell : null;
 }
 
 export function constrainProjectionAboveHud(
