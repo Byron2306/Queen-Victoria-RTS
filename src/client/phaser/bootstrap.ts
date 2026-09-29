@@ -4,7 +4,6 @@ import {
   PHASER_PARENT_ID,
   createPhaserShellDescriptor,
 } from './shell';
-import { createTitleSceneClass } from './title-scene';
 import { createBattlefieldSceneClass } from './phaser-scene';
 
 type PhaserConstants = Readonly<{
@@ -34,7 +33,6 @@ export interface PhaserGameConfigLike {
 
 export function buildPhaserGameConfig(
   constants: PhaserConstants,
-  TitleScene: SceneConstructor,
   BattlefieldScene: SceneConstructor,
 ): PhaserGameConfigLike {
   const shell = createPhaserShellDescriptor();
@@ -53,7 +51,6 @@ export function buildPhaserGameConfig(
       height: GAME_HEIGHT,
     },
     scene: [
-      TitleScene,
       BattlefieldScene,
     ],
   };
@@ -79,11 +76,6 @@ export async function startPhaserGame(): Promise<unknown> {
       sceneConfig?: unknown;
     };
 
-  const TitleScene =
-    createTitleSceneClass(
-      SceneBase,
-    );
-
   const BattlefieldScene =
     createBattlefieldSceneClass(
       SceneBase,
@@ -95,7 +87,6 @@ export async function startPhaserGame(): Promise<unknown> {
       RESIZE: Phaser.Scale.RESIZE,
       CENTER_BOTH: Phaser.Scale.CENTER_BOTH,
     },
-    TitleScene,
     BattlefieldScene,
   );
 

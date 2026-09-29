@@ -15,8 +15,7 @@ describe('Phase 6 Phaser bootstrap', () => {
         RESIZE: 5,
         CENTER_BOTH: 1,
       },
-      TitleScene,
-      BattlefieldScene,
+            BattlefieldScene,
     );
 
     expect(config).toMatchObject({
@@ -35,7 +34,6 @@ describe('Phase 6 Phaser bootstrap', () => {
     });
 
     expect(config.scene).toEqual([
-      TitleScene,
       BattlefieldScene,
     ]);
   });
