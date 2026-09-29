@@ -52,7 +52,7 @@ describe('Royal War Triptych battlefield intelligence gauntlet', () => {
         id: 'v-rook',
         faction: 'victoria',
         kind: 'rook',
-        position: { x: 7, y: 6 },
+        position: { x: 7, y: 10 },
       },
       {
         id: 'shadow-pawn',
@@ -70,7 +70,7 @@ describe('Royal War Triptych battlefield intelligence gauntlet', () => {
       lastKnownPolarity: 'white',
     });
 
-    world = reposition(world, 'v-rook', { x: 12, y: 6 });
+    world = reposition(world, 'v-rook', { x: 12, y: 10 });
     world = refreshFactionIntelligence(world, 'victoria');
     expect(getTileMemory(world, 'victoria', trap)).toMatchObject({
       visibility: 'remembered',
@@ -97,7 +97,7 @@ describe('Royal War Triptych battlefield intelligence gauntlet', () => {
       lastKnownPolarity: 'white',
     });
 
-    world = reposition(world, 'v-rook', { x: 7, y: 6 });
+    world = reposition(world, 'v-rook', { x: 7, y: 10 });
     world = refreshFactionIntelligence(world, 'victoria');
     expect(getTileMemory(world, 'victoria', trap)).toMatchObject({
       visibility: 'observed',
