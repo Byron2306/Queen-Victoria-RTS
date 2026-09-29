@@ -3,6 +3,7 @@ import { createInitialMatchState } from './sovereign';
 import { createInitialTerritoryState } from './nodes';
 import { createInitialHeroState } from './hero';
 import { createInitialAIState } from './ai';
+import { createInitialIntelligenceState } from './intelligence';
 import { createInitialTurnState } from './turns';
 import type { Coord, UnitState, WorldOptions, WorldState } from './types';
 
@@ -38,6 +39,7 @@ export function createWorld(units: readonly UnitState[] = [], options: WorldOpti
     promotions: { pending: [] },
     heroes: createInitialHeroState({}, options.heroIds ?? {}),
     ai: createInitialAIState(options.aiFactions ?? []),
+    intelligence: createInitialIntelligenceState(),
     turn: createInitialTurnState(),
     pendingOrders: [],
   };
