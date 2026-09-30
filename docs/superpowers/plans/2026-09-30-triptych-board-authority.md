@@ -1,5 +1,15 @@
 # Triptych Board Authority Implementation Plan
 
+> **STATUS: SUPERSEDED.** This 24x24 board-authority plan is retained only as historical context. Do not execute it. The approved programme migrates topology and projection to 32x32 before final board art is authored.
+>
+> Execute these plans instead, in order:
+> 1. `docs/superpowers/plans/2026-09-30-triptych-scale-supply-territory.md`
+> 2. `docs/superpowers/plans/2026-09-30-triptych-ready-deployment.md`
+> 3. `docs/superpowers/plans/2026-09-30-triptych-presentation-clock.md`
+> 4. `docs/superpowers/plans/2026-09-30-triptych-ornate-board-visual-gauntlet.md`
+>
+> Binding spec: `docs/superpowers/specs/2026-09-30-triptych-coalesced-strategy-and-presentation.md`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Make the ornate 24×24 Triptych cross the sole battlefield art authority and prove that board art, tile projection, units, nodes, tactical overlays, and camera transforms stay on one geometry.
