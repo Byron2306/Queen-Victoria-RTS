@@ -168,6 +168,7 @@ export type AICommanderState = Readonly<{
 export type WorldOptions = Readonly<{
   heroIds?: Partial<Record<Faction, string>>;
   aiFactions?: readonly Faction[];
+  topologyId?: import('./battlefield-topology-authority').BattlefieldTopologyId;
 }>;
 export type MoveRejectReason =
   | 'out_of_bounds'
@@ -223,8 +224,8 @@ export type SimEvent =
 
 export type WorldState = Readonly<{
   tick: number;
-  width: 24;
-  height: 24;
+  width: number;
+  height: number;
   units: Readonly<Record<string, UnitState>>;
   occupancy: Readonly<Record<string, string>>;
   combat: Readonly<Record<string, UnitCombatState>>;

@@ -6,6 +6,7 @@ import { createInitialAIState } from './ai';
 import { createInitialIntelligenceState } from './intelligence';
 import { createInitialTurnState } from './turns';
 import { BOARD_HEIGHT, BOARD_WIDTH } from './board-topology';
+import { getBattlefieldTopology } from './battlefield-topology-authority';
 import type { Coord, UnitState, WorldOptions, WorldState } from './types';
 
 export const BOARD_SIZE = BOARD_WIDTH;
@@ -22,10 +23,21 @@ export class DuplicateUnitError extends Error {
 
 export const coordKey = ({ x, y }: Coord): string => `${x},${y}`;
 export const isInBounds = ({ x, y }: Coord): boolean => Number.isInteger(x) && Number.isInteger(y) && x >= 0 && x < BOARD_WIDTH && y >= 0 && y < BOARD_HEIGHT;
+export const isInWorldBounds = (
+  world: Pick<WorldState, 'width' | 'height'>,
+  { x, y }: Coord,
+): boolean =>
+  Number.isInteger(x) &&
+  Number.isInteger(y) &&
+  x >= 0 &&
+  x < world.width &&
+  y >= 0 &&
+  y < world.height;
 
 export function createWorld(units: readonly UnitState[] = [], options: WorldOptions = {}): WorldState {
+  const topology = getBattlefieldTopology(options.topologyId);
   let world: WorldState = {
-    tick: 0, width: BOARD_WIDTH, height: BOARD_HEIGHT, units: {}, occupancy: {}, combat: {}, military: {},
+    tick: 0, width: topology.width, height: topology.height, units: {}, occupancy: {}, combat: {}, military: {},
     match: createInitialMatchState({}),
     territory: createInitialTerritoryState(),
     economy: { crownPower: { victoria: 0, obsidian: 0 } },
@@ -54,7 +66,7 @@ export function createWorld(units: readonly UnitState[] = [], options: WorldOpti
 }
 
 export function placeUnit(world: WorldState, unit: UnitState): WorldState {
-  if (!isInBounds(unit.position)) throw new OutOfBoundsError(unit.position);
+  if (!isInWorldBounds(world, unit.position)) throw new OutOfBoundsError(unit.position);
   if (world.units[unit.id]) throw new DuplicateUnitError(unit.id);
   const key = coordKey(unit.position);
   if (world.occupancy[key]) throw new CellOccupiedError(unit.position);
