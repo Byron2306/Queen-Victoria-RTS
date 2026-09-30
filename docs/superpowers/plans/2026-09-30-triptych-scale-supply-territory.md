@@ -17,7 +17,7 @@
 - Horizontal theatre: `y=11..20`.
 - Playable cells: `496`.
 - Victoria home side: west. Obsidian home side: east.
-- Pawn forward axis: Victoria `+x`; Obsidian `-x`. Presentation rotation never alters this.
+- Pawn forward axis: Victoria `+x`; Obsidian `-x`. Presentation rotation never alters simulation semantics. The production projection must also prove that this logical forward step visually advances toward the opposing home, not away from it.
 - Victoria opening units: King `(2,16)`, Victoria `(6,16)`, Rook `(4,13)`, Knight `(4,19)`, Pawns `(6,15)` and `(6,17)`.
 - Obsidian opening units: King `(29,15)`, Queen `(25,15)`, Rook `(27,18)`, Knight `(27,12)`, Pawns `(25,16)` and `(25,14)`.
 - Victoria prepared forts: `(7,13)`, `(7,16)`, `(7,19)`.
@@ -33,6 +33,7 @@
 
 - No parallel 24x24 runtime mode.
 - No presentation rotation may change simulation direction.
+- A legal pawn-forward step must project closer to the opposing Home Deployment centre than its origin. If the inherited projection violates this, presentation projection is corrected rather than reversing simulation semantics ad hoc.
 - No territorial source may bypass shared claim legality.
 - Settlement annexation remains a real mechanic.
 - Remote raiders remain legal and may occupy neutral ground without magically owning it.
@@ -50,6 +51,7 @@
 - All 32x32 topology, projection, intelligence-memory, replay and scenario fixtures migrate together.
 - Supply calculation must not treat disconnected owned islands as supplied.
 - AI must not clump into the retired 16x16 quadrant.
+- The old visual-left pawn regression must have an explicit projection-aware test, not merely a changed sign in `geometry.ts`.
 
 ---
 
@@ -91,11 +93,13 @@
 - Modify: `tests/sim/triptych-opening-territory.test.ts`
 - Modify: `tests/sim/geometry.test.ts`
 - Modify: `tests/sim/ai-strategy.test.ts`
+- Modify: `tests/client/board-projection.test.ts` or create a focused pawn-facing projection test
 
 - [ ] RED: pin the coordinates listed in this plan, mirror symmetry, all opening pieces/forts on friendly territory, and the enlarged neutral frontier.
 - [ ] RED: pin pawn forward as Victoria `+x`, Obsidian `-x`; reject the old `+/-y` behavior.
+- [ ] RED: for each faction, project a legal pawn-forward origin/destination and assert the destination is geometrically closer on screen to the opposing home deployment anchor than the origin. This reproduces the visible-left regression as a presentation test.
 - [ ] RED: pin promotion/frontline checks to board/home semantics rather than `y>=14`/`y<=1`.
-- [ ] Implement the migrated opening and pawn-axis semantics.
+- [ ] Implement the migrated opening and pawn-axis semantics. If the inherited projection makes logical forward visually retreat, correct the production projection/orientation rather than adding faction-specific visual hacks.
 - [ ] Commit: `feat: align Triptych opening and pawns to east west war`.
 
 ### Task 3: Create One Faction-Claim Authority
