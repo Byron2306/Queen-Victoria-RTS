@@ -26,7 +26,7 @@ export interface ResponsiveBattlefieldLayout {
 }
 
 const ASPECT = 16 / 9;
-const WORLD_EXPANSION = 24 / 16;
+const WORLD_EXPANSION = 32 / 16;
 
 function scalePointAroundViewport(
   point: ScreenPoint,
@@ -160,12 +160,9 @@ export function createResponsiveBattlefieldLayout(
     fittedBoardRender.height / 900;
 
   const fittedProjection: BoardProjection = {
-    // Presentation-only 90° rotation of the logical board.
-    //
-    // Logical y=23 (Victoria side) renders on the LEFT.
-    // Logical y=0  (Shadow side) renders on the RIGHT.
-    //
-    // Simulation coordinates remain unchanged.
+    // Presentation-only rotation of the logical board.
+    // Simulation coordinates remain authoritative and are never inferred from
+    // the art. Task 2 proves pawn-forward presentation against this projection.
     topLeft: {
       x:
         fittedBoardRender.x +
@@ -203,9 +200,9 @@ export function createResponsiveBattlefieldLayout(
     },
   };
 
-  // The logical battlefield grew from 16 to 24 cells. Expand the rendered
-  // world by the same 1.5x factor so the apparent tile and unit footprint
-  // remains unchanged; the free-roam camera reveals the additional world.
+  // The logical battlefield now spans 32 cells. Expand the rendered world by
+  // 2x relative to the original 16-cell footprint so tile and unit scale stay
+  // readable while the free-roam camera exposes the additional campaign space.
   const expandedBoardRender = scaleRectAroundViewport(
     fittedBoardRender,
     board,
