@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createWorld } from '../../src/sim/world';
+import { createPhase6SkirmishWorld } from '../../src/client/session/skirmish';
 import { enqueueTacticalOrder } from '../../src/sim/orders';
 import { resolveCommittedOrders } from '../../src/sim/resolve-orders';
 import { getBannerState } from '../../src/sim/polarity';
@@ -19,7 +19,7 @@ function deployBanner(overrides: Partial<Record<string, unknown>> = {}) {
 
 describe('Triptych banner Royal Commands', () => {
   it('queues and resolves DEPLOY_BANNER as a first-class tactical order', () => {
-    const world = createWorld();
+    const world = createPhase6SkirmishWorld();
     const queued = enqueueTacticalOrder(world, deployBanner());
 
     expect(queued.status).toBe('ACCEPTED');
@@ -45,7 +45,7 @@ describe('Triptych banner Royal Commands', () => {
   });
 
   it('refuses an off-board DEPLOY_BANNER without mutating banner state', () => {
-    const world = createWorld();
+    const world = createPhase6SkirmishWorld();
     const resolved = resolveCommittedOrders(world, [
       deployBanner({
         orderId: 'banner-order-off-board',
