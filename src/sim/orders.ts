@@ -60,6 +60,12 @@ export interface RecruitOrder extends TacticalOrderBase {
   unitKind: RecruitableUnitKind;
 }
 
+export interface DeployBannerOrder extends TacticalOrderBase {
+  kind: 'deploy_banner';
+  bannerId: string;
+  cell: Coord;
+}
+
 export type TacticalOrder =
   | MoveOrder
   | AttackOrder
@@ -67,7 +73,8 @@ export type TacticalOrder =
   | ReinforceOrder
   | GuardOrder
   | AbilityOrder
-  | RecruitOrder;
+  | RecruitOrder
+  | DeployBannerOrder;
 
 export type OrderQueueResult =
   | Readonly<{ status: 'ACCEPTED'; world: WorldState }>
