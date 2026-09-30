@@ -4,10 +4,13 @@ import type {
 } from './projection';
 
 import {
-  BOARD_SIZE,
   boardCellToScreen,
   screenToBoardCell,
 } from './projection';
+import {
+  getBattlefieldTopology,
+  type BattlefieldTopologyId,
+} from '../../sim/battlefield-topology-authority';
 
 export interface InteractiveBoardCell {
   x: number;
@@ -33,17 +36,20 @@ export interface InteractiveBoardGrid {
 
 export function createInteractiveBoardGrid(
   projection: BoardProjection,
+  topologyId?: BattlefieldTopologyId,
 ): InteractiveBoardGrid {
   const cells: InteractiveBoardCell[] = [];
+  const boardSize = getBattlefieldTopology(topologyId).width;
 
-  for (let y = 0; y < BOARD_SIZE; y += 1) {
-    for (let x = 0; x < BOARD_SIZE; x += 1) {
+  for (let y = 0; y < boardSize; y += 1) {
+    for (let x = 0; x < boardSize; x += 1) {
       cells.push({
         x,
         y,
         anchor: boardCellToScreen(
           { x, y },
           projection,
+          topologyId,
         ),
       });
     }
@@ -59,14 +65,14 @@ export function createInteractiveBoardGrid(
       if (
         x < 0 ||
         y < 0 ||
-        x >= BOARD_SIZE ||
-        y >= BOARD_SIZE
+        x >= boardSize ||
+        y >= boardSize
       ) {
         return undefined;
       }
 
       return cells[
-        y * BOARD_SIZE + x
+        y * boardSize + x
       ];
     },
 
@@ -80,6 +86,7 @@ export function createInteractiveBoardGrid(
         screenToBoardCell(
           point,
           projection,
+          topologyId,
         );
 
       if (!result) {
@@ -89,8 +96,8 @@ export function createInteractiveBoardGrid(
       if (
         result.x < 0 ||
         result.y < 0 ||
-        result.x >= BOARD_SIZE ||
-        result.y >= BOARD_SIZE
+        result.x >= boardSize ||
+        result.y >= boardSize
       ) {
         return null;
       }
