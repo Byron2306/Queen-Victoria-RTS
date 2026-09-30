@@ -33,8 +33,8 @@ export function createWorld(units: readonly UnitState[] = [], options: WorldOpti
       queues: { victoria: [], obsidian: [] },
       nextEntryOrdinal: { victoria: 1, obsidian: 1 },
       reinforcementAnchors: {
-        victoria: { x: 2, y: 12 },
-        obsidian: { x: 21, y: 11 },
+        victoria: { x: 3, y: 16 },
+        obsidian: { x: 28, y: 15 },
       },
     },
     promotions: { pending: [] },
