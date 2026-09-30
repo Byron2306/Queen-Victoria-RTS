@@ -9,12 +9,12 @@ import {
 } from '../../src/sim/triptych-territory';
 
 describe('Triptych opening territory freeze', () => {
-  it('gives each faction exactly 39 mirrored starting tiles', () => {
-    expect(VICTORIA_OPENING_TERRITORY).toHaveLength(39);
-    expect(OBSIDIAN_OPENING_TERRITORY).toHaveLength(39);
+  it('gives each faction exactly 80 mirrored starting tiles', () => {
+    expect(VICTORIA_OPENING_TERRITORY).toHaveLength(80);
+    expect(OBSIDIAN_OPENING_TERRITORY).toHaveLength(80);
 
     const mirroredVictoria = VICTORIA_OPENING_TERRITORY
-      .map(cell => ({ x: 23 - cell.x, y: 23 - cell.y }))
+      .map(cell => ({ x: 31 - cell.x, y: 31 - cell.y }))
       .sort((a, b) => a.y - b.y || a.x - b.x);
     const obsidian = [...OBSIDIAN_OPENING_TERRITORY]
       .sort((a, b) => a.y - b.y || a.x - b.x);
@@ -22,13 +22,13 @@ describe('Triptych opening territory freeze', () => {
     expect(obsidian).toEqual(mirroredVictoria);
   });
 
-  it('seeds exactly 39 Victoria and 39 Obsidian controlled tiles', () => {
+  it('seeds exactly 80 Victoria and 80 Obsidian controlled tiles', () => {
     const world = createPhase6SkirmishWorld();
     const tiles = Object.values(strategicTiles(world));
 
-    expect(tiles.filter(tile => tile.factionControl === 'victoria')).toHaveLength(39);
-    expect(tiles.filter(tile => tile.factionControl === 'obsidian')).toHaveLength(39);
-    expect(tiles.filter(tile => tile.factionControl === 'neutral')).toHaveLength(210);
+    expect(tiles.filter(tile => tile.factionControl === 'victoria')).toHaveLength(80);
+    expect(tiles.filter(tile => tile.factionControl === 'obsidian')).toHaveLength(80);
+    expect(tiles.filter(tile => tile.factionControl === 'neutral')).toHaveLength(336);
   });
 
   it('places every opening unit and prepared fort on friendly controlled territory', () => {
@@ -44,12 +44,12 @@ describe('Triptych opening territory freeze', () => {
     }
   });
 
-  it('leaves the six-column central theatre neutral at opening', () => {
+  it('leaves a deep neutral central theatre between the home realms', () => {
     const world = createPhase6SkirmishWorld();
     const tiles = strategicTiles(world);
 
-    for (let y = 8; y <= 15; y += 1) {
-      for (let x = 9; x <= 14; x += 1) {
+    for (let y = 11; y <= 20; y += 1) {
+      for (let x = 8; x <= 23; x += 1) {
         expect(tiles[`${x},${y}`]?.factionControl).toBe('neutral');
       }
     }
