@@ -26,7 +26,9 @@ import {
 import { combatModifiersForRank, militaryRecordFor } from './rank';
 import {
   getBannerAt,
+  getBannerState,
   queueBanner,
+  removeBanner,
 } from './polarity';
 import {
   getTileFactionControl,
@@ -152,6 +154,24 @@ function resolveDeployBanner(
   if (!result.accepted) {
     return refused(world, order.orderId, 'illegal_banner_cell');
   }
+  return {
+    world: result.state,
+    outcome: { orderId: order.orderId, status: 'RESOLVED' },
+    events: [],
+  };
+}
+
+function resolveRemoveBanner(
+  world: WorldState,
+  order: Extract<TacticalOrder, { kind: 'remove_banner' }>,
+): SingleResolution {
+  const banner = getBannerState(world, order.bannerId);
+  if (!banner) return refused(world, order.orderId, 'banner_missing');
+  if (banner.faction !== order.faction) {
+    return refused(world, order.orderId, 'banner_not_owned');
+  }
+  const result = removeBanner(world, order.bannerId);
+  if (!result.accepted) return refused(world, order.orderId, 'banner_missing');
   return {
     world: result.state,
     outcome: { orderId: order.orderId, status: 'RESOLVED' },
@@ -434,6 +454,8 @@ export function resolveCommittedOrders(
       result = resolveAbility(current, order);
     } else if (order.kind === 'deploy_banner') {
       result = resolveDeployBanner(current, order);
+    } else if (order.kind === 'remove_banner') {
+      result = resolveRemoveBanner(current, order);
     } else {
       result = refused(current, order.orderId, 'unsupported_order_kind');
     }
