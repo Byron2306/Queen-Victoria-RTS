@@ -32,8 +32,11 @@ import {
   createBoardDebugOverlay,
 } from '../render/board-debug-overlay';
 import {
-  createInteractiveBoardGrid,
-} from '../board/interactive-board-grid';
+  resolveBoardPointerCell,
+} from '../input/board-pointer-cell';
+import type {
+  BoardProjection,
+} from '../board/projection';
 
 type PhaserSceneBase = new (
   config?: any,
@@ -1567,6 +1570,22 @@ export function createBattlefieldSceneClass<
       this.refreshBoardDebugOverlay();
     }
 
+    protected resolvePointerCell(
+      point: Readonly<{
+        x: number;
+        y: number;
+      }>,
+      projection: BoardProjection,
+    ): Readonly<{
+      x: number;
+      y: number;
+    }> | null {
+      return resolveBoardPointerCell(
+        point,
+        projection,
+      );
+    }
+
     handleBoardPointer(
       point: Readonly<{
         x: number;
@@ -1588,13 +1607,11 @@ export function createBattlefieldSceneClass<
         return;
       }
 
-      const grid =
-        createInteractiveBoardGrid(
+      const cell =
+        this.resolvePointerCell(
+          point,
           layout.projection,
         );
-
-      const cell =
-        grid.hitTest(point);
 
       if (!cell) {
         return;
