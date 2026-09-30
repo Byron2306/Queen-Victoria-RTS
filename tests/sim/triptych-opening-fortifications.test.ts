@@ -9,12 +9,12 @@ import {
 } from '../../src/sim/triptych-opening';
 
 const APPROVED_FORTS = [
-  ['victoria-bastion-north', 'victoria', 'bastion', 8, 9, 3],
-  ['victoria-redoubt', 'victoria', 'redoubt', 8, 11, 3],
-  ['victoria-bastion-south', 'victoria', 'bastion', 8, 13, 3],
-  ['obsidian-bastion-south', 'obsidian', 'bastion', 15, 14, 3],
-  ['obsidian-redoubt', 'obsidian', 'redoubt', 15, 12, 3],
-  ['obsidian-bastion-north', 'obsidian', 'bastion', 15, 10, 3],
+  ['victoria-bastion-north', 'victoria', 'bastion', 7, 13, 3],
+  ['victoria-redoubt', 'victoria', 'redoubt', 7, 16, 3],
+  ['victoria-bastion-south', 'victoria', 'bastion', 7, 19, 3],
+  ['obsidian-bastion-south', 'obsidian', 'bastion', 24, 18, 3],
+  ['obsidian-redoubt', 'obsidian', 'redoubt', 24, 15, 3],
+  ['obsidian-bastion-north', 'obsidian', 'bastion', 24, 12, 3],
 ] as const;
 
 describe('Triptych prepared opening fortification belts', () => {
