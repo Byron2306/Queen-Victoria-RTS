@@ -31,6 +31,11 @@ import {
   removeBanner,
 } from './polarity';
 import {
+  buildFortification,
+  fortificationsFor,
+  repairFortification,
+} from './fortifications';
+import {
   getTileFactionControl,
 } from './territory';
 import {
@@ -172,6 +177,48 @@ function resolveRemoveBanner(
   }
   const result = removeBanner(world, order.bannerId);
   if (!result.accepted) return refused(world, order.orderId, 'banner_missing');
+  return {
+    world: result.state,
+    outcome: { orderId: order.orderId, status: 'RESOLVED' },
+    events: [],
+  };
+}
+
+function resolveBuildFortification(
+  world: WorldState,
+  order: Extract<TacticalOrder, { kind: 'build_fortification' }>,
+): SingleResolution {
+  const result = buildFortification(world, {
+    id: order.fortificationId,
+    faction: order.faction,
+    cell: order.cell,
+    kind: order.fortificationKind,
+  });
+  if (!result.accepted) {
+    return refused(world, order.orderId, result.reason ?? 'illegal_fortification');
+  }
+  return {
+    world: result.state,
+    outcome: { orderId: order.orderId, status: 'RESOLVED' },
+    events: [],
+  };
+}
+
+function resolveRepairFortification(
+  world: WorldState,
+  order: Extract<TacticalOrder, { kind: 'repair_fortification' }>,
+): SingleResolution {
+  const fortification = fortificationsFor(world)[order.fortificationId];
+  if (!fortification) {
+    return refused(world, order.orderId, 'fortification_missing');
+  }
+  if (fortification.faction !== order.faction) {
+    return refused(world, order.orderId, 'fortification_not_owned');
+  }
+  const result = repairFortification(world, order.fortificationId);
+  if (!result.accepted) {
+    return refused(world, order.orderId, 'fortification_missing');
+  }
   return {
     world: result.state,
     outcome: { orderId: order.orderId, status: 'RESOLVED' },
@@ -456,6 +503,10 @@ export function resolveCommittedOrders(
       result = resolveDeployBanner(current, order);
     } else if (order.kind === 'remove_banner') {
       result = resolveRemoveBanner(current, order);
+    } else if (order.kind === 'build_fortification') {
+      result = resolveBuildFortification(current, order);
+    } else if (order.kind === 'repair_fortification') {
+      result = resolveRepairFortification(current, order);
     } else {
       result = refused(current, order.orderId, 'unsupported_order_kind');
     }
