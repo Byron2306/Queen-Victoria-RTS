@@ -13,16 +13,16 @@ export interface BoardTile {
   factionControl: FactionControl;
 }
 
-export const BOARD_WIDTH = 24 as const;
-export const BOARD_HEIGHT = 24 as const;
+export const BOARD_WIDTH = 32 as const;
+export const BOARD_HEIGHT = 32 as const;
 
-// Final Triptych geometry: a full-width eight-row war theatre crossed by a
-// six-tile north/south strategic corridor. The unit scale remains unchanged;
-// the battlefield grows by adding logical tiles around it.
-const SPINE_MIN = 9;
-const SPINE_MAX = 14;
-const THEATRE_MIN = 8;
-const THEATRE_MAX = 15;
+// Coalesced Triptych geometry: a full-width ten-row war theatre crossed by
+// an eight-tile north/south strategic corridor. The apparent unit footprint
+// remains stable by expanding the rendered world to 2x the old 16-cell scale.
+const SPINE_MIN = 12;
+const SPINE_MAX = 19;
+const THEATRE_MIN = 11;
+const THEATRE_MAX = 20;
 
 export function isPlayableCell(x: number, y: number): boolean {
   if (
