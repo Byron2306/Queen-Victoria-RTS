@@ -77,8 +77,8 @@ export function validateMoveGeometry(world: WorldState, unit: UnitState, to: Coo
 
   switch (unit.kind) {
     case 'pawn': {
-      const forward = unit.faction === 'victoria' ? 1 : -1;
-      return dx === 0 && dy === forward
+      const forwardX = unit.faction === 'victoria' ? 1 : -1;
+      return dx === forwardX && dy === 0
         ? { legal: true }
         : { legal: false, reason: 'illegal_geometry' };
     }
