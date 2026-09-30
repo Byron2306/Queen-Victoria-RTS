@@ -8,26 +8,26 @@ import {
 } from '../../src/sim/triptych-opening';
 
 const APPROVED_OPENING = [
-  ['victoria-king', 'victoria', 'king', 1, 11],
-  ['victoria-queen', 'victoria', 'queen', 5, 11],
-  ['victoria-rook-a', 'victoria', 'rook', 3, 9],
-  ['victoria-knight-a', 'victoria', 'knight', 3, 13],
-  ['victoria-pawn-a', 'victoria', 'pawn', 5, 10],
-  ['victoria-pawn-b', 'victoria', 'pawn', 5, 12],
-  ['obsidian-king', 'obsidian', 'king', 22, 12],
-  ['obsidian-queen', 'obsidian', 'queen', 18, 12],
-  ['obsidian-rook-a', 'obsidian', 'rook', 20, 14],
-  ['obsidian-knight-a', 'obsidian', 'knight', 20, 10],
-  ['obsidian-pawn-a', 'obsidian', 'pawn', 18, 13],
-  ['obsidian-pawn-b', 'obsidian', 'pawn', 18, 11],
+  ['victoria-king', 'victoria', 'king', 2, 16],
+  ['victoria-queen', 'victoria', 'queen', 6, 16],
+  ['victoria-rook-a', 'victoria', 'rook', 4, 13],
+  ['victoria-knight-a', 'victoria', 'knight', 4, 19],
+  ['victoria-pawn-a', 'victoria', 'pawn', 6, 15],
+  ['victoria-pawn-b', 'victoria', 'pawn', 6, 17],
+  ['obsidian-king', 'obsidian', 'king', 29, 15],
+  ['obsidian-queen', 'obsidian', 'queen', 25, 15],
+  ['obsidian-rook-a', 'obsidian', 'rook', 27, 18],
+  ['obsidian-knight-a', 'obsidian', 'knight', 27, 12],
+  ['obsidian-pawn-a', 'obsidian', 'pawn', 25, 16],
+  ['obsidian-pawn-b', 'obsidian', 'pawn', 25, 14],
 ] as const;
 
 describe('Phase 6 skirmish fixture', () => {
-  it('creates the authoritative 24x24 Triptych battlefield', () => {
+  it('creates the authoritative 32x32 Triptych battlefield', () => {
     const world = createPhase6SkirmishWorld();
 
-    expect(world.width).toBe(24);
-    expect(world.height).toBe(24);
+    expect(world.width).toBe(32);
+    expect(world.height).toBe(32);
     expect(world.tick).toBe(0);
     expect(world.match.status).toBe('active');
   });
@@ -96,7 +96,7 @@ describe('Phase 6 skirmish fixture', () => {
     expect(world.units['victoria-queen']).toMatchObject({
       faction: 'victoria',
       kind: 'queen',
-      position: { x: 5, y: 11 },
+      position: { x: 6, y: 16 },
     });
   });
 
@@ -117,16 +117,16 @@ describe('Phase 6 skirmish fixture', () => {
 
     expect(world.match.sovereigns.victoria.kingId).toBe('victoria-king');
     expect(world.match.sovereigns.obsidian.kingId).toBe('obsidian-king');
-    expect(world.units['victoria-king']?.position).toEqual({ x: 1, y: 11 });
-    expect(world.units['obsidian-king']?.position).toEqual({ x: 22, y: 12 });
+    expect(world.units['victoria-king']?.position).toEqual({ x: 2, y: 16 });
+    expect(world.units['obsidian-king']?.position).toEqual({ x: 29, y: 15 });
   });
 
   it('loads the eight approved neutral objectives', () => {
     const world = createPhase6SkirmishWorld();
 
     expect(Object.keys(world.territory.nodes)).toHaveLength(8);
-    expect(world.territory.nodes.crown?.center).toEqual({ x: 11, y: 1 });
-    expect(world.territory.nodes['crown-south']?.center).toEqual({ x: 12, y: 22 });
+    expect(world.territory.nodes.crown?.center).toEqual({ x: 15, y: 1 });
+    expect(world.territory.nodes['crown-south']?.center).toEqual({ x: 16, y: 30 });
     expect(Object.values(world.territory.nodes).every(node => node.owner === null)).toBe(true);
   });
 
