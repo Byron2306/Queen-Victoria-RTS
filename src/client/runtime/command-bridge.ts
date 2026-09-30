@@ -11,6 +11,7 @@ import type {
 import type {
   TacticalOrder,
 } from '../../sim/orders';
+import type { FortificationKind } from '../../sim/fortifications';
 
 type ScheduledClientCommand =
   Readonly<{
@@ -157,6 +158,80 @@ export class ClientCommandBridge {
       faction: unit.faction,
       unitId,
       anchor: { ...unit.position },
+      issuedRound: world.turn.round,
+      commandCost: 1,
+    });
+  }
+
+  deployBanner(world: WorldState, faction: Faction, cell: Coord): void {
+    if (!this.canStageTactical(world, faction)) return;
+    const orderId = this.tacticalOrderId(world, faction);
+    this.pendingTactical.push({
+      orderId,
+      kind: 'deploy_banner',
+      faction,
+      bannerId: `${orderId}-banner`,
+      cell: { ...cell },
+      issuedRound: world.turn.round,
+      commandCost: 1,
+    });
+  }
+
+  removeBanner(world: WorldState, faction: Faction, bannerId: string): void {
+    if (!this.canStageTactical(world, faction)) return;
+    this.pendingTactical.push({
+      orderId: this.tacticalOrderId(world, faction),
+      kind: 'remove_banner',
+      faction,
+      bannerId,
+      issuedRound: world.turn.round,
+      commandCost: 1,
+    });
+  }
+
+  buildFortification(
+    world: WorldState,
+    faction: Faction,
+    fortificationKind: FortificationKind,
+    cell: Coord,
+  ): void {
+    if (!this.canStageTactical(world, faction)) return;
+    const orderId = this.tacticalOrderId(world, faction);
+    this.pendingTactical.push({
+      orderId,
+      kind: 'build_fortification',
+      faction,
+      fortificationId: `${orderId}-fort`,
+      fortificationKind,
+      cell: { ...cell },
+      issuedRound: world.turn.round,
+      commandCost: 1,
+    });
+  }
+
+  repairFortification(
+    world: WorldState,
+    faction: Faction,
+    fortificationId: string,
+  ): void {
+    if (!this.canStageTactical(world, faction)) return;
+    this.pendingTactical.push({
+      orderId: this.tacticalOrderId(world, faction),
+      kind: 'repair_fortification',
+      faction,
+      fortificationId,
+      issuedRound: world.turn.round,
+      commandCost: 1,
+    });
+  }
+
+  annexTile(world: WorldState, faction: Faction, cell: Coord): void {
+    if (!this.canStageTactical(world, faction)) return;
+    this.pendingTactical.push({
+      orderId: this.tacticalOrderId(world, faction),
+      kind: 'annex_tile',
+      faction,
+      cell: { ...cell },
       issuedRound: world.turn.round,
       commandCost: 1,
     });
