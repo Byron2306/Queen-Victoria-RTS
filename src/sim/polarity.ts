@@ -114,6 +114,30 @@ export function queueBanner(
   };
 }
 
+export function removeBanner(
+  world: WorldState,
+  bannerId: string,
+): BannerResult {
+  const current = bannersFor(world);
+  if (!current[bannerId]) {
+    return { state: world, accepted: false };
+  }
+
+  const banners: Record<string, BannerState> = { ...current };
+  delete banners[bannerId];
+
+  return {
+    accepted: true,
+    state: {
+      ...world,
+      territory: {
+        ...world.territory,
+        banners,
+      } as TerritoryWithBanners,
+    },
+  };
+}
+
 export function contestBannerAtLanding(
   world: WorldState,
   faction: Faction,
