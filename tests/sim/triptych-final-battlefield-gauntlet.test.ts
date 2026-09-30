@@ -12,7 +12,7 @@ import {
 } from '../../src/sim/triptych-opening';
 import { strategicTiles } from '../../src/sim/territory';
 
-describe('Final 24x24 Royal War Triptych battlefield gauntlet', () => {
+describe('Final 32x32 Royal War Triptych battlefield gauntlet', () => {
   it('boots the exact approved battlefield deterministically', () => {
     const world = createPhase6SkirmishWorld();
     const repeat = createPhase6SkirmishWorld();
@@ -20,9 +20,9 @@ describe('Final 24x24 Royal War Triptych battlefield gauntlet', () => {
     const forts = fortificationsFor(world);
 
     expect(world).toEqual(repeat);
-    expect(world.width).toBe(24);
-    expect(world.height).toBe(24);
-    expect(allPlayableCells()).toHaveLength(288);
+    expect(world.width).toBe(32);
+    expect(world.height).toBe(32);
+    expect(allPlayableCells()).toHaveLength(496);
 
     expect(Object.values(DEFAULT_CAPTURE_NODES).map(node => [
       node.id,
@@ -30,14 +30,14 @@ describe('Final 24x24 Royal War Triptych battlefield gauntlet', () => {
       node.center.x,
       node.center.y,
     ])).toEqual([
-      ['crown', 'crown', 11, 1],
-      ['crown-south', 'crown', 12, 22],
-      ['minor-nw', 'minor', 9, 7],
-      ['minor-ne', 'minor', 14, 7],
-      ['minor-w', 'minor', 10, 11],
-      ['minor-e', 'minor', 13, 12],
-      ['minor-sw', 'minor', 9, 16],
-      ['minor-se', 'minor', 14, 16],
+      ['crown', 'crown', 15, 1],
+      ['crown-south', 'crown', 16, 30],
+      ['minor-nw', 'minor', 12, 10],
+      ['minor-ne', 'minor', 19, 10],
+      ['minor-w', 'minor', 13, 15],
+      ['minor-e', 'minor', 18, 16],
+      ['minor-sw', 'minor', 12, 21],
+      ['minor-se', 'minor', 19, 21],
     ]);
 
     expect(Object.keys(world.units).sort())
@@ -50,15 +50,15 @@ describe('Final 24x24 Royal War Triptych battlefield gauntlet', () => {
     expect(Object.values(forts)).toHaveLength(6);
 
     expect(Object.values(tiles).filter(tile => tile.factionControl === 'victoria'))
-      .toHaveLength(39);
+      .toHaveLength(80);
     expect(Object.values(tiles).filter(tile => tile.factionControl === 'obsidian'))
-      .toHaveLength(39);
+      .toHaveLength(80);
     expect(Object.values(tiles).filter(tile => tile.factionControl === 'neutral'))
-      .toHaveLength(210);
+      .toHaveLength(336);
 
     expect(world.production.reinforcementAnchors).toEqual({
-      victoria: { x: 2, y: 12 },
-      obsidian: { x: 21, y: 11 },
+      victoria: { x: 3, y: 16 },
+      obsidian: { x: 28, y: 15 },
     });
 
     for (const unit of TRIPTYCH_OPENING_UNITS) {
@@ -69,8 +69,8 @@ describe('Final 24x24 Royal War Triptych battlefield gauntlet', () => {
       expect(fort.durability).toBe(3);
     }
 
-    for (let y = 8; y <= 15; y += 1) {
-      for (let x = 9; x <= 14; x += 1) {
+    for (let y = 11; y <= 20; y += 1) {
+      for (let x = 8; x <= 23; x += 1) {
         expect(tiles[`${x},${y}`]?.factionControl).toBe('neutral');
       }
     }
