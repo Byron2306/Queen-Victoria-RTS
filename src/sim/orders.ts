@@ -66,6 +66,11 @@ export interface DeployBannerOrder extends TacticalOrderBase {
   cell: Coord;
 }
 
+export interface RemoveBannerOrder extends TacticalOrderBase {
+  kind: 'remove_banner';
+  bannerId: string;
+}
+
 export type TacticalOrder =
   | MoveOrder
   | AttackOrder
@@ -74,7 +79,8 @@ export type TacticalOrder =
   | GuardOrder
   | AbilityOrder
   | RecruitOrder
-  | DeployBannerOrder;
+  | DeployBannerOrder
+  | RemoveBannerOrder;
 
 export type OrderQueueResult =
   | Readonly<{ status: 'ACCEPTED'; world: WorldState }>
