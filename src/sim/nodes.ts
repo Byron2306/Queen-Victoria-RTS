@@ -2,14 +2,14 @@ import type { CaptureNodeState, TerritoryState } from './types';
 import { hasAdjacentFactionTile } from './territory';
 
 export const DEFAULT_CAPTURE_NODES = {
-  crown: { id: 'crown', kind: 'crown', center: { x: 11, y: 1 } },
-  'crown-south': { id: 'crown-south', kind: 'crown', center: { x: 12, y: 22 } },
-  'minor-nw': { id: 'minor-nw', kind: 'minor', center: { x: 9, y: 7 } },
-  'minor-ne': { id: 'minor-ne', kind: 'minor', center: { x: 14, y: 7 } },
-  'minor-w': { id: 'minor-w', kind: 'minor', center: { x: 10, y: 11 } },
-  'minor-e': { id: 'minor-e', kind: 'minor', center: { x: 13, y: 12 } },
-  'minor-sw': { id: 'minor-sw', kind: 'minor', center: { x: 9, y: 16 } },
-  'minor-se': { id: 'minor-se', kind: 'minor', center: { x: 14, y: 16 } },
+  crown: { id: 'crown', kind: 'crown', center: { x: 15, y: 1 } },
+  'crown-south': { id: 'crown-south', kind: 'crown', center: { x: 16, y: 30 } },
+  'minor-nw': { id: 'minor-nw', kind: 'minor', center: { x: 12, y: 10 } },
+  'minor-ne': { id: 'minor-ne', kind: 'minor', center: { x: 19, y: 10 } },
+  'minor-w': { id: 'minor-w', kind: 'minor', center: { x: 13, y: 15 } },
+  'minor-e': { id: 'minor-e', kind: 'minor', center: { x: 18, y: 16 } },
+  'minor-sw': { id: 'minor-sw', kind: 'minor', center: { x: 12, y: 21 } },
+  'minor-se': { id: 'minor-se', kind: 'minor', center: { x: 19, y: 21 } },
 } as const;
 
 export function createInitialTerritoryState(): TerritoryState {
@@ -56,8 +56,6 @@ function suppliedFactions(
   node: CaptureNodeState,
   factions: readonly Faction[],
 ): readonly Faction[] {
-  // Pure node-clock fixtures can remain isolated. In actual round resolution
-  // settlement has materialized tile state, and supply is then mandatory.
   if (!hasStrategicTileState(world)) return factions;
 
   return factions.filter((faction) =>
