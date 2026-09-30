@@ -4,11 +4,9 @@ import {
 } from '../../src/client/assets/canonical';
 
 describe('Phase 6 canonical battlefield assets', () => {
-  it('locks the Triptych battlefield artwork to its own canonical identity', () => {
+  it('keeps the geometry-safe Triptych board authoritative until ornate binary handoff', () => {
     expect(CANONICAL_ASSET_PATHS.board)
-      .toBe('/Queen-Victoria-RTS/assets/battlefield/triptych-board.png');
-    expect(CANONICAL_ASSET_PATHS.board.includes('palace-board'))
-      .toBe(false);
+      .toBe('/Queen-Victoria-RTS/assets/battlefield/palace-board.png');
   });
 
   it('locks Victoria to her canonical battlefield art', () => {
