@@ -84,6 +84,11 @@ export interface RepairFortificationOrder extends TacticalOrderBase {
   fortificationId: string;
 }
 
+export interface AnnexTileOrder extends TacticalOrderBase {
+  kind: 'annex_tile';
+  cell: Coord;
+}
+
 export type TacticalOrder =
   | MoveOrder
   | AttackOrder
@@ -95,7 +100,8 @@ export type TacticalOrder =
   | DeployBannerOrder
   | RemoveBannerOrder
   | BuildFortificationOrder
-  | RepairFortificationOrder;
+  | RepairFortificationOrder
+  | AnnexTileOrder;
 
 export type OrderQueueResult =
   | Readonly<{ status: 'ACCEPTED'; world: WorldState }>
