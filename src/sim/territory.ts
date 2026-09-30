@@ -14,6 +14,18 @@ export type TriptychTerritoryState = TerritoryState & Readonly<{
   tiles?: Readonly<Record<TileId, BoardTile>>;
 }>;
 
+export type AnnexRejectReason =
+  | 'off_board'
+  | 'already_controlled'
+  | 'enemy_controlled'
+  | 'not_adjacent_to_friendly_territory';
+
+export type AnnexResult = Readonly<{
+  state: WorldState;
+  accepted: boolean;
+  reason?: AnnexRejectReason;
+}>;
+
 function storedTiles(world: WorldState): Readonly<Record<TileId, BoardTile>> | undefined {
   return (world.territory as TriptychTerritoryState).tiles;
 }
@@ -48,6 +60,51 @@ export function hasAdjacentFactionTile(
   return orthogonalNeighbors(cell.x, cell.y).some(
     (neighbor) => getTileFactionControl(world, neighbor) === faction,
   );
+}
+
+export function annexTile(
+  world: WorldState,
+  faction: Faction,
+  cell: Coord,
+): AnnexResult {
+  if (!isPlayableCell(cell.x, cell.y)) {
+    return { state: world, accepted: false, reason: 'off_board' };
+  }
+
+  const control = getTileFactionControl(world, cell);
+  if (control === faction) {
+    return { state: world, accepted: false, reason: 'already_controlled' };
+  }
+  if (control !== 'neutral') {
+    return { state: world, accepted: false, reason: 'enemy_controlled' };
+  }
+  if (!hasAdjacentFactionTile(world, cell, faction)) {
+    return {
+      state: world,
+      accepted: false,
+      reason: 'not_adjacent_to_friendly_territory',
+    };
+  }
+
+  const id = tileId(cell);
+  const tiles: Record<TileId, BoardTile> = {
+    ...strategicTiles(world),
+    [id]: {
+      ...strategicTiles(world)[id]!,
+      factionControl: faction,
+    },
+  };
+
+  return {
+    accepted: true,
+    state: {
+      ...world,
+      territory: {
+        ...world.territory,
+        tiles,
+      } as TriptychTerritoryState,
+    },
+  };
 }
 
 export function resolveSettlement(world: WorldState): WorldState {
