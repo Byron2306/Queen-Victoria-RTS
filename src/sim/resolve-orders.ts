@@ -24,6 +24,16 @@ import {
   type SupportChain,
 } from './support';
 import { combatModifiersForRank, militaryRecordFor } from './rank';
+import {
+  getBannerAt,
+  queueBanner,
+} from './polarity';
+import {
+  getTileFactionControl,
+} from './territory';
+import {
+  isPlayableCell,
+} from './board-topology';
 import type {
   AssaultOrder,
   AttackOrder,
@@ -115,6 +125,35 @@ function resolveMove(world: WorldState, order: MoveOrder): SingleResolution {
         [actor.id]: { ...actorCombat, guardAnchor: { ...order.destination } },
       },
     },
+    outcome: { orderId: order.orderId, status: 'RESOLVED' },
+    events: [],
+  };
+}
+
+function resolveDeployBanner(
+  world: WorldState,
+  order: Extract<TacticalOrder, { kind: 'deploy_banner' }>,
+): SingleResolution {
+  if (!isPlayableCell(order.cell.x, order.cell.y)) {
+    return refused(world, order.orderId, 'illegal_banner_cell');
+  }
+  if (getTileFactionControl(world, order.cell) !== order.faction) {
+    return refused(world, order.orderId, 'not_friendly_territory');
+  }
+  if (getBannerAt(world, order.cell)) {
+    return refused(world, order.orderId, 'banner_present');
+  }
+
+  const result = queueBanner(world, {
+    bannerId: order.bannerId,
+    faction: order.faction,
+    cell: order.cell,
+  });
+  if (!result.accepted) {
+    return refused(world, order.orderId, 'illegal_banner_cell');
+  }
+  return {
+    world: result.state,
     outcome: { orderId: order.orderId, status: 'RESOLVED' },
     events: [],
   };
@@ -393,6 +432,8 @@ export function resolveCommittedOrders(
       result = resolveGuard(current, order);
     } else if (order.kind === 'ability') {
       result = resolveAbility(current, order);
+    } else if (order.kind === 'deploy_banner') {
+      result = resolveDeployBanner(current, order);
     } else {
       result = refused(current, order.orderId, 'unsupported_order_kind');
     }
