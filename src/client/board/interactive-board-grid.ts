@@ -4,6 +4,7 @@ import type {
 } from './projection';
 
 import {
+  BOARD_SIZE,
   boardCellToScreen,
   screenToBoardCell,
 } from './projection';
@@ -29,8 +30,6 @@ export interface InteractiveBoardGrid {
     y: number;
   }> | null;
 }
-
-const BOARD_SIZE = 16;
 
 export function createInteractiveBoardGrid(
   projection: BoardProjection,
