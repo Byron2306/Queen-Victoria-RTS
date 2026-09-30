@@ -9,6 +9,7 @@ import type {
   RecruitableUnitKind,
   WorldState,
 } from './types';
+import type { FortificationKind } from './fortifications';
 
 export interface TacticalOrderBase {
   orderId: string;
@@ -71,6 +72,18 @@ export interface RemoveBannerOrder extends TacticalOrderBase {
   bannerId: string;
 }
 
+export interface BuildFortificationOrder extends TacticalOrderBase {
+  kind: 'build_fortification';
+  fortificationId: string;
+  fortificationKind: FortificationKind;
+  cell: Coord;
+}
+
+export interface RepairFortificationOrder extends TacticalOrderBase {
+  kind: 'repair_fortification';
+  fortificationId: string;
+}
+
 export type TacticalOrder =
   | MoveOrder
   | AttackOrder
@@ -80,7 +93,9 @@ export type TacticalOrder =
   | AbilityOrder
   | RecruitOrder
   | DeployBannerOrder
-  | RemoveBannerOrder;
+  | RemoveBannerOrder
+  | BuildFortificationOrder
+  | RepairFortificationOrder;
 
 export type OrderQueueResult =
   | Readonly<{ status: 'ACCEPTED'; world: WorldState }>
