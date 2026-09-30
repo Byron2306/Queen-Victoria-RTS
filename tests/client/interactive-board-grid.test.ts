@@ -4,24 +4,24 @@ import { tileCenter, type BoardProjection } from '../../src/client/board/project
 
 const flat: BoardProjection = {
   topLeft: { x: 0, y: 0 },
-  topRight: { x: 2400, y: 0 },
-  bottomLeft: { x: 0, y: 2400 },
-  bottomRight: { x: 2400, y: 2400 },
+  topRight: { x: 3200, y: 0 },
+  bottomLeft: { x: 0, y: 3200 },
+  bottomRight: { x: 3200, y: 3200 },
 };
 
 describe('Triptych interactive board grid', () => {
-  it('covers the full canonical 24x24 logical extent', () => {
+  it('covers the full canonical 32x32 logical extent', () => {
     const grid = createInteractiveBoardGrid(flat);
 
-    expect(grid.cells).toHaveLength(24 * 24);
-    expect(grid.cell(23, 23)).toMatchObject({ x: 23, y: 23 });
-    expect(grid.cell(24, 23)).toBeUndefined();
+    expect(grid.cells).toHaveLength(32 * 32);
+    expect(grid.cell(31, 31)).toMatchObject({ x: 31, y: 31 });
+    expect(grid.cell(32, 31)).toBeUndefined();
   });
 
-  it('hit-tests cells beyond the retired 16x16 extent', () => {
+  it('hit-tests cells across the enlarged east theatre', () => {
     const grid = createInteractiveBoardGrid(flat);
-    const point = tileCenter({ x: 23, y: 15 }, flat);
+    const point = tileCenter({ x: 31, y: 20 }, flat);
 
-    expect(grid.hitTest(point)).toEqual({ x: 23, y: 15 });
+    expect(grid.hitTest(point)).toEqual({ x: 31, y: 20 });
   });
 });
