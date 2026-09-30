@@ -31,11 +31,20 @@ import {
   nodeArtPresentation,
 } from '../render/node-art-layout';
 import {
+  bannerArtPresentation,
+} from '../render/banner-art-layout';
+import {
+  createTriptychStrategicOverlay,
+} from '../render/triptych-presentation';
+import {
   UNIT_SPRITE_ORIGIN,
 } from '../render/unit-grounding';
 import {
   unitVisualHeightForRank,
 } from '../render/unit-visual-footprint';
+import {
+  assetUrl,
+} from '../assets/base-url';
 import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
@@ -82,6 +91,8 @@ export function createTriptychBattlefieldSceneClass<
     private intelligenceVisualFingerprint = '';
     private ghostMarkers: any[] = [];
     private ghostVisualFingerprint = '';
+    private bannerSprites: any[] = [];
+    private bannerVisualFingerprint = '';
 
     private cameraBounds(): {
       minX: number;
@@ -286,10 +297,80 @@ export function createTriptychBattlefieldSceneClass<
       this.refreshGhostContacts(force);
     }
 
+    private refreshBannerSprites(force = false): void {
+      const scene = this as any;
+      const width = Number(scene.scale?.width) || 1600;
+      const height = Number(scene.scale?.height) || 900;
+      const layout = createResponsiveBattlefieldLayout(width, height);
+      const overlay = createTriptychStrategicOverlay(
+        scene.controller.world,
+        layout.projection,
+      );
+      const camera = getBattlefieldCameraState();
+      const fingerprint = [
+        width,
+        height,
+        camera.panX.toFixed(2),
+        camera.panY.toFixed(2),
+        camera.zoom.toFixed(3),
+        ...overlay.banners.map((banner: any) =>
+          `${banner.id}:${banner.faction}:${banner.anchor.x.toFixed(2)}:${banner.anchor.y.toFixed(2)}:${banner.roundsHeld}:${banner.contestedBy ?? 'clear'}`,
+        ),
+      ].join('|');
+
+      if (!force && fingerprint === this.bannerVisualFingerprint) return;
+      this.bannerVisualFingerprint = fingerprint;
+
+      for (const sprite of this.bannerSprites) sprite?.destroy?.();
+      this.bannerSprites = [];
+
+      const legacyLabels = (scene.royalStrategicMarkers ?? [])
+        .filter((marker: any) => typeof marker?.text === 'string' && marker.text.startsWith('⚑ '));
+      for (const label of legacyLabels) label?.setVisible?.(false);
+
+      if (!scene.add?.image) return;
+      const tileWidth = layout.boardRender.width / BOARD_WIDTH;
+
+      for (const banner of overlay.banners) {
+        const art = bannerArtPresentation(banner.faction, tileWidth);
+        const sprite = scene.add.image(
+          banner.anchor.x,
+          banner.anchor.y,
+          art.textureKey,
+        );
+        sprite
+          ?.setOrigin?.(art.origin.x, art.origin.y)
+          ?.setDisplaySize?.(art.displayWidth, art.displayHeight)
+          ?.setDepth?.(1748);
+        this.bannerSprites.push(sprite);
+
+        if (scene.add?.text) {
+          const status = banner.contestedBy
+            ? 'CONTESTED'
+            : `${banner.roundsHeld}/2`;
+          const label = scene.add.text(
+            banner.anchor.x,
+            banner.anchor.y - art.displayHeight - 5,
+            status,
+            {
+              fontFamily: 'Georgia, serif',
+              fontSize: '10px',
+              fontStyle: 'bold',
+              color: banner.faction === 'victoria' ? '#ffd46a' : '#c99cff',
+              stroke: '#160907',
+              strokeThickness: 3,
+            },
+          );
+          label?.setOrigin?.(0.5, 1)?.setDepth?.(1750);
+          this.bannerSprites.push(label);
+        }
+      }
+    }
+
     /**
      * Camera-bound overlays must be regenerated from the same current
      * projection as the board and units. Keeping this as one refresh boundary
-     * prevents selection, movement, strategic/watchtower, nodes, and
+     * prevents selection, movement, strategic/watchtower, nodes, banners, and
      * intelligence layers from retaining pre-pan screen coordinates.
      */
     refreshCameraBoundPresentation(force = false): void {
@@ -297,12 +378,10 @@ export function createTriptychBattlefieldSceneClass<
       scene.redrawRoyalMoveMarkers?.();
       scene.redrawStrategicOverlay?.(force);
       this.redrawRoyalNodes(force);
+      this.refreshBannerSprites(force);
       this.refreshBattlefieldIntelligence(force);
     }
 
-    // Overrides the inherited Royal node renderer. The source PNGs stay
-    // pristine; production geometry crops transparent atlas padding at runtime,
-    // preserves aspect ratio, and anchors every state at the same ground point.
     private redrawRoyalNodes(force = false): void {
       const scene = this as any;
       const width = Number(scene.scale?.width) || 1600;
@@ -373,6 +452,19 @@ export function createTriptychBattlefieldSceneClass<
       }
     }
 
+    preload(): void {
+      super.preload();
+      const scene = this as any;
+      scene.load?.image?.(
+        'royal-banner-victoria',
+        assetUrl('assets/banners/banner-victoria.png'),
+      );
+      scene.load?.image?.(
+        'royal-banner-shadow',
+        assetUrl('assets/banners/banner-shadow.png'),
+      );
+    }
+
     layoutBattlefield(): void {
       super.layoutBattlefield();
       this.enforceTriptychUnitPresentation();
@@ -383,6 +475,7 @@ export function createTriptychBattlefieldSceneClass<
       super.create();
       this.enforceTriptychUnitPresentation();
       this.refreshBattlefieldIntelligence(true);
+      this.refreshBannerSprites(true);
 
       const scene = this as any;
       const keyboard = scene.input?.keyboard;
@@ -475,6 +568,7 @@ export function createTriptychBattlefieldSceneClass<
       super.update(time, delta);
       this.enforceTriptychUnitPresentation();
       this.refreshBattlefieldIntelligence();
+      this.refreshBannerSprites();
 
       const liveUnitIds = new Set<string>(
         Object.keys(this.controller.world.units),
