@@ -10,7 +10,9 @@ type PromotionRejectReason = Extract<SimEvent, { type: 'promotion.rejected' }>['
 function inPromotionZone(world: WorldState, pawnId: string): boolean {
   const pawn = world.units[pawnId];
   if (!pawn) return false;
-  return pawn.position.y <= 1 || pawn.position.y >= 14;
+  return pawn.faction === 'victoria'
+    ? pawn.position.x >= world.width - 2
+    : pawn.position.x <= 1;
 }
 
 function rejection(world: WorldState, command: Pick<PromoteCommand, 'faction' | 'pawnId' | 'targetKind'>, reason: PromotionRejectReason) {
