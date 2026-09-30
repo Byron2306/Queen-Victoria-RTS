@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createPhase6SkirmishWorld } from '../../src/client/session/skirmish';
 import { enqueueTacticalOrder } from '../../src/sim/orders';
 import { resolveCommittedOrders } from '../../src/sim/resolve-orders';
-import { getBannerState } from '../../src/sim/polarity';
+import { getBannerState, queueBanner } from '../../src/sim/polarity';
 
 function deployBanner(overrides: Partial<Record<string, unknown>> = {}) {
   return {
@@ -11,6 +11,18 @@ function deployBanner(overrides: Partial<Record<string, unknown>> = {}) {
     faction: 'victoria',
     bannerId: 'banner-v-1',
     cell: { x: 8, y: 11 },
+    issuedRound: 1,
+    commandCost: 1,
+    ...overrides,
+  } as any;
+}
+
+function removeBanner(overrides: Partial<Record<string, unknown>> = {}) {
+  return {
+    orderId: 'banner-remove-1',
+    kind: 'remove_banner',
+    faction: 'victoria',
+    bannerId: 'banner-v-1',
     issuedRound: 1,
     commandCost: 1,
     ...overrides,
@@ -63,5 +75,50 @@ describe('Triptych banner Royal Commands', () => {
     ]);
     expect(getBannerState(resolved.world, 'banner-v-off-board'))
       .toBeUndefined();
+  });
+
+  it('queues and resolves REMOVE_BANNER for the owning faction', () => {
+    let world = createPhase6SkirmishWorld();
+    world = queueBanner(world, {
+      bannerId: 'banner-v-1',
+      faction: 'victoria',
+      cell: { x: 8, y: 11 },
+    }).state;
+
+    const queued = enqueueTacticalOrder(world, removeBanner());
+    expect(queued.status).toBe('ACCEPTED');
+    if (queued.status !== 'ACCEPTED') return;
+
+    const resolved = resolveCommittedOrders(
+      queued.world,
+      queued.world.pendingOrders,
+    );
+
+    expect(resolved.outcomes).toEqual([
+      { orderId: 'banner-remove-1', status: 'RESOLVED' },
+    ]);
+    expect(getBannerState(resolved.world, 'banner-v-1')).toBeUndefined();
+  });
+
+  it('refuses REMOVE_BANNER against an enemy banner', () => {
+    let world = createPhase6SkirmishWorld();
+    world = queueBanner(world, {
+      bannerId: 'banner-shadow-1',
+      faction: 'obsidian',
+      cell: { x: 15, y: 12 },
+    }).state;
+
+    const resolved = resolveCommittedOrders(world, [
+      removeBanner({ bannerId: 'banner-shadow-1' }),
+    ]);
+
+    expect(resolved.outcomes).toEqual([
+      {
+        orderId: 'banner-remove-1',
+        status: 'REFUSED',
+        reason: 'banner_not_owned',
+      },
+    ]);
+    expect(getBannerState(resolved.world, 'banner-shadow-1')).toBeDefined();
   });
 });
