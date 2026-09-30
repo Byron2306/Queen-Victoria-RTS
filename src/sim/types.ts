@@ -223,8 +223,8 @@ export type SimEvent =
 
 export type WorldState = Readonly<{
   tick: number;
-  width: 24;
-  height: 24;
+  width: 32;
+  height: 32;
   units: Readonly<Record<string, UnitState>>;
   occupancy: Readonly<Record<string, string>>;
   combat: Readonly<Record<string, UnitCombatState>>;
