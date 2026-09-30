@@ -110,6 +110,38 @@ export function buildFortification(
   };
 }
 
+export function repairFortification(
+  world: WorldState,
+  fortificationId: string,
+): FortificationResult {
+  const current = fortificationsFor(world)[fortificationId];
+  if (!current) return { state: world, accepted: false };
+
+  const maxDurability =
+    3 + strategicAbilityModifiers(world, current.faction).fortificationDurabilityBonus;
+  const durability = Math.min(maxDurability, current.durability + 1);
+  if (durability === current.durability) {
+    return { state: world, accepted: true };
+  }
+
+  return {
+    accepted: true,
+    state: {
+      ...world,
+      territory: {
+        ...world.territory,
+        fortifications: {
+          ...fortificationsFor(world),
+          [fortificationId]: {
+            ...current,
+            durability,
+          },
+        },
+      } as TerritoryWithFortifications,
+    },
+  };
+}
+
 export function damageFortification(
   world: WorldState,
   fortificationId: string,
