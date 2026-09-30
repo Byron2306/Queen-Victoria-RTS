@@ -1,9 +1,9 @@
 import {
-  BOARD_WIDTH,
-  isPlayableCell,
-} from '../../sim/board-topology';
+  getBattlefieldTopology,
+  type BattlefieldTopologyId,
+} from '../../sim/battlefield-topology-authority';
 
-export const BOARD_SIZE = BOARD_WIDTH;
+export const BOARD_SIZE = getBattlefieldTopology().width;
 
 export interface ScreenPoint {
   x: number;
@@ -26,17 +26,21 @@ function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
 
-function assertValidCell(cell: BoardCell): void {
+function assertValidCell(
+  cell: BoardCell,
+  topologyId?: BattlefieldTopologyId,
+): void {
+  const boardSize = getBattlefieldTopology(topologyId).width;
   if (
     !Number.isInteger(cell.x) ||
     !Number.isInteger(cell.y) ||
     cell.x < 0 ||
     cell.y < 0 ||
-    cell.x >= BOARD_SIZE ||
-    cell.y >= BOARD_SIZE
+    cell.x >= boardSize ||
+    cell.y >= boardSize
   ) {
     throw new RangeError(
-      `Board cell (${cell.x}, ${cell.y}) is outside ${BOARD_SIZE}x${BOARD_SIZE}`
+      `Board cell (${cell.x}, ${cell.y}) is outside ${boardSize}x${boardSize}`
     );
   }
 }
@@ -65,21 +69,24 @@ function bilinearPoint(
 export function boardCellToScreen(
   cell: BoardCell,
   projection: BoardProjection,
+  topologyId?: BattlefieldTopologyId,
 ): ScreenPoint {
-  assertValidCell(cell);
-  return tileCenter(cell, projection);
+  assertValidCell(cell, topologyId);
+  return tileCenter(cell, projection, topologyId);
 }
 
 export function tilePolygon(
   cell: BoardCell,
   projection: BoardProjection,
+  topologyId?: BattlefieldTopologyId,
 ): ScreenPoint[] {
-  assertValidCell(cell);
+  assertValidCell(cell, topologyId);
+  const boardSize = getBattlefieldTopology(topologyId).width;
 
-  const u0 = cell.x / BOARD_SIZE;
-  const u1 = (cell.x + 1) / BOARD_SIZE;
-  const v0 = cell.y / BOARD_SIZE;
-  const v1 = (cell.y + 1) / BOARD_SIZE;
+  const u0 = cell.x / boardSize;
+  const u1 = (cell.x + 1) / boardSize;
+  const v0 = cell.y / boardSize;
+  const v1 = (cell.y + 1) / boardSize;
 
   return [
     bilinearPoint(projection, u0, v0),
@@ -92,33 +99,39 @@ export function tilePolygon(
 export function tileCenter(
   cell: BoardCell,
   projection: BoardProjection,
+  topologyId?: BattlefieldTopologyId,
 ): ScreenPoint {
-  assertValidCell(cell);
+  assertValidCell(cell, topologyId);
+  const boardSize = getBattlefieldTopology(topologyId).width;
 
   return bilinearPoint(
     projection,
-    (cell.x + 0.5) / BOARD_SIZE,
-    (cell.y + 0.5) / BOARD_SIZE,
+    (cell.x + 0.5) / boardSize,
+    (cell.y + 0.5) / boardSize,
   );
 }
 
 export function tileFootpoint(
   cell: BoardCell,
   projection: BoardProjection,
+  topologyId?: BattlefieldTopologyId,
 ): ScreenPoint {
-  assertValidCell(cell);
+  assertValidCell(cell, topologyId);
+  const boardSize = getBattlefieldTopology(topologyId).width;
 
   return bilinearPoint(
     projection,
-    (cell.x + 0.5) / BOARD_SIZE,
-    (cell.y + 0.72) / BOARD_SIZE,
+    (cell.x + 0.5) / boardSize,
+    (cell.y + 0.72) / boardSize,
   );
 }
 
 export function screenToBoardCell(
   point: ScreenPoint,
   projection: BoardProjection,
+  topologyId?: BattlefieldTopologyId,
 ): BoardCell | null {
+  const boardSize = getBattlefieldTopology(topologyId).width;
   let u = 0.5;
   let v = 0.5;
 
@@ -195,12 +208,12 @@ export function screenToBoardCell(
 
   return {
     x: Math.min(
-      BOARD_SIZE - 1,
-      Math.floor(boundedU * BOARD_SIZE),
+      boardSize - 1,
+      Math.floor(boundedU * boardSize),
     ),
     y: Math.min(
-      BOARD_SIZE - 1,
-      Math.floor(boundedV * BOARD_SIZE),
+      boardSize - 1,
+      Math.floor(boundedV * boardSize),
     ),
   };
 }
@@ -208,10 +221,12 @@ export function screenToBoardCell(
 export function screenPointToPlayableCell(
   point: ScreenPoint,
   projection: BoardProjection,
+  topologyId?: BattlefieldTopologyId,
 ): BoardCell | null {
-  const cell = screenToBoardCell(point, projection);
+  const topology = getBattlefieldTopology(topologyId);
+  const cell = screenToBoardCell(point, projection, topologyId);
   if (!cell) return null;
-  return isPlayableCell(cell.x, cell.y) ? cell : null;
+  return topology.isPlayableCell(cell.x, cell.y) ? cell : null;
 }
 
 export function constrainProjectionAboveHud(
