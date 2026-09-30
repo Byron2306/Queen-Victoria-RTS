@@ -36,6 +36,7 @@ import {
   repairFortification,
 } from './fortifications';
 import {
+  annexTile,
   getTileFactionControl,
 } from './territory';
 import {
@@ -218,6 +219,21 @@ function resolveRepairFortification(
   const result = repairFortification(world, order.fortificationId);
   if (!result.accepted) {
     return refused(world, order.orderId, 'fortification_missing');
+  }
+  return {
+    world: result.state,
+    outcome: { orderId: order.orderId, status: 'RESOLVED' },
+    events: [],
+  };
+}
+
+function resolveAnnexTile(
+  world: WorldState,
+  order: Extract<TacticalOrder, { kind: 'annex_tile' }>,
+): SingleResolution {
+  const result = annexTile(world, order.faction, order.cell);
+  if (!result.accepted) {
+    return refused(world, order.orderId, result.reason ?? 'illegal_annex');
   }
   return {
     world: result.state,
@@ -507,6 +523,8 @@ export function resolveCommittedOrders(
       result = resolveBuildFortification(current, order);
     } else if (order.kind === 'repair_fortification') {
       result = resolveRepairFortification(current, order);
+    } else if (order.kind === 'annex_tile') {
+      result = resolveAnnexTile(current, order);
     } else {
       result = refused(current, order.orderId, 'unsupported_order_kind');
     }
