@@ -1,5 +1,5 @@
 import type { Coord, Faction, UnitState, WorldState } from './types';
-import { coordKey, isInBounds } from './world';
+import { coordKey, isInWorldBounds } from './world';
 
 export type ThreatMap = Readonly<Record<string, readonly string[]>>;
 
@@ -41,11 +41,11 @@ function sortCoords(cells: Coord[]): readonly Coord[] {
   return cells.sort((a, b) => a.y - b.y || a.x - b.x);
 }
 
-function offsetThreats(unit: UnitState, offsets: readonly Coord[]): readonly Coord[] {
+function offsetThreats(world: WorldState, unit: UnitState, offsets: readonly Coord[]): readonly Coord[] {
   const cells: Coord[] = [];
   for (const offset of offsets) {
     const cell = { x: unit.position.x + offset.x, y: unit.position.y + offset.y };
-    if (isInBounds(cell)) cells.push(cell);
+    if (isInWorldBounds(world, cell)) cells.push(cell);
   }
   return sortCoords(cells);
 }
@@ -55,7 +55,7 @@ function rayThreats(world: WorldState, unit: UnitState, directions: readonly Dir
   for (const direction of directions) {
     let x = unit.position.x + direction.x;
     let y = unit.position.y + direction.y;
-    while (isInBounds({ x, y })) {
+    while (isInWorldBounds(world, { x, y })) {
       const cell = { x, y };
       cells.push(cell);
       if (world.occupancy[coordKey(cell)]) break;
@@ -70,15 +70,15 @@ export function projectThreatCells(world: WorldState, unit: UnitState): readonly
   switch (unit.kind) {
     case 'pawn': {
       const forward = unit.faction === 'victoria' ? 1 : -1;
-      return offsetThreats(unit, [
+      return offsetThreats(world, unit, [
         { x: -1, y: forward },
         { x: 1, y: forward },
       ]);
     }
     case 'knight':
-      return offsetThreats(unit, KNIGHT_OFFSETS);
+      return offsetThreats(world, unit, KNIGHT_OFFSETS);
     case 'king':
-      return offsetThreats(unit, KING_OFFSETS);
+      return offsetThreats(world, unit, KING_OFFSETS);
     case 'bishop':
       return rayThreats(world, unit, BISHOP_DIRECTIONS);
     case 'rook':
