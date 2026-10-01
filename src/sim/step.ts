@@ -11,7 +11,7 @@ import { queuePromotionRequest } from './promotion';
 import { evaluateSovereignThreats, interpretSovereignDefeats } from './sovereign';
 import { interpretHeroCombat } from './hero';
 import type { SimCommand, SimEvent, StepResult, WorldState } from './types';
-import { coordKey, isInBounds } from './world';
+import { coordKey, isInWorldBounds } from './world';
 
 function resolveAttackOrder(world: WorldState, command: Extract<SimCommand, { type: 'attack' }>): { state: WorldState; event: SimEvent } {
   const unit = world.units[command.unitId];
@@ -31,7 +31,7 @@ function resolveMove(world: WorldState, command: Extract<SimCommand, { type: 'mo
   const unit = world.units[command.unitId];
   if (!unit) return { state: world, event: { type: 'move.rejected', tick: world.tick, sequence: command.sequence, unitId: command.unitId, to: command.to, reason: 'missing_unit' } };
   if (heroMovementAnchored(world, command.unitId)) return { state: world, event: { type: 'move.rejected', tick: world.tick, sequence: command.sequence, unitId: command.unitId, to: command.to, reason: 'hero_anchored' } };
-  if (!isInBounds(command.to)) return { state: world, event: { type: 'move.rejected', tick: world.tick, sequence: command.sequence, unitId: command.unitId, to: command.to, reason: 'out_of_bounds' } };
+  if (!isInWorldBounds(world, command.to)) return { state: world, event: { type: 'move.rejected', tick: world.tick, sequence: command.sequence, unitId: command.unitId, to: command.to, reason: 'out_of_bounds' } };
   const geometry = validateMoveGeometry(world, unit, command.to);
   if (!geometry.legal) return { state: world, event: { type: 'move.rejected', tick: world.tick, sequence: command.sequence, unitId: command.unitId, to: command.to, reason: geometry.reason } };
   const targetKey = coordKey(command.to);
