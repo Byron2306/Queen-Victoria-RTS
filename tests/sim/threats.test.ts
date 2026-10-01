@@ -42,6 +42,16 @@ describe('Phase 1 threat projection', () => {
     ]);
   });
 
+  it('uses the selected world dimensions for sliding threats', () => {
+    const rook = unit('v2-rook', 'rook', 24, 11);
+    const world = createWorld([rook], { topologyId: 'triptych-v2' });
+    const threatened = keys(projectThreatCells(world, rook));
+
+    expect(world.width).toBe(32);
+    expect(threatened).toContain('31,11');
+    expect(threatened).not.toContain('32,11');
+  });
+
   it('includes the first occupied square on a sliding ray and stops beyond it', () => {
     const rook = unit('r', 'rook', 2, 2);
     const blocker = unit('blocker', 'pawn', 2, 5, 'obsidian');
