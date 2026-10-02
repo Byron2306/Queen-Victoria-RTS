@@ -3,6 +3,7 @@ import type {
   UnitState,
   WorldState,
 } from '../../sim/types';
+import { topologyForWorld } from '../../sim/territory';
 import {
   tileCenter,
   type BoardProjection,
@@ -116,6 +117,8 @@ export function createBattlefieldRenderModel(
   projection: BattlefieldRenderProjection,
   selectedUnitId: string | null,
 ): BattlefieldRenderModel {
+  const topologyId = topologyForWorld(world).id;
+
   const units = Object.values(world.units)
     .map<RenderedBattlefieldUnit>((unit) => ({
       id: unit.id,
@@ -124,6 +127,7 @@ export function createBattlefieldRenderModel(
       screen: unitGroundAnchor(
         unit.position,
         projection,
+        topologyId,
       ),
       asset: resolveUnitAsset(unit),
       selected: unit.id === selectedUnitId,
@@ -150,6 +154,7 @@ export function createBattlefieldRenderModel(
       screen: tileCenter(
         node.center,
         projection,
+        topologyId,
       ),
     }))
     .sort(
