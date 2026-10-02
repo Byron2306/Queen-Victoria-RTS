@@ -1,9 +1,9 @@
-import { allPlayableCells } from '../../sim/board-topology';
 import { canBuildFortification } from '../../sim/fortifications';
 import { getBannerAt } from '../../sim/polarity';
 import {
   getTileFactionControl,
   hasAdjacentFactionTile,
+  topologyForWorld,
 } from '../../sim/territory';
 import type { Coord, Faction, WorldState } from '../../sim/types';
 import type { ClientCommandBridge } from '../runtime/command-bridge';
@@ -42,7 +42,7 @@ export function legalStrategicTargets(
   faction: Faction,
   mode: StrategicTargetMode,
 ): readonly Coord[] {
-  return allPlayableCells()
+  return topologyForWorld(world).allPlayableCells()
     .filter(cell => isLegalStrategicTarget(world, faction, mode, cell))
     .map(cell => ({ ...cell }));
 }
@@ -54,6 +54,7 @@ export function stageStrategicTarget(
   mode: StrategicTargetMode,
   cell: Coord,
 ): boolean {
+  if (!topologyForWorld(world).isPlayableCell(cell.x, cell.y)) return false;
   if (!isLegalStrategicTarget(world, faction, mode, cell)) return false;
 
   if (mode === 'deploy_banner') {
