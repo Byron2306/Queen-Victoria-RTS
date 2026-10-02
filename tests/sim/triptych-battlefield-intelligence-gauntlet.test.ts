@@ -216,7 +216,7 @@ describe('Royal War Triptych battlefield intelligence gauntlet', () => {
     ).toBeNull();
   });
 
-  it('observes valid V2 frontier cells beyond the historical V1 footprint without observing void corners', () => {
+  it('observes valid V2 frontier cells beyond the historical V1 footprint without creating intelligence records for void corners', () => {
     let world = createWorld([
       {
         id: 'v2-rook',
@@ -230,7 +230,7 @@ describe('Royal War Triptych battlefield intelligence gauntlet', () => {
 
     expect(getTileMemory(world, 'victoria', { x: 28, y: 18 }).visibility)
       .toBe('observed');
-    expect(getTileMemory(world, 'victoria', { x: 2, y: 2 }).visibility)
-      .toBe('unknown');
+    expect(() => getTileMemory(world, 'victoria', { x: 2, y: 2 }))
+      .toThrow('Cell 2,2 has no battlefield intelligence record');
   });
 });
