@@ -6,7 +6,7 @@ import {
   isRecruitUnlocked,
   pieceCountWithQueue,
 } from './economy';
-import { isPlayableCell } from './board-topology';
+import { topologyForWorld } from './territory';
 import type {
   Faction,
   ProductionQueueEntry,
@@ -201,7 +201,8 @@ export function deployReinforcements(world: WorldState): DeploymentResult {
     if (!head) continue;
 
     const anchor = working.production.reinforcementAnchors[faction];
-    if (!isPlayableCell(anchor.x, anchor.y)) {
+    const topology = topologyForWorld(working);
+    if (!topology.isPlayableCell(anchor.x, anchor.y)) {
       receipts[faction] = blockedReceipt(
         working,
         head,
