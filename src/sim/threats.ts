@@ -77,6 +77,12 @@ export function projectThreatCells(world: WorldState, unit: UnitState): readonly
   switch (unit.kind) {
     case 'pawn': {
       const forward = unit.faction === 'victoria' ? 1 : -1;
+      if (topologyForWorld(world).id === 'triptych-v2') {
+        return offsetThreats(world, unit, [
+          { x: forward, y: -1 },
+          { x: forward, y: 1 },
+        ]);
+      }
       return offsetThreats(world, unit, [
         { x: -1, y: forward },
         { x: 1, y: forward },
