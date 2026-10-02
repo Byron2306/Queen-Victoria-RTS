@@ -46,4 +46,35 @@ describe('topology-aware world dimensions', () => {
       }),
     ).toThrow(OutOfBoundsError);
   });
+
+  it('rejects a rectangularly in-bounds V2 void cell while allowing a valid V2 frontier cell', () => {
+    const world = createWorld([], { topologyId: 'triptych-v2' });
+
+    expect(() => placeUnit(world, {
+      id: 'void-pawn',
+      faction: 'victoria',
+      kind: 'pawn',
+      position: { x: 11, y: 10 },
+    })).toThrow(OutOfBoundsError);
+
+    const placed = placeUnit(world, {
+      id: 'frontier-pawn',
+      faction: 'victoria',
+      kind: 'pawn',
+      position: { x: 27, y: 18 },
+    });
+    expect(placed.units['frontier-pawn']?.position).toEqual({ x: 27, y: 18 });
+  });
+
+  it('retains historical V1 placement on an explicitly V1-playable cell', () => {
+    const world = createWorld([], { topologyId: 'triptych-v1' });
+    const placed = placeUnit(world, {
+      id: 'legacy-pawn',
+      faction: 'victoria',
+      kind: 'pawn',
+      position: { x: 11, y: 10 },
+    });
+
+    expect(placed.units['legacy-pawn']?.position).toEqual({ x: 11, y: 10 });
+  });
 });
