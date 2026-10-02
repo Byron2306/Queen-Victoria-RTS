@@ -4,6 +4,7 @@ import {
   type BoardProjection,
   type ScreenPoint,
 } from '../board/projection';
+import type { BattlefieldTopologyId } from '../../sim/battlefield-topology-authority';
 
 /**
  * All live unit art is grounded by its bottom-centre pixel anchor.
@@ -23,6 +24,7 @@ export const UNIT_SPRITE_ORIGIN = {
 export function unitGroundAnchor(
   cell: BoardCell,
   projection: BoardProjection,
+  topologyId?: BattlefieldTopologyId,
 ): ScreenPoint {
-  return tileCenter(cell, projection);
+  return tileCenter(cell, projection, topologyId);
 }
