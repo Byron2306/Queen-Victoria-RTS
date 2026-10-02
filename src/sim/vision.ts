@@ -1,5 +1,4 @@
 import {
-  isPlayableCell,
   tileId,
   type TileId,
 } from './board-topology';
@@ -8,7 +7,7 @@ import {
   getFortificationAt,
   type FortificationState,
 } from './fortifications';
-import { strategicTiles } from './territory';
+import { strategicTiles, topologyForWorld } from './territory';
 import type {
   CaptureNodeState,
   Coord,
@@ -35,24 +34,34 @@ function sortedCells(cells: readonly Coord[]): readonly Coord[] {
   return [...cells].sort((a, b) => tileId(a).localeCompare(tileId(b)));
 }
 
-function surroundingCells(center: Coord, range: number): readonly Coord[] {
+function surroundingCells(
+  world: WorldState,
+  center: Coord,
+  range: number,
+): readonly Coord[] {
+  const topology = topologyForWorld(world);
   const cells: Coord[] = [];
   for (let dy = -range; dy <= range; dy += 1) {
     for (let dx = -range; dx <= range; dx += 1) {
       if (dx === 0 && dy === 0) continue;
       const cell = { x: center.x + dx, y: center.y + dy };
-      if (isPlayableCell(cell.x, cell.y)) cells.push(cell);
+      if (topology.isPlayableCell(cell.x, cell.y)) cells.push(cell);
     }
   }
   return sortedCells(cells);
 }
 
-function localBeaconCells(center: Coord, range: number): readonly Coord[] {
+function localBeaconCells(
+  world: WorldState,
+  center: Coord,
+  range: number,
+): readonly Coord[] {
+  const topology = topologyForWorld(world);
   const cells: Coord[] = [];
   for (let dy = -range; dy <= range; dy += 1) {
     for (let dx = -range; dx <= range; dx += 1) {
       const cell = { x: center.x + dx, y: center.y + dy };
-      if (isPlayableCell(cell.x, cell.y)) cells.push(cell);
+      if (topology.isPlayableCell(cell.x, cell.y)) cells.push(cell);
     }
   }
   return sortedCells(cells);
@@ -64,6 +73,7 @@ function rayCells(
   directions: readonly Readonly<{ x: number; y: number }>[],
   range: number,
 ): readonly Coord[] {
+  const topology = topologyForWorld(world);
   const cells: Coord[] = [];
   for (const direction of directions) {
     for (let distance = 1; distance <= range; distance += 1) {
@@ -71,7 +81,7 @@ function rayCells(
         x: origin.x + direction.x * distance,
         y: origin.y + direction.y * distance,
       };
-      if (!isPlayableCell(cell.x, cell.y)) break;
+      if (!topology.isPlayableCell(cell.x, cell.y)) break;
       cells.push(cell);
       if (getFortificationAt(world, cell)) break;
     }
@@ -83,9 +93,10 @@ export function visibleCellsForUnit(
   world: WorldState,
   unit: UnitState,
 ): readonly Coord[] {
+  const topology = topologyForWorld(world);
   switch (unit.kind) {
     case 'pawn':
-      return surroundingCells(unit.position, 1);
+      return surroundingCells(world, unit.position, 1);
     case 'knight': {
       const offsets = [
         { x: -2, y: -1 }, { x: -2, y: 1 },
@@ -95,7 +106,7 @@ export function visibleCellsForUnit(
       ] as const;
       return sortedCells(offsets
         .map(offset => ({ x: unit.position.x + offset.x, y: unit.position.y + offset.y }))
-        .filter(cell => isPlayableCell(cell.x, cell.y)));
+        .filter(cell => topology.isPlayableCell(cell.x, cell.y)));
     }
     case 'rook':
       return rayCells(world, unit.position, ORTHOGONAL_DIRECTIONS, 3);
@@ -107,36 +118,38 @@ export function visibleCellsForUnit(
         ...rayCells(world, unit.position, DIAGONAL_DIRECTIONS, 3),
       ]);
     case 'king':
-      return surroundingCells(unit.position, 2);
+      return surroundingCells(world, unit.position, 2);
   }
 }
 
 export function visibleCellsForFortification(
-  _world: WorldState,
+  world: WorldState,
   fortification: FortificationState,
 ): readonly Coord[] {
   return localBeaconCells(
+    world,
     fortification.cell,
     fortification.kind === 'redoubt' ? 4 : 3,
   );
 }
 
 export function visibleCellsForNode(
-  _world: WorldState,
+  world: WorldState,
   node: CaptureNodeState,
   faction: Faction,
 ): readonly Coord[] {
   if (node.owner !== faction) return [];
-  return localBeaconCells(node.center, node.kind === 'crown' ? 5 : 3);
+  return localBeaconCells(world, node.center, node.kind === 'crown' ? 5 : 3);
 }
 
 export function computeFactionVisibleCells(
   world: WorldState,
   faction: Faction,
 ): ReadonlySet<TileId> {
+  const topology = topologyForWorld(world);
   const visible = new Set<TileId>();
   const add = (cell: Coord) => {
-    if (isPlayableCell(cell.x, cell.y)) visible.add(tileId(cell));
+    if (topology.isPlayableCell(cell.x, cell.y)) visible.add(tileId(cell));
   };
 
   for (const tile of Object.values(strategicTiles(world))) {
