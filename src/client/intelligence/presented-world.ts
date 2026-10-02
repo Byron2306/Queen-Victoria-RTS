@@ -1,11 +1,11 @@
 import {
-  allPlayableCells,
-  createBoardTile,
   tileId,
+  type BoardTile,
   type FactionControl,
   type TileId,
   type TilePolarity,
 } from '../../sim/board-topology';
+import { topologyForWorld } from '../../sim/territory';
 import type {
   CaptureNodeState,
   Coord,
@@ -46,6 +46,17 @@ function cellFromTileId(id: TileId): Coord {
   };
 }
 
+function createPresentedBoardTile(tile: PresentedTile): BoardTile {
+  return {
+    id: tile.id,
+    x: tile.cell.x,
+    y: tile.cell.y,
+    polarity: tile.polarity
+      ?? ((tile.cell.x + tile.cell.y) % 2 === 0 ? 'white' : 'black'),
+    factionControl: tile.control ?? 'neutral',
+  };
+}
+
 export function createPresentedWorld(
   world: WorldState,
   faction: Faction,
@@ -82,7 +93,7 @@ export function createPresentedWorld(
       || a.unitId.localeCompare(b.unitId),
     );
 
-  const tiles = allPlayableCells()
+  const tiles = topologyForWorld(world).allPlayableCells()
     .map<PresentedTile>((cell) => {
       const id = tileId(cell);
       const remembered = memory[id];
@@ -145,15 +156,7 @@ export function createPresentedWorldState(
       .filter((entry): entry is readonly [string, NonNullable<typeof entry[1]>] => entry[1] !== undefined),
   );
   const tiles = Object.fromEntries(
-    presented.tiles.map((tile) => {
-      const base = createBoardTile(tile.cell, tile.control ?? 'neutral');
-      return [
-        tile.id,
-        tile.polarity
-          ? { ...base, polarity: tile.polarity }
-          : base,
-      ];
-    }),
+    presented.tiles.map((tile) => [tile.id, createPresentedBoardTile(tile)]),
   );
   const nodes = Object.fromEntries(
     (presented.nodes ?? []).map((node) => [node.id, node]),
