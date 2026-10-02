@@ -16,4 +16,24 @@ describe('reinforcement resolution',()=>{
    const r=deployReinforcements(w);
    expect(r.events).toEqual([]); expect(r.state.production.queues.victoria).toHaveLength(1); expect(r.state.units).toEqual(w.units); expect(r.state.economy.crownPower.victoria).toBe(7);
  });
+
+ it('uses the selected V2 topology for reinforcement spawn search',()=>{
+   const world=createWorld([], {topologyId:'triptych-v2'});
+   expect(findReinforcementSpawn(world,'victoria')).toEqual({x:1,y:16});
+ });
+
+ it('rejects a V2 void reinforcement anchor even when V1 would consider it playable',()=>{
+   let world=queued(createWorld([], {topologyId:'triptych-v2'}),[entry()]);
+   world={
+     ...world,
+     production:{
+       ...world.production,
+       reinforcementAnchors:{...world.production.reinforcementAnchors,victoria:{x:11,y:10}},
+     },
+   };
+   const result=deployReinforcements(world);
+   expect(result.events).toEqual([]);
+   expect(result.receipts.victoria).toMatchObject({accepted:false,reason:'invalid_deployment_territory'});
+   expect(result.state.production.queues.victoria).toHaveLength(1);
+ });
 });
