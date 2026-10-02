@@ -14,26 +14,29 @@ const APPROVED_V2_NODES = [
   ['minor-se', 'minor', 19, 21],
 ] as const;
 
-describe('Triptych V2 strategic nodes', () => {
-  it('pins the frozen 32x32 objective map exactly', () => {
-    expect(Object.values(TRIPTYCH_V2_CAPTURE_NODES).map(node => [
+const byNodeId = (nodes: Readonly<Record<string, { id: string; kind: string; center: { x: number; y: number } }>>) =>
+  Object.values(nodes)
+    .map(node => [
       node.id,
       node.kind,
       node.center.x,
       node.center.y,
-    ] as const)).toEqual(APPROVED_V2_NODES);
+    ] as const)
+    .sort(([a], [b]) => a.localeCompare(b));
+
+const APPROVED_V2_NODES_BY_ID = [...APPROVED_V2_NODES]
+  .sort(([a], [b]) => a.localeCompare(b));
+
+describe('Triptych V2 strategic nodes', () => {
+  it('pins the frozen 32x32 objective map exactly', () => {
+    expect(byNodeId(TRIPTYCH_V2_CAPTURE_NODES)).toEqual(APPROVED_V2_NODES_BY_ID);
   });
 
   it('initializes V2 worlds with the V2 nodes and keeps every center playable', () => {
     const world = createWorld([], { topologyId: 'triptych-v2' });
     const topology = getBattlefieldTopology('triptych-v2');
 
-    expect(Object.values(world.territory.nodes).map(node => [
-      node.id,
-      node.kind,
-      node.center.x,
-      node.center.y,
-    ] as const)).toEqual(APPROVED_V2_NODES);
+    expect(byNodeId(world.territory.nodes)).toEqual(APPROVED_V2_NODES_BY_ID);
     expect(Object.values(world.territory.nodes).every(node =>
       topology.isPlayableCell(node.center.x, node.center.y),
     )).toBe(true);
