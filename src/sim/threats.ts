@@ -1,4 +1,5 @@
 import type { Coord, Faction, UnitState, WorldState } from './types';
+import { topologyForWorld } from './territory';
 import { coordKey, isInWorldBounds } from './world';
 
 export type ThreatMap = Readonly<Record<string, readonly string[]>>;
@@ -41,11 +42,17 @@ function sortCoords(cells: Coord[]): readonly Coord[] {
   return cells.sort((a, b) => a.y - b.y || a.x - b.x);
 }
 
+function isThreatCell(world: WorldState, cell: Coord): boolean {
+  if (!isInWorldBounds(world, cell)) return false;
+  const topology = topologyForWorld(world);
+  return topology.id === 'triptych-v1' || topology.isPlayableCell(cell.x, cell.y);
+}
+
 function offsetThreats(world: WorldState, unit: UnitState, offsets: readonly Coord[]): readonly Coord[] {
   const cells: Coord[] = [];
   for (const offset of offsets) {
     const cell = { x: unit.position.x + offset.x, y: unit.position.y + offset.y };
-    if (isInWorldBounds(world, cell)) cells.push(cell);
+    if (isThreatCell(world, cell)) cells.push(cell);
   }
   return sortCoords(cells);
 }
@@ -55,7 +62,7 @@ function rayThreats(world: WorldState, unit: UnitState, directions: readonly Dir
   for (const direction of directions) {
     let x = unit.position.x + direction.x;
     let y = unit.position.y + direction.y;
-    while (isInWorldBounds(world, { x, y })) {
+    while (isThreatCell(world, { x, y })) {
       const cell = { x, y };
       cells.push(cell);
       if (world.occupancy[coordKey(cell)]) break;
