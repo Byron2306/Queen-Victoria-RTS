@@ -26,7 +26,9 @@ export type AnnexResult = Readonly<{
   reason?: AnnexRejectReason;
 }>;
 
-function topologyForWorld(world: Pick<WorldState, 'width' | 'height'>): BattlefieldTopologyAuthority {
+export function topologyForWorld(
+  world: Pick<WorldState, 'width' | 'height'>,
+): BattlefieldTopologyAuthority {
   const v2 = getBattlefieldTopology('triptych-v2');
   if (world.width === v2.width && world.height === v2.height) return v2;
   return getBattlefieldTopology('triptych-v1');
