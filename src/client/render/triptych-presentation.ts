@@ -7,7 +7,7 @@ import {
 import type { TacticalOrder } from '../../sim/orders';
 import type { BannerState } from '../../sim/polarity';
 import type { FortificationState } from '../../sim/fortifications';
-import { strategicTiles } from '../../sim/territory';
+import { strategicTiles, topologyForWorld } from '../../sim/territory';
 import type {
   Coord,
   Faction,
@@ -83,7 +83,7 @@ function unitAnchor(
   projection: BoardProjection,
 ): ScreenPoint | null {
   const unit = world.units[unitId];
-  return unit ? tileCenter(unit.position, projection) : null;
+  return unit ? tileCenter(unit.position, projection, topologyForWorld(world).id) : null;
 }
 
 export function createTriptychOrderVisuals(
@@ -91,6 +91,8 @@ export function createTriptychOrderVisuals(
   orders: readonly TacticalOrder[],
   projection: BoardProjection,
 ): readonly TriptychOrderVisual[] {
+  const topologyId = topologyForWorld(world).id;
+
   return orders.map((order): TriptychOrderVisual => {
     if (order.kind === 'move') {
       return {
@@ -98,7 +100,7 @@ export function createTriptychOrderVisuals(
         style: 'move',
         fromUnitId: order.unitId,
         from: unitAnchor(world, order.unitId, projection),
-        to: tileCenter(order.destination, projection),
+        to: tileCenter(order.destination, projection, topologyId),
       };
     }
     if (order.kind === 'attack' || order.kind === 'assault') {
@@ -127,7 +129,7 @@ export function createTriptychOrderVisuals(
         style: 'guard',
         fromUnitId: order.unitId,
         from: unitAnchor(world, order.unitId, projection),
-        to: tileCenter(order.anchor, projection),
+        to: tileCenter(order.anchor, projection, topologyId),
       };
     }
     if (order.kind === 'ability') {
@@ -152,6 +154,7 @@ export function createTriptychStrategicOverlay(
   world: WorldState,
   projection: BoardProjection,
 ): TriptychStrategicOverlay {
+  const topologyId = topologyForWorld(world).id;
   const tiles = Object.values(strategicTiles(world));
   const extras = world.territory as typeof world.territory & StrategicTerritoryExtras;
 
@@ -162,7 +165,7 @@ export function createTriptychStrategicOverlay(
       return {
         cell,
         faction: tile.factionControl as Faction,
-        polygon: tilePolygon(cell, projection),
+        polygon: tilePolygon(cell, projection, topologyId),
       };
     });
 
@@ -173,7 +176,7 @@ export function createTriptychStrategicOverlay(
     roundsHeld: banner.roundsHeld,
     mature: banner.mature,
     contestedBy: banner.contestedBy,
-    anchor: tileCenter(banner.cell, projection),
+    anchor: tileCenter(banner.cell, projection, topologyId),
   }));
 
   const fortifications = Object.values(extras.fortifications ?? {}).map<FortificationOverlayRecord>((fortification) => ({
@@ -181,8 +184,8 @@ export function createTriptychStrategicOverlay(
     faction: fortification.faction,
     cell: { ...fortification.cell },
     durability: fortification.durability,
-    polygon: tilePolygon(fortification.cell, projection),
-    anchor: tileCenter(fortification.cell, projection),
+    polygon: tilePolygon(fortification.cell, projection, topologyId),
+    anchor: tileCenter(fortification.cell, projection, topologyId),
   }));
 
   const ranks = Object.entries(world.military)
