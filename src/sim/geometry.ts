@@ -1,7 +1,7 @@
 import type { Coord, UnitState, WorldState } from './types';
 import { coordKey } from './world';
 import { isFortificationBlockingCell } from './fortifications';
-import { isPlayableCell } from './board-topology';
+import { topologyForWorld } from './territory';
 import { getTilePolarity } from './polarity';
 
 export type GeometryRejectReason =
@@ -17,6 +17,11 @@ function sign(value: number): -1 | 0 | 1 {
   return value === 0 ? 0 : value > 0 ? 1 : -1;
 }
 
+function selectedTopologyAllows(world: WorldState, cell: Coord): boolean {
+  const topology = topologyForWorld(world);
+  return topology.id === 'triptych-v1' || topology.isPlayableCell(cell.x, cell.y);
+}
+
 function rayIsClear(world: WorldState, from: Coord, to: Coord): boolean {
   const stepX = sign(to.x - from.x);
   const stepY = sign(to.y - from.y);
@@ -25,6 +30,7 @@ function rayIsClear(world: WorldState, from: Coord, to: Coord): boolean {
   while (x !== to.x || y !== to.y) {
     const cell = { x, y };
     if (
+      !selectedTopologyAllows(world, cell) ||
       world.occupancy[coordKey(cell)] ||
       isFortificationBlockingCell(world, cell)
     ) {
@@ -36,18 +42,21 @@ function rayIsClear(world: WorldState, from: Coord, to: Coord): boolean {
   return true;
 }
 
-function polarityAvailable(from: Coord, to: Coord): boolean {
-  return isPlayableCell(from.x, from.y) && isPlayableCell(to.x, to.y);
+function polarityAvailable(world: WorldState, from: Coord, to: Coord): boolean {
+  const topology = topologyForWorld(world);
+  if (topology.id === 'triptych-v1') return topology.isPlayableCell(from.x, from.y) && topology.isPlayableCell(to.x, to.y);
+  return topology.isPlayableCell(from.x, from.y) && topology.isPlayableCell(to.x, to.y);
 }
 
 function knightPolarityIsLegal(world: WorldState, from: Coord, to: Coord): boolean {
-  if (!polarityAvailable(from, to)) return true;
+  if (!polarityAvailable(world, from, to)) return true;
   return getTilePolarity(world, from) !== getTilePolarity(world, to);
 }
 
 function diagonalPolarityIsContinuous(world: WorldState, from: Coord, to: Coord): boolean {
-  if (!polarityAvailable(from, to)) return true;
+  if (!polarityAvailable(world, from, to)) return true;
 
+  const topology = topologyForWorld(world);
   const required = getTilePolarity(world, from);
   const stepX = sign(to.x - from.x);
   const stepY = sign(to.y - from.y);
@@ -56,7 +65,7 @@ function diagonalPolarityIsContinuous(world: WorldState, from: Coord, to: Coord)
 
   while (true) {
     const cell = { x, y };
-    if (!isPlayableCell(x, y)) return true;
+    if (!topology.isPlayableCell(x, y)) return false;
     if (getTilePolarity(world, cell) !== required) return false;
     if (x === to.x && y === to.y) return true;
     x += stepX;
@@ -65,6 +74,10 @@ function diagonalPolarityIsContinuous(world: WorldState, from: Coord, to: Coord)
 }
 
 export function validateMoveGeometry(world: WorldState, unit: UnitState, to: Coord): GeometryResult {
+  if (!selectedTopologyAllows(world, to)) {
+    return { legal: false, reason: 'illegal_geometry' };
+  }
+
   const dx = to.x - unit.position.x;
   const dy = to.y - unit.position.y;
   const ax = Math.abs(dx);
