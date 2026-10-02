@@ -1,5 +1,5 @@
-import { isPlayableCell } from './board-topology';
 import { isTileKnown, isTileObserved } from './intelligence';
+import { topologyForWorld } from './territory';
 import type { Coord, Faction, UnitKind, WorldState } from './types';
 
 export type KnowledgeRejectReason = 'unknown_destination' | 'unknown_path';
@@ -36,9 +36,11 @@ export function validateMoveKnowledge(
   to: Coord,
   kind: UnitKind,
 ): KnowledgeResult {
+  const topology = topologyForWorld(world);
+
   // Legacy/non-battlefield fixtures are governed by the existing geometry
-  // rules only. Intelligence authority applies to the playable royal theatre.
-  if (!isPlayableCell(from.x, from.y) || !isPlayableCell(to.x, to.y)) {
+  // rules only. Intelligence authority applies to the selected playable theatre.
+  if (!topology.isPlayableCell(from.x, from.y) || !topology.isPlayableCell(to.x, to.y)) {
     return { legal: true };
   }
 
@@ -66,7 +68,7 @@ export function validateMoveKnowledge(
 
   while (x !== to.x || y !== to.y) {
     const cell = { x, y };
-    if (isPlayableCell(x, y) && !isTileKnown(world, faction, cell)) {
+    if (topology.isPlayableCell(x, y) && !isTileKnown(world, faction, cell)) {
       return { legal: false, reason: 'unknown_path' };
     }
     x += stepX;
@@ -83,6 +85,7 @@ export function targetIsObserved(
 ): boolean {
   const target = world.units[targetId];
   if (!target) return false;
-  if (!isPlayableCell(target.position.x, target.position.y)) return true;
+  const topology = topologyForWorld(world);
+  if (!topology.isPlayableCell(target.position.x, target.position.y)) return true;
   return isTileObserved(world, faction, target.position);
 }
