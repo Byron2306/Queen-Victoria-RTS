@@ -1,7 +1,8 @@
-import { allPlayableCells, tileId, type TileId } from './board-topology';
+import { tileId, type TileId } from './board-topology';
+import { getBattlefieldTopology, type BattlefieldTopologyId } from './battlefield-topology-authority';
 import { getFortificationAt } from './fortifications';
 import { getBannerAt, getTilePolarity } from './polarity';
-import { getTileFactionControl } from './territory';
+import { getTileFactionControl, topologyForWorld } from './territory';
 import { computeFactionVisibleCells } from './vision';
 import { coordKey } from './world';
 import type {
@@ -22,19 +23,19 @@ const UNKNOWN_MEMORY: TileMemory = {
   lastKnownBannerId: null,
 };
 
-function createFactionMemory(): Record<TileId, TileMemory> {
+function createFactionMemory(topologyId?: BattlefieldTopologyId): Record<TileId, TileMemory> {
   const memory: Partial<Record<TileId, TileMemory>> = {};
-  for (const cell of allPlayableCells()) {
+  for (const cell of getBattlefieldTopology(topologyId).allPlayableCells()) {
     memory[tileId(cell)] = { ...UNKNOWN_MEMORY };
   }
   return memory as Record<TileId, TileMemory>;
 }
 
-export function createInitialIntelligenceState(): IntelligenceState {
+export function createInitialIntelligenceState(topologyId?: BattlefieldTopologyId): IntelligenceState {
   return {
     byFaction: {
-      victoria: createFactionMemory(),
-      obsidian: createFactionMemory(),
+      victoria: createFactionMemory(topologyId),
+      obsidian: createFactionMemory(topologyId),
     },
   };
 }
@@ -91,7 +92,7 @@ export function refreshFactionIntelligence(
   const previous = world.intelligence.byFaction[faction];
   const next: Partial<Record<TileId, TileMemory>> = {};
 
-  for (const cell of allPlayableCells()) {
+  for (const cell of topologyForWorld(world).allPlayableCells()) {
     const id = tileId(cell);
     const oldMemory = previous[id] ?? UNKNOWN_MEMORY;
 
