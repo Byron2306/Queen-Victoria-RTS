@@ -46,4 +46,24 @@ describe('Triptych faction settlement', () => {
     expect(getTileFactionControl(world, { x: 7, y: 10 })).toBe('obsidian');
     expect(getTilePolarity(world, { x: 7, y: 10 })).toBe(polarity);
   });
+
+  it('settles territory on the far edge of an explicit 32x32 Triptych V2 world', () => {
+    let world = createWorld(
+      [
+        {
+          id: 'victoria-rook',
+          faction: 'victoria',
+          kind: 'rook',
+          position: { x: 31, y: 11 },
+        },
+      ],
+      { topologyId: 'triptych-v2' },
+    );
+
+    expect(getTileFactionControl(world, { x: 31, y: 11 })).toBe('neutral');
+
+    world = resolveSettlement(world);
+
+    expect(getTileFactionControl(world, { x: 31, y: 11 })).toBe('victoria');
+  });
 });
