@@ -7,10 +7,11 @@ import {
   getFortificationAt,
   type FortificationState,
 } from '../../src/sim/fortifications';
-import { resolveSettlement } from '../../src/sim/territory';
+import { resolveSettlement, strategicTiles } from '../../src/sim/territory';
 import {
   computeFactionVisibleCells,
   visibleCellsForFortification,
+  visibleCellsForNode,
   visibleCellsForUnit,
 } from '../../src/sim/vision';
 import { createWorld, placeUnit } from '../../src/sim/world';
@@ -139,5 +140,62 @@ describe('chess-geometric battlefield vision', () => {
     fortified = damageFortification(fortified, 'watch', 99);
     expect(getFortificationAt(fortified, { x: 11, y: 14 })).toBeNull();
     expect(computeFactionVisibleCells(fortified, 'victoria')).not.toContain('11,18');
+  });
+
+  it('uses V2 topology for unit sight beyond the historical V1 footprint', () => {
+    const world = createWorld([], { topologyId: 'triptych-v2' });
+    const rook = unit('rook', { x: 27, y: 18 });
+    const seen = ids(visibleCellsForUnit(world, rook));
+
+    expect(seen).toContain('28,18');
+    expect(seen).toContain('27,19');
+    expect(seen).toContain('24,18');
+  });
+
+  it('stops V2 rays at a void corner even inside rectangular world bounds', () => {
+    const world = createWorld([], { topologyId: 'triptych-v2' });
+    const rook = unit('rook', { x: 12, y: 10 });
+    const seen = ids(visibleCellsForUnit(world, rook));
+
+    expect(seen).not.toContain('11,10');
+    expect(seen).toContain('12,9');
+    expect(seen).toContain('12,11');
+  });
+
+  it('limits V2 fortification and owned-node beacon sight to V2 playable cells', () => {
+    let world = createWorld([], { topologyId: 'triptych-v2' });
+    const fort: FortificationState = {
+      id: 'v2-watch', faction: 'victoria', kind: 'redoubt', cell: { x: 24, y: 18 }, durability: 3,
+    };
+    const fortSight = ids(visibleCellsForFortification(world, fort));
+
+    expect(fortSight).toContain('27,18');
+    expect(fortSight).not.toContain('24,22');
+
+    world = {
+      ...world,
+      territory: {
+        ...world.territory,
+        nodes: {
+          ...world.territory.nodes,
+          crown: { ...world.territory.nodes.crown!, owner: 'victoria' },
+        },
+      },
+    };
+    const nodeSight = ids(visibleCellsForNode(world, world.territory.nodes.crown!, 'victoria'));
+    expect(nodeSight).toContain('15,1');
+    expect(nodeSight).not.toContain('9,1');
+  });
+
+  it('includes controlled V2 territory beyond the V1 footprint in faction visibility', () => {
+    let world = createWorld([], { topologyId: 'triptych-v2' });
+    const tiles = { ...strategicTiles(world) };
+    tiles['27,18'] = { ...tiles['27,18']!, factionControl: 'victoria' };
+    world = {
+      ...world,
+      territory: { ...world.territory, tiles },
+    };
+
+    expect(computeFactionVisibleCells(world, 'victoria')).toContain('27,18');
   });
 });
