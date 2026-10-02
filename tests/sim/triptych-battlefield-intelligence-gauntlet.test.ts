@@ -215,4 +215,22 @@ describe('Royal War Triptych battlefield intelligence gauntlet', () => {
       selectPriorityTarget(world, 'obsidian', 'shadow-rook'),
     ).toBeNull();
   });
+
+  it('observes valid V2 frontier cells beyond the historical V1 footprint without observing void corners', () => {
+    let world = createWorld([
+      {
+        id: 'v2-rook',
+        faction: 'victoria',
+        kind: 'rook',
+        position: { x: 27, y: 18 },
+      },
+    ], { topologyId: 'triptych-v2' });
+
+    world = refreshFactionIntelligence(world, 'victoria');
+
+    expect(getTileMemory(world, 'victoria', { x: 28, y: 18 }).visibility)
+      .toBe('observed');
+    expect(getTileMemory(world, 'victoria', { x: 2, y: 2 }).visibility)
+      .toBe('unknown');
+  });
 });
