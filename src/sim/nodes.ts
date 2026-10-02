@@ -1,3 +1,4 @@
+import type { BattlefieldTopologyId } from './battlefield-topology-authority';
 import type { CaptureNodeState, TerritoryState } from './types';
 import { hasAdjacentFactionTile } from './territory';
 
@@ -12,10 +13,30 @@ export const DEFAULT_CAPTURE_NODES = {
   'minor-se': { id: 'minor-se', kind: 'minor', center: { x: 14, y: 16 } },
 } as const;
 
-export function createInitialTerritoryState(): TerritoryState {
+export const TRIPTYCH_V2_CAPTURE_NODES = {
+  crown: { id: 'crown', kind: 'crown', center: { x: 15, y: 1 } },
+  'crown-south': { id: 'crown-south', kind: 'crown', center: { x: 16, y: 30 } },
+  'minor-nw': { id: 'minor-nw', kind: 'minor', center: { x: 12, y: 10 } },
+  'minor-ne': { id: 'minor-ne', kind: 'minor', center: { x: 19, y: 10 } },
+  'minor-w': { id: 'minor-w', kind: 'minor', center: { x: 13, y: 15 } },
+  'minor-e': { id: 'minor-e', kind: 'minor', center: { x: 18, y: 16 } },
+  'minor-sw': { id: 'minor-sw', kind: 'minor', center: { x: 12, y: 21 } },
+  'minor-se': { id: 'minor-se', kind: 'minor', center: { x: 19, y: 21 } },
+} as const;
+
+function captureNodesFor(topologyId: BattlefieldTopologyId) {
+  return topologyId === 'triptych-v2'
+    ? TRIPTYCH_V2_CAPTURE_NODES
+    : DEFAULT_CAPTURE_NODES;
+}
+
+export function createInitialTerritoryState(
+  topologyId: BattlefieldTopologyId = 'triptych-v1',
+): TerritoryState {
+  const source = captureNodesFor(topologyId);
   const nodes: Record<string, CaptureNodeState> = {};
-  for (const id of Object.keys(DEFAULT_CAPTURE_NODES).sort()) {
-    const node = DEFAULT_CAPTURE_NODES[id as keyof typeof DEFAULT_CAPTURE_NODES];
+  for (const id of Object.keys(source).sort()) {
+    const node = source[id as keyof typeof source];
     nodes[id] = {
       id: node.id,
       kind: node.kind,
