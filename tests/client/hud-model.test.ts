@@ -40,7 +40,7 @@ describe('Phase 6 HUD model', () => {
       id: 'victoria-rook-a',
       faction: 'victoria',
       kind: 'rook',
-      position: { x: 3, y: 9 },
+      position: { x: 4, y: 13 },
     });
     expect(hud.selectedCombat).toEqual(world.combat['victoria-rook-a']);
   });
