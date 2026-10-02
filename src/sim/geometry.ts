@@ -44,7 +44,6 @@ function rayIsClear(world: WorldState, from: Coord, to: Coord): boolean {
 
 function polarityAvailable(world: WorldState, from: Coord, to: Coord): boolean {
   const topology = topologyForWorld(world);
-  if (topology.id === 'triptych-v1') return topology.isPlayableCell(from.x, from.y) && topology.isPlayableCell(to.x, to.y);
   return topology.isPlayableCell(from.x, from.y) && topology.isPlayableCell(to.x, to.y);
 }
 
@@ -91,6 +90,11 @@ export function validateMoveGeometry(world: WorldState, unit: UnitState, to: Coo
   switch (unit.kind) {
     case 'pawn': {
       const forward = unit.faction === 'victoria' ? 1 : -1;
+      if (topologyForWorld(world).id === 'triptych-v2') {
+        return dx === forward && dy === 0
+          ? { legal: true }
+          : { legal: false, reason: 'illegal_geometry' };
+      }
       return dx === 0 && dy === forward
         ? { legal: true }
         : { legal: false, reason: 'illegal_geometry' };
