@@ -10,7 +10,7 @@ function deployBanner(overrides: Partial<Record<string, unknown>> = {}) {
     kind: 'deploy_banner',
     faction: 'victoria',
     bannerId: 'banner-v-1',
-    cell: { x: 8, y: 11 },
+    cell: { x: 7, y: 14 },
     issuedRound: 1,
     commandCost: 1,
     ...overrides,
@@ -50,7 +50,7 @@ describe('Triptych banner Royal Commands', () => {
     ]);
     expect(getBannerState(resolved.world, 'banner-v-1')).toMatchObject({
       faction: 'victoria',
-      cell: { x: 8, y: 11 },
+      cell: { x: 7, y: 14 },
       roundsHeld: 0,
       mature: false,
     });
@@ -82,7 +82,7 @@ describe('Triptych banner Royal Commands', () => {
     world = queueBanner(world, {
       bannerId: 'banner-v-1',
       faction: 'victoria',
-      cell: { x: 8, y: 11 },
+      cell: { x: 7, y: 14 },
     }).state;
 
     const queued = enqueueTacticalOrder(world, removeBanner());
@@ -105,7 +105,7 @@ describe('Triptych banner Royal Commands', () => {
     world = queueBanner(world, {
       bannerId: 'banner-shadow-1',
       faction: 'obsidian',
-      cell: { x: 15, y: 12 },
+      cell: { x: 24, y: 14 },
     }).state;
 
     const resolved = resolveCommittedOrders(world, [
