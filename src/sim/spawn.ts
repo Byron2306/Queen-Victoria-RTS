@@ -1,37 +1,33 @@
-import { BOARD_HEIGHT, BOARD_WIDTH, isPlayableCell } from './board-topology';
-import { DEFAULT_CAPTURE_NODES } from './nodes';
+import { topologyForWorld } from './territory';
 import type { Coord, Faction, WorldState } from './types';
-
-const NODE_CENTER_KEYS = new Set(
-  Object.values(DEFAULT_CAPTURE_NODES).map(
-    node => `${node.center.x},${node.center.y}`,
-  ),
-);
 
 export function findReinforcementSpawn(
   world: WorldState,
   faction: Faction,
 ): Coord | null {
+  const topology = topologyForWorld(world);
   const anchor = world.production.reinforcementAnchors[faction];
 
-  if (!isPlayableCell(anchor.x, anchor.y)) return null;
+  if (!topology.isPlayableCell(anchor.x, anchor.y)) return null;
 
-  const maxRadius = Math.max(BOARD_WIDTH, BOARD_HEIGHT);
+  const nodeCenterKeys = new Set(
+    Object.values(world.territory.nodes).map(
+      node => `${node.center.x},${node.center.y}`,
+    ),
+  );
+  const maxRadius = Math.max(topology.width, topology.height);
 
   for (let radius = 0; radius < maxRadius; radius += 1) {
     const candidates: Coord[] = [];
 
-    for (let y = 0; y < BOARD_HEIGHT; y += 1) {
-      for (let x = 0; x < BOARD_WIDTH; x += 1) {
-        if (!isPlayableCell(x, y)) continue;
-        if (
-          Math.max(
-            Math.abs(x - anchor.x),
-            Math.abs(y - anchor.y),
-          ) === radius
-        ) {
-          candidates.push({ x, y });
-        }
+    for (const cell of topology.allPlayableCells()) {
+      if (
+        Math.max(
+          Math.abs(cell.x - anchor.x),
+          Math.abs(cell.y - anchor.y),
+        ) === radius
+      ) {
+        candidates.push(cell);
       }
     }
 
@@ -39,7 +35,7 @@ export function findReinforcementSpawn(
 
     for (const candidate of candidates) {
       const key = `${candidate.x},${candidate.y}`;
-      if (!world.occupancy[key] && !NODE_CENTER_KEYS.has(key)) {
+      if (!world.occupancy[key] && !nodeCenterKeys.has(key)) {
         return candidate;
       }
     }
