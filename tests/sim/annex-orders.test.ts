@@ -9,7 +9,7 @@ function annexTile(overrides: Partial<Record<string, unknown>> = {}) {
     orderId: 'annex-1',
     kind: 'annex_tile',
     faction: 'victoria',
-    cell: { x: 9, y: 11 },
+    cell: { x: 8, y: 14 },
     issuedRound: 1,
     commandCost: 1,
     ...overrides,
@@ -19,7 +19,7 @@ function annexTile(overrides: Partial<Record<string, unknown>> = {}) {
 describe('Triptych ANNEX_TILE Royal Command', () => {
   it('annexes one neutral orthogonally adjacent frontier tile', () => {
     const world = createPhase6SkirmishWorld();
-    expect(getTileFactionControl(world, { x: 9, y: 11 })).toBe('neutral');
+    expect(getTileFactionControl(world, { x: 8, y: 14 })).toBe('neutral');
 
     const queued = enqueueTacticalOrder(world, annexTile());
     expect(queued.status).toBe('ACCEPTED');
@@ -29,14 +29,14 @@ describe('Triptych ANNEX_TILE Royal Command', () => {
     expect(resolved.outcomes).toEqual([
       { orderId: 'annex-1', status: 'RESOLVED' },
     ]);
-    expect(getTileFactionControl(resolved.world, { x: 9, y: 11 }))
+    expect(getTileFactionControl(resolved.world, { x: 8, y: 14 }))
       .toBe('victoria');
   });
 
   it('refuses annexing a disconnected neutral tile', () => {
     const world = createPhase6SkirmishWorld();
     const resolved = resolveCommittedOrders(world, [
-      annexTile({ cell: { x: 11, y: 11 } }),
+      annexTile({ cell: { x: 10, y: 14 } }),
     ]);
 
     expect(resolved.outcomes).toEqual([
@@ -46,14 +46,14 @@ describe('Triptych ANNEX_TILE Royal Command', () => {
         reason: 'not_adjacent_to_friendly_territory',
       },
     ]);
-    expect(getTileFactionControl(resolved.world, { x: 11, y: 11 }))
+    expect(getTileFactionControl(resolved.world, { x: 10, y: 14 }))
       .toBe('neutral');
   });
 
   it('refuses annexing an enemy-controlled tile', () => {
     const world = createPhase6SkirmishWorld();
     const resolved = resolveCommittedOrders(world, [
-      annexTile({ cell: { x: 15, y: 12 } }),
+      annexTile({ cell: { x: 24, y: 14 } }),
     ]);
 
     expect(resolved.outcomes).toEqual([
@@ -63,7 +63,7 @@ describe('Triptych ANNEX_TILE Royal Command', () => {
         reason: 'enemy_controlled',
       },
     ]);
-    expect(getTileFactionControl(resolved.world, { x: 15, y: 12 }))
+    expect(getTileFactionControl(resolved.world, { x: 24, y: 14 }))
       .toBe('obsidian');
   });
 });
