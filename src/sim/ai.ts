@@ -6,6 +6,7 @@ import type {
 import { refreshFactionIntelligence } from './intelligence';
 import { createFactionKnowledgeView, createFactionPlanningWorld } from './intelligence-view';
 import { targetIsObserved, validateMoveKnowledge } from './knowledge-legality';
+import { topologyForWorld } from './territory';
 
 function initialAI(enabled: boolean): AICommanderState {
   return {
@@ -247,14 +248,14 @@ function bestProgressMove(world:WorldState,faction:Faction,objective:Coord,used:
   const planning=createFactionPlanningWorld(informed,faction);
   type Candidate={unitId:string;to:Coord;after:number;before:number};
   const candidates:Candidate[]=[];
+  const playableCells=topologyForWorld(planning).allPlayableCells();
   for(const unitId of Object.keys(planning.units).sort()){
     if(used.has(unitId)) continue;
     const unit=planning.units[unitId];
     if(!unit||unit.faction!==faction||unit.kind==='king'||!planning.combat[unitId]||planning.combat[unitId]!.health<=0) continue;
     const before=distance(unit.position,objective);
-    for(let y=0;y<16;y+=1) for(let x=0;x<16;x+=1){
-      const to={x,y};
-      if(planning.occupancy[`${x},${y}`]) continue;
+    for(const to of playableCells){
+      if(planning.occupancy[`${to.x},${to.y}`]) continue;
       if(!validateMoveKnowledge(informed,faction,unit.position,to,unit.kind).legal) continue;
       if(!validateMoveGeometry(planning,unit,to).legal) continue;
       const after=distance(to,objective);
@@ -393,7 +394,6 @@ export function scheduleAICommands(world:WorldState,faction:Faction,commands:rea
     events:limited.map(command=>({type:'ai.command.scheduled',tick:world.tick,faction,executeTick,actorId:commandActorId(command),commandType:command.type})),
   };
 }
-
 
 function shadowOrderId(
   world: WorldState,
