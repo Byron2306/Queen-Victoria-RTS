@@ -58,7 +58,7 @@ export function createWorld(units: readonly UnitState[] = [], options: WorldOpti
     promotions: { pending: [] },
     heroes: createInitialHeroState({}, options.heroIds ?? {}),
     ai: createInitialAIState(options.aiFactions ?? []),
-    intelligence: createInitialIntelligenceState(),
+    intelligence: createInitialIntelligenceState(topology.id),
     turn: createInitialTurnState(),
     pendingOrders: [],
   };
