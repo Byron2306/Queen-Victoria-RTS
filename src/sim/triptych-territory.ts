@@ -2,7 +2,7 @@ import {
   tileId,
   type BoardCell,
 } from './board-topology';
-import { strategicTiles } from './territory';
+import { strategicTiles, topologyForWorld } from './territory';
 import type { WorldState } from './types';
 
 function cellsForRow(
@@ -13,6 +13,19 @@ function cellsForRow(
   const cells: BoardCell[] = [];
   for (let x = minX; x <= maxX; x += 1) {
     cells.push({ x, y });
+  }
+  return cells;
+}
+
+function cellsForRows(
+  minY: number,
+  maxY: number,
+  minX: number,
+  maxX: number,
+): BoardCell[] {
+  const cells: BoardCell[] = [];
+  for (let y = minY; y <= maxY; y += 1) {
+    cells.push(...cellsForRow(y, minX, maxX));
   }
   return cells;
 }
@@ -31,12 +44,25 @@ export const OBSIDIAN_OPENING_TERRITORY: readonly BoardCell[] =
     y: 23 - cell.y,
   }));
 
+export const VICTORIA_OPENING_TERRITORY_V2: readonly BoardCell[] =
+  cellsForRows(11, 20, 0, 7);
+
+export const OBSIDIAN_OPENING_TERRITORY_V2: readonly BoardCell[] =
+  cellsForRows(11, 20, 24, 31);
+
 export function applyTriptychOpeningTerritory(
   world: WorldState,
 ): WorldState {
   const tiles = { ...strategicTiles(world) };
+  const topology = topologyForWorld(world);
+  const victoria = topology.id === 'triptych-v2'
+    ? VICTORIA_OPENING_TERRITORY_V2
+    : VICTORIA_OPENING_TERRITORY;
+  const obsidian = topology.id === 'triptych-v2'
+    ? OBSIDIAN_OPENING_TERRITORY_V2
+    : OBSIDIAN_OPENING_TERRITORY;
 
-  for (const cell of VICTORIA_OPENING_TERRITORY) {
+  for (const cell of victoria) {
     const id = tileId(cell);
     tiles[id] = {
       ...tiles[id]!,
@@ -44,7 +70,7 @@ export function applyTriptychOpeningTerritory(
     };
   }
 
-  for (const cell of OBSIDIAN_OPENING_TERRITORY) {
+  for (const cell of obsidian) {
     const id = tileId(cell);
     tiles[id] = {
       ...tiles[id]!,
