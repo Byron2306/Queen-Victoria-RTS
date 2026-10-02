@@ -1,11 +1,10 @@
 import {
-  allPlayableCells,
-  createBoardTile,
   tileId,
   type BoardTile,
   type TileId,
 } from './board-topology';
 import type { FortificationState } from './fortifications';
+import { topologyForWorld } from './territory';
 import type {
   Coord,
   Faction,
@@ -116,11 +115,18 @@ function projectedTiles(
 ): Readonly<Record<TileId, BoardTile>> {
   const memory = world.intelligence.byFaction[faction];
   const tiles: Partial<Record<TileId, BoardTile>> = {};
+  const topology = topologyForWorld(world);
 
-  for (const cell of allPlayableCells()) {
+  for (const cell of topology.allPlayableCells()) {
     const id = tileId(cell);
     const remembered = memory[id];
-    const base = createBoardTile(cell);
+    const base: BoardTile = {
+      id,
+      x: cell.x,
+      y: cell.y,
+      polarity: (cell.x + cell.y) % 2 === 0 ? 'white' : 'black',
+      factionControl: 'neutral',
+    };
     tiles[id] = {
       ...base,
       polarity: remembered?.lastKnownPolarity ?? base.polarity,
