@@ -100,4 +100,21 @@ describe('Triptych banner polarity', () => {
       contestedBy: 'obsidian',
     });
   });
+
+  it('allows polarity and banners on the far edge of Triptych V2', () => {
+    let world = createWorld([], { topologyId: 'triptych-v2' });
+    const cell = { x: 31, y: 11 } as const;
+
+    expect(getTilePolarity(world, cell)).toBe('white');
+
+    const queued = queueBanner(world, {
+      bannerId: 'banner-v2-edge',
+      faction: 'victoria',
+      cell,
+    });
+
+    expect(queued.accepted).toBe(true);
+    world = queued.state;
+    expect(getBannerState(world, 'banner-v2-edge')?.cell).toEqual(cell);
+  });
 });
