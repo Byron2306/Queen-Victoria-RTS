@@ -39,7 +39,7 @@ export function createWorld(units: readonly UnitState[] = [], options: WorldOpti
   let world: WorldState = {
     tick: 0, width: topology.width, height: topology.height, units: {}, occupancy: {}, combat: {}, military: {},
     match: createInitialMatchState({}),
-    territory: createInitialTerritoryState(),
+    territory: createInitialTerritoryState(topology.id),
     economy: { crownPower: { victoria: 0, obsidian: 0 } },
     production: {
       queues: { victoria: [], obsidian: [] },
