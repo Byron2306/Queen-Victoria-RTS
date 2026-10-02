@@ -1,12 +1,15 @@
 import {
-  isPlayableCell,
   tileId,
   type BoardTile,
   type TileId,
   type TilePolarity,
 } from './board-topology';
 import { strategicAbilityModifiers } from './strategic-ability-hooks';
-import { strategicTiles, type TriptychTerritoryState } from './territory';
+import {
+  strategicTiles,
+  topologyForWorld,
+  type TriptychTerritoryState,
+} from './territory';
 import { coordKey } from './world';
 import type { Coord, Faction, WorldState } from './types';
 
@@ -76,7 +79,8 @@ export function getTilePolarity(
   world: WorldState,
   cell: Coord,
 ): TilePolarity {
-  if (!isPlayableCell(cell.x, cell.y)) {
+  const topology = topologyForWorld(world);
+  if (!topology.isPlayableCell(cell.x, cell.y)) {
     throw new RangeError(`Cell ${cell.x},${cell.y} is outside the royal battlefield`);
   }
   return strategicTiles(world)[tileId(cell)]!.polarity;
@@ -86,7 +90,8 @@ export function queueBanner(
   world: WorldState,
   order: BannerOrder,
 ): BannerResult {
-  if (!isPlayableCell(order.cell.x, order.cell.y)) {
+  const topology = topologyForWorld(world);
+  if (!topology.isPlayableCell(order.cell.x, order.cell.y)) {
     return { state: world, accepted: false };
   }
 
