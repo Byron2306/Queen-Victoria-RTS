@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createPhase6SkirmishWorld } from '../../src/client/session/skirmish';
 import { getBattlefieldTopology } from '../../src/sim/battlefield-topology-authority';
+import { findReinforcementSpawn } from '../../src/sim/production';
 import { strategicTiles } from '../../src/sim/territory';
 import { tileId } from '../../src/sim/board-topology';
 
@@ -25,5 +26,12 @@ describe('Triptych V2 reinforcement anchors', () => {
       expect(world.occupancy[`${anchor.x},${anchor.y}`]).toBeUndefined();
       expect(tiles[tileId(anchor)]?.factionControl).toBe(faction);
     }
+  });
+
+  it('uses the V2 anchors as valid deterministic spawn origins', () => {
+    const world = createPhase6SkirmishWorld();
+
+    expect(findReinforcementSpawn(world, 'victoria')).toEqual({ x: 1, y: 16 });
+    expect(findReinforcementSpawn(world, 'obsidian')).toEqual({ x: 30, y: 15 });
   });
 });
