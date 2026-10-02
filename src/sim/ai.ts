@@ -231,12 +231,30 @@ export function selectPriorityTarget(world:WorldState,faction:Faction,attackerId
   return candidates[0]?.id??null;
 }
 
+export function aiFrontObjective(world:WorldState,faction:Faction):Coord {
+  if(topologyForWorld(world).id==='triptych-v2'){
+    const nodeId=faction==='victoria'?'minor-w':'minor-e';
+    const node=world.territory.nodes[nodeId];
+    if(node) return {...node.center};
+  }
+  return {x:7,y:7};
+}
+
+export function pawnIsPromotionEligible(world:WorldState,faction:Faction,position:Coord):boolean {
+  if(topologyForWorld(world).id==='triptych-v2'){
+    return faction==='victoria'
+      ? position.x>=world.width-2
+      : position.x<=1;
+  }
+  return faction==='victoria'?position.y>=14:position.y<=1;
+}
+
 function objectivePosition(world:WorldState,faction:Faction,commitment:StrategicCommitment):Coord|null {
   const informed=refreshFactionIntelligence(world,faction);
   const view=createFactionKnowledgeView(informed,faction);
   if(commitment.intention==='capture_node') return informed.territory.nodes[commitment.objectiveId]?.center??null;
   if(commitment.intention==='defend_king') return informed.units[informed.match.sovereigns[faction].kingId??'']?.position??null;
-  if(commitment.intention==='reinforce_front') return {x:7,y:7};
+  if(commitment.intention==='reinforce_front') return aiFrontObjective(informed,faction);
   const observed=view.observedEnemyUnits.find(unit=>unit.id===commitment.objectiveId);
   if(observed) return observed.position;
   if(commitment.intention==='pressure_position') return view.rememberedContacts.find(contact=>contact.unitId===commitment.objectiveId)?.position??null;
@@ -284,7 +302,7 @@ function legalRecruitKind(world:WorldState,faction:Faction):RecruitableUnitKind|
 
 function legalPromotion(world:WorldState,faction:Faction):{pawnId:string;targetKind:PromotableUnitKind}|null {
   const pawns=Object.keys(world.units).sort().map(id=>world.units[id]!).filter(unit=>unit.faction===faction&&unit.kind==='pawn'
-    &&(faction==='victoria'?unit.position.y>=14:unit.position.y<=1)
+    &&pawnIsPromotionEligible(world,faction,unit.position)
     &&!world.promotions.pending.some(p=>p.pawnId===unit.id));
   for(const pawn of pawns){
     const kinds:PromotableUnitKind[]=['rook','bishop','knight'];
