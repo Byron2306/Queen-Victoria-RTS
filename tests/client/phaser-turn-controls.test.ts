@@ -33,7 +33,7 @@ function worldWithVictoriaMove() {
     kind: 'move',
     faction: 'victoria',
     unitId: 'victoria-queen',
-    destination: { x: 4, y: 12 },
+    destination: { x: 5, y: 16 },
     issuedRound: 1,
     commandCost: 1,
   };
@@ -73,7 +73,7 @@ describe('Royal Tactical Phaser turn controls', () => {
 
     controller.endTurn();
 
-    expect(controller.world.units['victoria-queen']?.position).toEqual({ x: 4, y: 12 });
+    expect(controller.world.units['victoria-queen']?.position).toEqual({ x: 5, y: 16 });
     expect(controller.world.turn.round).toBe(2);
     expect(controller.world.turn.phase).toBe('victoria_command');
     expect(controller.world.pendingOrders).toEqual([]);
@@ -91,14 +91,14 @@ describe('Royal Tactical immediate End Turn commit', () => {
     const runtime = new FixedTickRuntime(world);
     const controller = new BattlefieldSceneController(runtime);
 
-    runtime.commands.move(runtime.world, 'victoria-queen', { x: 4, y: 12 });
+    runtime.commands.move(runtime.world, 'victoria-queen', { x: 5, y: 16 });
 
-    expect(runtime.world.units['victoria-queen']?.position).toEqual({ x: 5, y: 11 });
+    expect(runtime.world.units['victoria-queen']?.position).toEqual({ x: 6, y: 16 });
     expect(runtime.world.pendingOrders).toEqual([]);
 
     controller.endTurn();
 
-    expect(controller.world.units['victoria-queen']?.position).toEqual({ x: 4, y: 12 });
+    expect(controller.world.units['victoria-queen']?.position).toEqual({ x: 5, y: 16 });
     expect(controller.world.turn.round).toBe(2);
     expect(controller.world.turn.phase).toBe('victoria_command');
   });
