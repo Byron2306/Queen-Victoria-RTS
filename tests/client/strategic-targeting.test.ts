@@ -15,8 +15,8 @@ describe('Triptych strategic targeting authority', () => {
     const world = createPhase6SkirmishWorld();
     const targets = legalStrategicTargets(world, 'victoria', 'deploy_banner');
 
-    expect(hasCell(targets, 8, 11)).toBe(true);
-    expect(hasCell(targets, 9, 11)).toBe(false);
+    expect(hasCell(targets, 7, 14)).toBe(true);
+    expect(hasCell(targets, 8, 14)).toBe(false);
     expect(hasCell(targets, 0, 0)).toBe(false);
   });
 
@@ -27,17 +27,17 @@ describe('Triptych strategic targeting authority', () => {
 
     expect(hasCell(bastions, 7, 11)).toBe(true);
     expect(hasCell(redoubts, 7, 11)).toBe(true);
-    expect(hasCell(bastions, 8, 11)).toBe(false);
-    expect(hasCell(bastions, 9, 11)).toBe(false);
+    expect(hasCell(bastions, 8, 14)).toBe(false);
+    expect(hasCell(bastions, 24, 14)).toBe(false);
   });
 
   it('offers annexing only on neutral orthogonally adjacent frontier cells', () => {
     const world = createPhase6SkirmishWorld();
     const targets = legalStrategicTargets(world, 'victoria', 'annex_tile');
 
-    expect(hasCell(targets, 9, 11)).toBe(true);
-    expect(hasCell(targets, 11, 11)).toBe(false);
-    expect(hasCell(targets, 15, 12)).toBe(false);
+    expect(hasCell(targets, 8, 14)).toBe(true);
+    expect(hasCell(targets, 10, 14)).toBe(false);
+    expect(hasCell(targets, 24, 14)).toBe(false);
   });
 
   it('stages the armed mode through the canonical client bridge', () => {
@@ -45,7 +45,7 @@ describe('Triptych strategic targeting authority', () => {
     const bridge = new ClientCommandBridge();
 
     stageStrategicTarget(bridge, world, 'victoria', 'build_redoubt', { x: 7, y: 11 });
-    stageStrategicTarget(bridge, world, 'victoria', 'annex_tile', { x: 9, y: 11 });
+    stageStrategicTarget(bridge, world, 'victoria', 'annex_tile', { x: 8, y: 14 });
 
     expect(bridge.drainTactical().map(order => order.kind))
       .toEqual(['build_fortification', 'annex_tile']);
