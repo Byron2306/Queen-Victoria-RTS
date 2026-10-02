@@ -36,6 +36,15 @@ export const isInWorldBounds = (
 
 export function createWorld(units: readonly UnitState[] = [], options: WorldOptions = {}): WorldState {
   const topology = getBattlefieldTopology(options.topologyId);
+  const reinforcementAnchors = topology.id === 'triptych-v2'
+    ? {
+        victoria: { x: 1, y: 16 },
+        obsidian: { x: 30, y: 15 },
+      }
+    : {
+        victoria: { x: 2, y: 12 },
+        obsidian: { x: 21, y: 11 },
+      };
   let world: WorldState = {
     tick: 0, width: topology.width, height: topology.height, units: {}, occupancy: {}, combat: {}, military: {},
     match: createInitialMatchState({}),
@@ -44,10 +53,7 @@ export function createWorld(units: readonly UnitState[] = [], options: WorldOpti
     production: {
       queues: { victoria: [], obsidian: [] },
       nextEntryOrdinal: { victoria: 1, obsidian: 1 },
-      reinforcementAnchors: {
-        victoria: { x: 2, y: 12 },
-        obsidian: { x: 21, y: 11 },
-      },
+      reinforcementAnchors,
     },
     promotions: { pending: [] },
     heroes: createInitialHeroState({}, options.heroIds ?? {}),
