@@ -29,9 +29,9 @@ describe('Triptych strategic target visuals', () => {
       base,
     );
 
-    expect(visuals.some(visual => visual.cell.x === 9 && visual.cell.y === 11))
+    expect(visuals.some(visual => visual.cell.x === 8 && visual.cell.y === 14))
       .toBe(true);
-    expect(visuals.some(visual => visual.cell.x === 11 && visual.cell.y === 11))
+    expect(visuals.some(visual => visual.cell.x === 10 && visual.cell.y === 14))
       .toBe(false);
     expect(visuals.every(visual => visual.polygon.length === 4)).toBe(true);
   });
@@ -43,13 +43,13 @@ describe('Triptych strategic target visuals', () => {
       'victoria',
       'annex_tile',
       base,
-    ).find(visual => visual.cell.x === 9 && visual.cell.y === 11)!;
+    ).find(visual => visual.cell.x === 8 && visual.cell.y === 14)!;
     const after = createStrategicTargetVisuals(
       world,
       'victoria',
       'annex_tile',
       shifted,
-    ).find(visual => visual.cell.x === 9 && visual.cell.y === 11)!;
+    ).find(visual => visual.cell.x === 8 && visual.cell.y === 14)!;
 
     expect(after.anchor.x - before.anchor.x).toBeCloseTo(120, 6);
     expect(after.anchor.y - before.anchor.y).toBeCloseTo(-80, 6);
