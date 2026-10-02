@@ -147,6 +147,67 @@ describe('knowledge-bounded movement', () => {
     expect(validateMoveKnowledge(world, 'victoria', { x: 11, y: 11 }, { x: 13, y: 12 }, 'knight'))
       .toEqual({ legal: true });
   });
+
+  it('applies unknown-destination authority to valid V2 cells beyond V1 bounds', () => {
+    const world = createWorld([
+      unit('victoria-rook', 'victoria', 'rook', 27, 17),
+    ], { topologyId: 'triptych-v2' });
+
+    expect(validateMoveKnowledge(
+      world,
+      'victoria',
+      { x: 27, y: 17 },
+      { x: 27, y: 18 },
+      'rook',
+    )).toEqual({ legal: false, reason: 'unknown_destination' });
+  });
+
+  it('rejects a V2 sliding path that crosses an unknown V2 cell beyond V1 bounds', () => {
+    let world = createWorld([
+      unit('victoria-rook', 'victoria', 'rook', 24, 18),
+    ], { topologyId: 'triptych-v2' });
+    const memory = world.intelligence.byFaction.victoria;
+
+    world = {
+      ...world,
+      intelligence: {
+        ...world.intelligence,
+        byFaction: {
+          ...world.intelligence.byFaction,
+          victoria: {
+            ...memory,
+            '28,18': {
+              ...memory['28,18']!,
+              visibility: 'remembered',
+              lastSeenRound: 1,
+              lastKnownPolarity: 'white',
+              lastKnownControl: 'neutral',
+            },
+          },
+        },
+      },
+    };
+
+    expect(validateMoveKnowledge(
+      world,
+      'victoria',
+      { x: 24, y: 18 },
+      { x: 28, y: 18 },
+      'rook',
+    )).toEqual({ legal: false, reason: 'unknown_path' });
+  });
+
+  it('leaves V2 void destinations to ordinary geometry validation', () => {
+    const world = createWorld([], { topologyId: 'triptych-v2' });
+
+    expect(validateMoveKnowledge(
+      world,
+      'victoria',
+      { x: 12, y: 10 },
+      { x: 11, y: 10 },
+      'rook',
+    )).toEqual({ legal: true });
+  });
 });
 
 describe('knowledge-bounded targeting', () => {
@@ -169,5 +230,13 @@ describe('knowledge-bounded targeting', () => {
       .toMatchObject({ status: 'REFUSED', reason: 'target_not_observed' });
     expect(resolveCommittedOrders(world, [attack('assault', 'enemy')]).outcomes[0])
       .toMatchObject({ status: 'REFUSED', reason: 'target_not_observed' });
+  });
+
+  it('requires observation for real enemies on valid V2 cells beyond V1 bounds', () => {
+    const world = createWorld([
+      unit('enemy-v2', 'obsidian', 'pawn', 27, 18),
+    ], { topologyId: 'triptych-v2' });
+
+    expect(targetIsObserved(world, 'victoria', 'enemy-v2')).toBe(false);
   });
 });
