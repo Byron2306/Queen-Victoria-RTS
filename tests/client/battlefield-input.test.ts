@@ -22,7 +22,7 @@ describe('Royal Tactical battlefield input', () => {
     const bridge = new ClientCommandBridge();
     const input = new BattlefieldInput(bridge);
 
-    input.pointerDown(world, 0, { x: 5, y: 11 });
+    input.pointerDown(world, 0, { x: 6, y: 16 });
 
     expect(input.selectedUnitId).toBe('victoria-queen');
     expect(bridge.drainTactical()).toEqual([]);
@@ -33,7 +33,7 @@ describe('Royal Tactical battlefield input', () => {
     const bridge = new ClientCommandBridge();
     const input = new BattlefieldInput(bridge);
 
-    input.pointerDown(world, 0, { x: 18, y: 12 });
+    input.pointerDown(world, 0, { x: 25, y: 15 });
 
     expect(input.selectedUnitId).toBeNull();
     expect(bridge.drainTactical()).toEqual([]);
@@ -44,8 +44,8 @@ describe('Royal Tactical battlefield input', () => {
     const bridge = new ClientCommandBridge();
     const input = new BattlefieldInput(bridge);
 
-    input.pointerDown(world, 5, { x: 5, y: 11 });
-    input.pointerDown(world, 5, { x: 6, y: 11 });
+    input.pointerDown(world, 5, { x: 6, y: 16 });
+    input.pointerDown(world, 5, { x: 5, y: 16 });
 
     expect(bridge.drainTactical()).toEqual([
       {
@@ -53,13 +53,13 @@ describe('Royal Tactical battlefield input', () => {
         kind: 'move',
         faction: 'victoria',
         unitId: 'victoria-queen',
-        destination: { x: 6, y: 11 },
+        destination: { x: 5, y: 16 },
         issuedRound: 1,
         commandCost: 1,
       },
     ]);
 
-    expect(world.units['victoria-queen']?.position).toEqual({ x: 5, y: 11 });
+    expect(world.units['victoria-queen']?.position).toEqual({ x: 6, y: 16 });
   });
 
   it('queues Attack rather than applying damage immediately', () => {
@@ -68,8 +68,8 @@ describe('Royal Tactical battlefield input', () => {
     const bridge = new ClientCommandBridge();
     const input = new BattlefieldInput(bridge);
 
-    input.pointerDown(world, 9, { x: 5, y: 11 });
-    input.pointerDown(world, 9, { x: 18, y: 12 });
+    input.pointerDown(world, 9, { x: 6, y: 16 });
+    input.pointerDown(world, 9, { x: 25, y: 15 });
 
     expect(bridge.drainTactical()).toEqual([
       {
@@ -91,7 +91,7 @@ describe('Royal Tactical battlefield input', () => {
     const bridge = new ClientCommandBridge();
     const input = new BattlefieldInput(bridge);
 
-    input.pointerDown(world, 0, { x: 3, y: 9 });
+    input.pointerDown(world, 0, { x: 4, y: 13 });
     input.guardSelected(world);
 
     expect(bridge.drainTactical()).toEqual([
@@ -100,7 +100,7 @@ describe('Royal Tactical battlefield input', () => {
         kind: 'guard',
         faction: 'victoria',
         unitId: 'victoria-rook-a',
-        anchor: { x: 3, y: 9 },
+        anchor: { x: 4, y: 13 },
         issuedRound: 1,
         commandCost: 1,
       },
@@ -112,8 +112,8 @@ describe('Royal Tactical battlefield input', () => {
     const bridge = new ClientCommandBridge();
     const input = new BattlefieldInput(bridge);
 
-    input.pointerDown(world, 2, { x: 5, y: 11 });
-    input.pointerDown(world, 2, { x: 3, y: 9 });
+    input.pointerDown(world, 2, { x: 6, y: 16 });
+    input.pointerDown(world, 2, { x: 4, y: 13 });
 
     expect(input.selectedUnitId).toBe('victoria-rook-a');
     expect(bridge.drainTactical()).toEqual([]);
@@ -124,12 +124,12 @@ describe('Royal Tactical battlefield input', () => {
     const bridge = new ClientCommandBridge();
     const input = new BattlefieldInput(bridge);
 
-    input.pointerDown(world, 0, { x: 5, y: 11 });
+    input.pointerDown(world, 0, { x: 6, y: 16 });
 
     const units = { ...world.units };
     delete units['victoria-queen'];
 
-    input.pointerDown({ ...world, units }, 0, { x: 6, y: 11 });
+    input.pointerDown({ ...world, units }, 0, { x: 5, y: 16 });
 
     expect(input.selectedUnitId).toBeNull();
     expect(bridge.drainTactical()).toEqual([]);
@@ -150,11 +150,20 @@ describe('Royal Tactical screen-space battlefield input', () => {
       bottomRight: { x: 1600, y: 1600 },
     };
 
-    const selectCell = screenToBoardCell(tileCenter({ x: 5, y: 11 }, projection), projection);
-    const moveCell = screenToBoardCell(tileCenter({ x: 6, y: 11 }, projection), projection);
+    const topologyId = 'triptych-v2' as const;
+    const selectCell = screenToBoardCell(
+      tileCenter({ x: 6, y: 16 }, projection, topologyId),
+      projection,
+      topologyId,
+    );
+    const moveCell = screenToBoardCell(
+      tileCenter({ x: 5, y: 16 }, projection, topologyId),
+      projection,
+      topologyId,
+    );
 
-    expect(selectCell).toEqual({ x: 5, y: 11 });
-    expect(moveCell).toEqual({ x: 6, y: 11 });
+    expect(selectCell).toEqual({ x: 6, y: 16 });
+    expect(moveCell).toEqual({ x: 5, y: 16 });
 
     input.pointerDown(world, 4, selectCell!);
     input.pointerDown(world, 4, moveCell!);
@@ -165,7 +174,7 @@ describe('Royal Tactical screen-space battlefield input', () => {
         kind: 'move',
         faction: 'victoria',
         unitId: 'victoria-queen',
-        destination: { x: 6, y: 11 },
+        destination: { x: 5, y: 16 },
         issuedRound: 1,
         commandCost: 1,
       },
