@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { createPresentedWorld } from '../../src/client/intelligence/presented-world';
+import {
+  createPresentedWorld,
+  createPresentedWorldState,
+} from '../../src/client/intelligence/presented-world';
 import {
   refreshFactionIntelligence,
 } from '../../src/sim/intelligence';
@@ -114,6 +117,63 @@ describe('faction-safe presented battlefield world', () => {
       visibility: 'remembered',
       polarity: 'white',
       lastSeenRound: 3,
+    });
+  });
+
+  it('enumerates exactly the selected V2 topology and excludes rectangular void corners', () => {
+    const world = createWorld([], { topologyId: 'triptych-v2' });
+    const presented = createPresentedWorld(world, 'victoria');
+
+    expect(presented.tiles).toHaveLength(496);
+    expect(presented.tiles.some(tile => tile.cell.x === 27 && tile.cell.y === 18)).toBe(true);
+    expect(presented.tiles.some(tile => tile.cell.x === 2 && tile.cell.y === 2)).toBe(false);
+  });
+
+  it('round-trips remembered V2 frontier intelligence without falling back to V1 tile construction', () => {
+    let world = createWorld([], { topologyId: 'triptych-v2' });
+    const memory = world.intelligence.byFaction.victoria['27,18']!;
+
+    world = {
+      ...world,
+      intelligence: {
+        ...world.intelligence,
+        byFaction: {
+          ...world.intelligence.byFaction,
+          victoria: {
+            ...world.intelligence.byFaction.victoria,
+            '27,18': {
+              ...memory,
+              visibility: 'remembered',
+              lastSeenRound: 7,
+              lastKnownPolarity: 'black',
+              lastKnownControl: 'obsidian',
+              lastKnownUnitId: 'shadow-frontier',
+            },
+          },
+        },
+      },
+    };
+
+    const presented = createPresentedWorld(world, 'victoria');
+    const tile = presented.tiles.find(candidate => candidate.id === '27,18');
+    expect(tile).toMatchObject({
+      visibility: 'remembered',
+      polarity: 'black',
+      control: 'obsidian',
+      lastSeenRound: 7,
+    });
+    expect(presented.ghosts).toContainEqual({
+      unitId: 'shadow-frontier',
+      cell: { x: 27, y: 18 },
+      lastSeenRound: 7,
+    });
+
+    const projected = createPresentedWorldState(world, presented);
+    expect(projected.territory.tiles?.['27,18']).toMatchObject({
+      x: 27,
+      y: 18,
+      polarity: 'black',
+      factionControl: 'obsidian',
     });
   });
 });
