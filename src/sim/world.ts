@@ -7,6 +7,7 @@ import { createInitialIntelligenceState } from './intelligence';
 import { createInitialTurnState } from './turns';
 import { BOARD_HEIGHT, BOARD_WIDTH } from './board-topology';
 import { getBattlefieldTopology } from './battlefield-topology-authority';
+import { topologyForWorld } from './territory';
 import type { Coord, UnitState, WorldOptions, WorldState } from './types';
 
 export const BOARD_SIZE = BOARD_WIDTH;
@@ -72,7 +73,13 @@ export function createWorld(units: readonly UnitState[] = [], options: WorldOpti
 }
 
 export function placeUnit(world: WorldState, unit: UnitState): WorldState {
-  if (!isInWorldBounds(world, unit.position)) throw new OutOfBoundsError(unit.position);
+  const topology = topologyForWorld(world);
+  if (
+    !isInWorldBounds(world, unit.position)
+    || !topology.isPlayableCell(unit.position.x, unit.position.y)
+  ) {
+    throw new OutOfBoundsError(unit.position);
+  }
   if (world.units[unit.id]) throw new DuplicateUnitError(unit.id);
   const key = coordKey(unit.position);
   if (world.occupancy[key]) throw new CellOccupiedError(unit.position);
