@@ -20,4 +20,13 @@ describe('Phaser battlefield intelligence projection', () => {
     expect(renderedIds).toContain('seen-pawn');
     expect(renderedIds).not.toContain('hidden-knight');
   });
+
+  it('carries the full V2 presented topology into the Phaser runtime without void-corner tiles', () => {
+    const world = createWorld([], { topologyId: 'triptych-v2' });
+    const runtime = createBattlefieldSceneRuntime(world, null);
+
+    expect(runtime.presented.tiles).toHaveLength(496);
+    expect(runtime.presented.tiles.some(tile => tile.id === '27,18')).toBe(true);
+    expect(runtime.presented.tiles.some(tile => tile.id === '2,2')).toBe(false);
+  });
 });
