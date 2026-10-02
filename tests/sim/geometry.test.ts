@@ -37,6 +37,17 @@ describe('Phase 1 chess geometry', () => {
     expect(validateMoveGeometry(createWorld([piece]), piece, { x, y })).toEqual({ legal: false, reason: 'illegal_geometry' });
   });
 
+  it('rejects geometrically valid landings in the void outside the selected topology mask', () => {
+    const rook = unit('rook', 19, 5, 'victoria', 'v2-mask-rook');
+    const world = createWorld([rook], { topologyId: 'triptych-v2' });
+
+    expect(validateMoveGeometry(world, rook, { x: 19, y: 10 })).toEqual({ legal: true });
+    expect(validateMoveGeometry(world, rook, { x: 20, y: 5 })).toEqual({
+      legal: false,
+      reason: 'illegal_geometry',
+    });
+  });
+
   it('orients pawns by faction and rejects zero distance', () => {
     const victoria = unit('pawn', 4, 4, 'victoria', 'v');
     const obsidian = unit('pawn', 4, 11, 'obsidian', 'o');
