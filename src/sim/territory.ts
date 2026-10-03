@@ -131,7 +131,9 @@ export function claimFactionTile(
 ): ClaimResult {
   const decision = canFactionClaimTile(world, faction, cell, source);
   if (!decision.allowed) {
-    return { state: world, accepted: false, reason: decision.reason };
+    return decision.reason === undefined
+      ? { state: world, accepted: false }
+      : { state: world, accepted: false, reason: decision.reason };
   }
 
   const id = tileId(cell);
