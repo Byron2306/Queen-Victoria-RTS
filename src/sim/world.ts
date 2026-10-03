@@ -5,12 +5,13 @@ import { createInitialHeroState } from './hero';
 import { createInitialAIState } from './ai';
 import { createInitialIntelligenceState } from './intelligence';
 import { createInitialTurnState } from './turns';
-import { BOARD_HEIGHT, BOARD_WIDTH } from './board-topology';
 import { getBattlefieldTopology } from './battlefield-topology-authority';
 import { topologyForWorld } from './territory';
 import type { Coord, UnitState, WorldOptions, WorldState } from './types';
 
-export const BOARD_SIZE = BOARD_WIDTH;
+const LEGACY_WORLD_TOPOLOGY = getBattlefieldTopology('triptych-v1');
+
+export const BOARD_SIZE = LEGACY_WORLD_TOPOLOGY.width;
 
 export class OutOfBoundsError extends Error {
   constructor(coord: Coord) { super(`Coordinate out of bounds: ${coord.x},${coord.y}`); this.name = 'OutOfBoundsError'; }
@@ -23,7 +24,13 @@ export class DuplicateUnitError extends Error {
 }
 
 export const coordKey = ({ x, y }: Coord): string => `${x},${y}`;
-export const isInBounds = ({ x, y }: Coord): boolean => Number.isInteger(x) && Number.isInteger(y) && x >= 0 && x < BOARD_WIDTH && y >= 0 && y < BOARD_HEIGHT;
+export const isInBounds = ({ x, y }: Coord): boolean =>
+  Number.isInteger(x)
+  && Number.isInteger(y)
+  && x >= 0
+  && x < LEGACY_WORLD_TOPOLOGY.width
+  && y >= 0
+  && y < LEGACY_WORLD_TOPOLOGY.height;
 export const isInWorldBounds = (
   world: Pick<WorldState, 'width' | 'height'>,
   { x, y }: Coord,
