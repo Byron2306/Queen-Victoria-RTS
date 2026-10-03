@@ -14,17 +14,32 @@ export type TriptychTerritoryState = TerritoryState & Readonly<{
   tiles?: Readonly<Record<TileId, BoardTile>>;
 }>;
 
-export type AnnexRejectReason =
+export type ClaimSource =
+  | 'annex_command'
+  | 'settlement'
+  | 'banner'
+  | 'fortification';
+
+export type ClaimRejectReason =
   | 'off_board'
   | 'already_controlled'
   | 'enemy_controlled'
   | 'not_adjacent_to_friendly_territory';
 
-export type AnnexResult = Readonly<{
+export type ClaimDecision = Readonly<{
+  allowed: boolean;
+  reason?: ClaimRejectReason;
+}>;
+
+export type ClaimResult = Readonly<{
   state: WorldState;
   accepted: boolean;
-  reason?: AnnexRejectReason;
+  reason?: ClaimRejectReason;
 }>;
+
+export type AnnexRejectReason = ClaimRejectReason;
+
+export type AnnexResult = ClaimResult;
 
 export function topologyForWorld(
   world: Pick<WorldState, 'width' | 'height'>,
@@ -81,6 +96,32 @@ export function hasAdjacentFactionTile(
   return topology.orthogonalNeighbors(cell.x, cell.y).some(
     (neighbor) => getTileFactionControl(world, neighbor) === faction,
   );
+}
+
+export function canFactionClaimTile(
+  world: WorldState,
+  faction: Faction,
+  cell: Coord,
+  source: ClaimSource,
+): ClaimDecision {
+  void source;
+  const topology = topologyForWorld(world);
+  if (!topology.isPlayableCell(cell.x, cell.y)) {
+    return { allowed: false, reason: 'off_board' };
+  }
+
+  const control = getTileFactionControl(world, cell);
+  if (control === faction) {
+    return { allowed: false, reason: 'already_controlled' };
+  }
+  if (control !== 'neutral') {
+    return { allowed: false, reason: 'enemy_controlled' };
+  }
+  if (!hasAdjacentFactionTile(world, cell, faction)) {
+    return { allowed: false, reason: 'not_adjacent_to_friendly_territory' };
+  }
+
+  return { allowed: true };
 }
 
 export function annexTile(
