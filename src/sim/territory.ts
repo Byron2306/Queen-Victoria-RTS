@@ -124,6 +124,39 @@ export function canFactionClaimTile(
   return { allowed: true };
 }
 
+export function claimFactionTile(
+  world: WorldState,
+  faction: Faction,
+  cell: Coord,
+  source: ClaimSource,
+): ClaimResult {
+  const decision = canFactionClaimTile(world, faction, cell, source);
+  if (!decision.allowed) {
+    return { state: world, accepted: false, reason: decision.reason };
+  }
+
+  const id = tileId(cell);
+  const currentTiles = strategicTiles(world);
+  const tiles: Record<TileId, BoardTile> = {
+    ...currentTiles,
+    [id]: {
+      ...currentTiles[id]!,
+      factionControl: faction,
+    },
+  };
+
+  return {
+    accepted: true,
+    state: {
+      ...world,
+      territory: {
+        ...world.territory,
+        tiles,
+      } as TriptychTerritoryState,
+    },
+  };
+}
+
 export function annexTile(
   world: WorldState,
   faction: Faction,
