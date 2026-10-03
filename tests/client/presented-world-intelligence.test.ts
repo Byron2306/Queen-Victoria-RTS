@@ -7,7 +7,10 @@ import {
 import {
   refreshFactionIntelligence,
 } from '../../src/sim/intelligence';
-import { strategicTiles } from '../../src/sim/territory';
+import {
+  strategicTiles,
+  type TriptychTerritoryState,
+} from '../../src/sim/territory';
 import { createWorld } from '../../src/sim/world';
 
 function worldWithObservedAndHiddenEnemies() {
@@ -92,7 +95,7 @@ describe('faction-safe presented battlefield world', () => {
             polarity: 'black',
           },
         },
-      } as typeof world.territory,
+      } as TriptychTerritoryState,
       intelligence: {
         ...world.intelligence,
         byFaction: {
@@ -169,7 +172,8 @@ describe('faction-safe presented battlefield world', () => {
     });
 
     const projected = createPresentedWorldState(world, presented);
-    expect(projected.territory.tiles?.['27,18']).toMatchObject({
+    const projectedTerritory = projected.territory as TriptychTerritoryState;
+    expect(projectedTerritory.tiles?.['27,18']).toMatchObject({
       x: 27,
       y: 18,
       polarity: 'black',
