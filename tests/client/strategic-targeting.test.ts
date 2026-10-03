@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { createPhase6SkirmishWorld } from '../../src/client/session/skirmish';
 import {
@@ -5,6 +7,11 @@ import {
   stageStrategicTarget,
 } from '../../src/client/input/strategic-targeting';
 import { ClientCommandBridge } from '../../src/client/runtime/command-bridge';
+import {
+  canFactionClaimTile,
+  topologyForWorld,
+} from '../../src/sim/territory';
+import { tileId } from '../../src/sim/board-topology';
 
 function hasCell(cells: readonly { x: number; y: number }[], x: number, y: number): boolean {
   return cells.some(cell => cell.x === x && cell.y === y);
@@ -38,6 +45,43 @@ describe('Triptych strategic targeting authority', () => {
     expect(hasCell(targets, 8, 14)).toBe(true);
     expect(hasCell(targets, 10, 14)).toBe(false);
     expect(hasCell(targets, 24, 14)).toBe(false);
+  });
+
+  it('matches sim claim legality for every playable V2 cell', () => {
+    const world = createPhase6SkirmishWorld();
+    const legalIds = new Set(
+      legalStrategicTargets(world, 'victoria', 'annex_tile').map(tileId),
+    );
+
+    for (const cell of topologyForWorld(world).allPlayableCells()) {
+      expect(legalIds.has(tileId(cell))).toBe(
+        canFactionClaimTile(world, 'victoria', cell, 'annex_command').allowed,
+      );
+    }
+  });
+
+  it('refuses staging a disconnected neutral annex target', () => {
+    const world = createPhase6SkirmishWorld();
+    const bridge = new ClientCommandBridge();
+
+    expect(stageStrategicTarget(
+      bridge,
+      world,
+      'victoria',
+      'annex_tile',
+      { x: 10, y: 14 },
+    )).toBe(false);
+    expect(bridge.drainTactical()).toEqual([]);
+  });
+
+  it('delegates annex legality to the canonical sim claim authority', () => {
+    const sourcePath = fileURLToPath(
+      new URL('../../src/client/input/strategic-targeting.ts', import.meta.url),
+    );
+    const source = readFileSync(sourcePath, 'utf8');
+
+    expect(source).toContain('canFactionClaimTile');
+    expect(source).not.toContain('hasAdjacentFactionTile');
   });
 
   it('stages the armed mode through the canonical client bridge', () => {
