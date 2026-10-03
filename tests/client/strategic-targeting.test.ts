@@ -1,6 +1,5 @@
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import strategicTargetingSource from '../../src/client/input/strategic-targeting.ts?raw';
 import { createPhase6SkirmishWorld } from '../../src/client/session/skirmish';
 import {
   legalStrategicTargets,
@@ -75,13 +74,8 @@ describe('Triptych strategic targeting authority', () => {
   });
 
   it('delegates annex legality to the canonical sim claim authority', () => {
-    const sourcePath = fileURLToPath(
-      new URL('../../src/client/input/strategic-targeting.ts', import.meta.url),
-    );
-    const source = readFileSync(sourcePath, 'utf8');
-
-    expect(source).toContain('canFactionClaimTile');
-    expect(source).not.toContain('hasAdjacentFactionTile');
+    expect(strategicTargetingSource).toContain('canFactionClaimTile');
+    expect(strategicTargetingSource).not.toContain('hasAdjacentFactionTile');
   });
 
   it('stages the armed mode through the canonical client bridge', () => {
