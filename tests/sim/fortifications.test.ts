@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createWorld } from '../../src/sim/world';
-import { resolveSettlement } from '../../src/sim/territory';
+import { resolveSettlement, strategicTiles } from '../../src/sim/territory';
 import { validateMoveGeometry } from '../../src/sim/geometry';
 import {
   buildFortification,
@@ -87,6 +87,31 @@ describe('Triptych fortifications', () => {
     expect(validateMoveGeometry(world, knight, fortCell)).toEqual({
       legal: false,
       reason: 'blocked',
+    });
+  });
+
+  it('uses the selected V2 topology when deciding whether a fortification cell is on-board', () => {
+    const frontier = { x: 27, y: 18 } as const;
+    let world = createWorld([], { topologyId: 'triptych-v2' });
+    const tiles = strategicTiles(world);
+    world = {
+      ...world,
+      territory: {
+        ...world.territory,
+        tiles: {
+          ...tiles,
+          '27,18': {
+            ...tiles['27,18']!,
+            factionControl: 'victoria',
+          },
+        },
+      } as typeof world.territory,
+    };
+
+    expect(canBuildFortification(world, 'victoria', frontier)).toEqual({ allowed: true });
+    expect(canBuildFortification(world, 'victoria', { x: 11, y: 10 })).toEqual({
+      allowed: false,
+      reason: 'off_board',
     });
   });
 });
