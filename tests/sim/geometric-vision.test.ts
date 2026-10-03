@@ -7,7 +7,11 @@ import {
   getFortificationAt,
   type FortificationState,
 } from '../../src/sim/fortifications';
-import { resolveSettlement, strategicTiles } from '../../src/sim/territory';
+import {
+  resolveSettlement,
+  strategicTiles,
+  type TriptychTerritoryState,
+} from '../../src/sim/territory';
 import {
   computeFactionVisibleCells,
   visibleCellsForFortification,
@@ -19,7 +23,10 @@ import type { UnitState } from '../../src/sim/types';
 
 const ids = (cells: readonly { x: number; y: number }[]) => new Set(cells.map(tileId));
 
-function unit(kind: UnitState['kind'], position = { x: 11, y: 11 } as const): UnitState {
+function unit(
+  kind: UnitState['kind'],
+  position: UnitState['position'] = { x: 11, y: 11 },
+): UnitState {
   return { id: kind, faction: 'victoria', kind, position };
 }
 
@@ -193,7 +200,7 @@ describe('chess-geometric battlefield vision', () => {
     tiles['27,18'] = { ...tiles['27,18']!, factionControl: 'victoria' };
     world = {
       ...world,
-      territory: { ...world.territory, tiles },
+      territory: { ...world.territory, tiles } as TriptychTerritoryState,
     };
 
     expect(computeFactionVisibleCells(world, 'victoria')).toContain('27,18');
