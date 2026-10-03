@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { tileId } from '../../src/sim/board-topology';
 import { tilePolygon, type BoardProjection } from '../../src/client/board/projection';
 import { createSelectionGeometryOverlay } from '../../src/client/render/selection-geometry-overlay';
 import {
@@ -7,7 +8,10 @@ import {
 } from '../../src/client/render/triptych-presentation';
 import { buildFortification } from '../../src/sim/fortifications';
 import { queueBanner } from '../../src/sim/polarity';
-import { resolveSettlement } from '../../src/sim/territory';
+import {
+  strategicTiles,
+  type TriptychTerritoryState,
+} from '../../src/sim/territory';
 import { createWorld } from '../../src/sim/world';
 import type { TacticalOrder } from '../../src/sim/orders';
 
@@ -56,7 +60,18 @@ describe('Royal Triptych presentation model', () => {
     let world = createWorld([
       { id: 'settler', faction: 'victoria', kind: 'pawn', position: cell },
     ]);
-    world = resolveSettlement(world);
+    const id = tileId(cell);
+    const tiles = strategicTiles(world);
+    world = {
+      ...world,
+      territory: {
+        ...world.territory,
+        tiles: {
+          ...tiles,
+          [id]: { ...tiles[id]!, factionControl: 'victoria' },
+        },
+      } as TriptychTerritoryState,
+    };
     world = queueBanner(world, {
       bannerId: 'banner-1', faction: 'victoria', cell,
     }).state;
