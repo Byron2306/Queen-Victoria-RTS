@@ -4,8 +4,11 @@ import {
   DEFAULT_CAPTURE_NODES,
   evaluateNodeControlForRound,
 } from '../../src/sim/nodes';
-import { isPlayableCell } from '../../src/sim/board-topology';
-import { resolveSettlement } from '../../src/sim/territory';
+import { isPlayableCell, tileId } from '../../src/sim/board-topology';
+import {
+  strategicTiles,
+  type TriptychTerritoryState,
+} from '../../src/sim/territory';
 
 const APPROVED_NODES = {
   crown: { id: 'crown', kind: 'crown', center: { x: 11, y: 1 } },
@@ -37,7 +40,7 @@ describe('Royal Tactical node topology', () => {
     const crown = world.territory.nodes.crown!;
     const queen = world.units['victoria-queen']!;
 
-    const positioned = resolveSettlement({
+    const positioned = {
       ...world,
       units: {
         ...world.units,
@@ -49,7 +52,7 @@ describe('Royal Tactical node topology', () => {
       occupancy: {
         [`${crown.center.x},${crown.center.y}`]: queen.id,
       },
-    });
+    };
 
     const result = evaluateNodeControlForRound(positioned);
     expect(result.state.territory.nodes.crown?.owner).toBeNull();
@@ -60,27 +63,11 @@ describe('Royal Tactical node topology', () => {
     const crown = world.territory.nodes.crown!;
     const queen = world.units['victoria-queen']!;
     const supplyCell = { x: crown.center.x, y: crown.center.y + 1 };
+    const supplyId = tileId(supplyCell);
+    const tiles = strategicTiles(world);
 
-    let supplied = resolveSettlement({
+    const supplied = {
       ...world,
-      units: {
-        'supply-pawn': {
-          id: 'supply-pawn',
-          faction: 'victoria',
-          kind: 'pawn',
-          position: supplyCell,
-        },
-      },
-      occupancy: {
-        [`${supplyCell.x},${supplyCell.y}`]: 'supply-pawn',
-      },
-      combat: {
-        'supply-pawn': world.combat[queen.id]!,
-      },
-    });
-
-    supplied = {
-      ...supplied,
       units: {
         [queen.id]: {
           ...queen,
@@ -93,6 +80,16 @@ describe('Royal Tactical node topology', () => {
       combat: {
         [queen.id]: world.combat[queen.id]!,
       },
+      territory: {
+        ...world.territory,
+        tiles: {
+          ...tiles,
+          [supplyId]: {
+            ...tiles[supplyId]!,
+            factionControl: 'victoria',
+          },
+        },
+      } as TriptychTerritoryState,
     };
 
     const result = evaluateNodeControlForRound(supplied);
