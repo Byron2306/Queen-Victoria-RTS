@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative, resolve } from 'node:path';
 
-const SRC_ROOT = resolve(process.cwd(), 'src');
 const ALLOWED_OWNERSHIP_WRITERS = new Set([
   'src/sim/territory.ts',
   'src/sim/triptych-territory.ts',
@@ -15,16 +12,11 @@ const DERIVED_OWNERSHIP_PROJECTIONS = new Set([
   'src/sim/intelligence-view.ts',
 ]);
 
-function tsFilesUnder(root: string): string[] {
-  const files: string[] = [];
-  for (const name of readdirSync(root)) {
-    const path = join(root, name);
-    const stat = statSync(path);
-    if (stat.isDirectory()) files.push(...tsFilesUnder(path));
-    else if (stat.isFile() && path.endsWith('.ts')) files.push(path);
-  }
-  return files;
-}
+const SOURCE_MODULES = import.meta.glob('../../src/**/*.ts', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
 
 function directFactionControlWriteLines(source: string): number[] {
   const lines = source.split(/\r?\n/);
@@ -33,7 +25,7 @@ function directFactionControlWriteLines(source: string): number[] {
 }
 
 function repoPath(path: string): string {
-  return relative(process.cwd(), path).replaceAll('\\', '/');
+  return path.replace(/^\.\.\/\.\.\//, '');
 }
 
 describe('canonical territorial ownership architecture', () => {
@@ -48,10 +40,10 @@ describe('canonical territorial ownership architecture', () => {
   });
 
   it('allows direct territorial ownership writes only inside canonical ownership boundaries', () => {
-    const violations = tsFilesUnder(SRC_ROOT)
-      .map(path => ({
+    const violations = Object.entries(SOURCE_MODULES)
+      .map(([path, source]) => ({
         path: repoPath(path),
-        lines: directFactionControlWriteLines(readFileSync(path, 'utf8')),
+        lines: directFactionControlWriteLines(source),
       }))
       .filter(entry => entry.lines.length > 0)
       .filter(entry => !ALLOWED_OWNERSHIP_WRITERS.has(entry.path))
