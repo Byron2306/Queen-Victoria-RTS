@@ -1,15 +1,20 @@
 import { describe, expect, it } from 'vitest';
+import { tileId } from '../../src/sim/board-topology';
 import { buildFortification, getFortificationAt } from '../../src/sim/fortifications';
 import { getTilePolarity, queueBanner, resolveBannerProgress, getBannerState } from '../../src/sim/polarity';
 import { queueRecruitment } from '../../src/sim/production';
 import { resolveCommittedOrders } from '../../src/sim/resolve-orders';
 import { combatModifiersForRank, militaryRecordFor } from '../../src/sim/rank';
 import { supportPressureForChain, validateSupportGraph } from '../../src/sim/support';
-import { resolveSettlement, getTileFactionControl } from '../../src/sim/territory';
+import {
+  getTileFactionControl,
+  strategicTiles,
+  type TriptychTerritoryState,
+} from '../../src/sim/territory';
 import { resolveReinforcementPhase } from '../../src/sim/turns';
 import { createWorld } from '../../src/sim/world';
 import type { TacticalOrder } from '../../src/sim/orders';
-import type { UnitState, WorldState } from '../../src/sim/types';
+import type { UnitState } from '../../src/sim/types';
 
 const unit = (
   id: string,
@@ -36,10 +41,16 @@ function scenario() {
   // This is not a bare opening position. Victoria begins with previously held
   // infrastructure sufficient to sustain the existing force. The gauntlet
   // then proves acquisition of a *new* supplied node at minor-nw.
+  const supplyId = tileId(supplyCell);
+  const tiles = strategicTiles(world);
   world = {
     ...world,
     territory: {
       ...world.territory,
+      tiles: {
+        ...tiles,
+        [supplyId]: { ...tiles[supplyId]!, factionControl: 'victoria' },
+      },
       nodes: {
         ...world.territory.nodes,
         crown: {
@@ -51,7 +62,7 @@ function scenario() {
           owner: 'victoria',
         },
       },
-    },
+    } as TriptychTerritoryState,
     economy: {
       crownPower: { victoria: 50, obsidian: 35 },
     },
@@ -85,7 +96,6 @@ function scenario() {
   // defended through the next; the other will be legally landed upon.
   world = resolveBannerProgress(world).state;
 
-  world = resolveSettlement(world);
   const fortification = buildFortification(world, {
     id: 'royal-wall', faction: 'victoria', cell: supplyCell,
   });
