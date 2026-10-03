@@ -45,10 +45,6 @@ import {
 import {
   assetUrl,
 } from '../assets/base-url';
-import {
-  BOARD_HEIGHT,
-  BOARD_WIDTH,
-} from '../../sim/board-topology';
 
 type PhaserSceneBase = new (config?: any) => object;
 
@@ -131,14 +127,15 @@ export function createTriptychBattlefieldSceneClass<
 
     /**
      * Final Triptych presentation authority. The generic scene still contains
-     * legacy 16x16 sizing assumptions, so every visible Triptych frame is
-     * normalized here against the authoritative 24-row battlefield. Position
-     * comes from the render model's exact tile centre; this method changes only
-     * sprite origin, size, and facing, preserving movement interpolation.
+     * legacy sizing assumptions, so every visible Triptych frame is normalized
+     * against the selected battlefield dimensions. Position comes from the
+     * render model's exact tile centre; this method changes only sprite origin,
+     * size, and facing, preserving movement interpolation.
      */
     private enforceTriptychUnitPresentation(): void {
       const { layout, runtime } = this.currentPresentationRuntime();
-      const cellHeight = layout.boardRender.height / BOARD_HEIGHT;
+      const boardHeight = this.controller.world.height;
+      const cellHeight = layout.boardRender.height / boardHeight;
 
       for (const unit of runtime.frame.units) {
         const sprite = (this.unitSprites as Map<string, any>).get(unit.id);
@@ -148,6 +145,7 @@ export function createTriptychBattlefieldSceneClass<
         const visualHeight = unitVisualHeightForRank({
           boardY: worldUnit.position.y,
           cellHeight,
+          boardHeight,
         });
         const rawWidth = Number(sprite.width) || visualHeight;
         const rawHeight = Number(sprite.height) || visualHeight;
@@ -329,7 +327,7 @@ export function createTriptychBattlefieldSceneClass<
       for (const label of legacyLabels) label?.setVisible?.(false);
 
       if (!scene.add?.image) return;
-      const tileWidth = layout.boardRender.width / BOARD_WIDTH;
+      const tileWidth = layout.boardRender.width / scene.controller.world.width;
 
       for (const banner of overlay.banners) {
         const art = bannerArtPresentation(banner.faction, tileWidth);
@@ -412,7 +410,7 @@ export function createTriptychBattlefieldSceneClass<
       }
       scene.royalNodeSprites = [];
 
-      const tileWidth = layout.boardRender.width / BOARD_WIDTH;
+      const tileWidth = layout.boardRender.width / scene.controller.world.width;
 
       for (const node of runtime.frame.nodes) {
         const art = nodeArtPresentation(
