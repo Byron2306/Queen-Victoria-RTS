@@ -38,7 +38,6 @@ export type ClaimResult = Readonly<{
 }>;
 
 export type AnnexRejectReason = ClaimRejectReason;
-
 export type AnnexResult = ClaimResult;
 
 export function topologyForWorld(
@@ -162,76 +161,26 @@ export function annexTile(
   faction: Faction,
   cell: Coord,
 ): AnnexResult {
-  const topology = topologyForWorld(world);
-  if (!topology.isPlayableCell(cell.x, cell.y)) {
-    return { state: world, accepted: false, reason: 'off_board' };
-  }
-
-  const control = getTileFactionControl(world, cell);
-  if (control === faction) {
-    return { state: world, accepted: false, reason: 'already_controlled' };
-  }
-  if (control !== 'neutral') {
-    return { state: world, accepted: false, reason: 'enemy_controlled' };
-  }
-  if (!hasAdjacentFactionTile(world, cell, faction)) {
-    return {
-      state: world,
-      accepted: false,
-      reason: 'not_adjacent_to_friendly_territory',
-    };
-  }
-
-  const id = tileId(cell);
-  const tiles: Record<TileId, BoardTile> = {
-    ...strategicTiles(world),
-    [id]: {
-      ...strategicTiles(world)[id]!,
-      factionControl: faction,
-    },
-  };
-
-  return {
-    accepted: true,
-    state: {
-      ...world,
-      territory: {
-        ...world.territory,
-        tiles,
-      } as TriptychTerritoryState,
-    },
-  };
+  return claimFactionTile(world, faction, cell, 'annex_command');
 }
 
 export function resolveSettlement(world: WorldState): WorldState {
-  const topology = topologyForWorld(world);
-  const tiles: Record<TileId, BoardTile> = {
-    ...strategicTiles(world),
-  };
+  let state = world;
+  const unitIds = Object.keys(world.units).sort((a, b) => a.localeCompare(b));
 
-  for (const unit of Object.values(world.units)) {
-    if (!topology.isPlayableCell(unit.position.x, unit.position.y)) {
-      continue;
-    }
-
+  for (const unitId of unitIds) {
+    const unit = world.units[unitId]!;
     const combat = world.combat[unit.id];
-    if (combat && combat.health <= 0) {
-      continue;
-    }
+    if (combat && combat.health <= 0) continue;
 
-    const id = tileId(unit.position);
-    const previous = tiles[id]!;
-    tiles[id] = {
-      ...previous,
-      factionControl: unit.faction,
-    };
+    const result = claimFactionTile(
+      state,
+      unit.faction,
+      unit.position,
+      'settlement',
+    );
+    if (result.accepted) state = result.state;
   }
 
-  return {
-    ...world,
-    territory: {
-      ...world.territory,
-      tiles,
-    } as TriptychTerritoryState,
-  };
+  return state;
 }
