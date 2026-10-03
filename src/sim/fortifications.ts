@@ -1,6 +1,10 @@
-import { isPlayableCell, tileId } from './board-topology';
+import { tileId } from './board-topology';
 import { strategicAbilityModifiers } from './strategic-ability-hooks';
-import { getTileFactionControl, type TriptychTerritoryState } from './territory';
+import {
+  getTileFactionControl,
+  topologyForWorld,
+  type TriptychTerritoryState,
+} from './territory';
 import type { Coord, Faction, WorldState } from './types';
 
 export type FortificationRejectReason =
@@ -58,7 +62,8 @@ export function canBuildFortification(
   faction: Faction,
   cell: Coord,
 ): FortificationDecision {
-  if (!isPlayableCell(cell.x, cell.y)) {
+  const topology = topologyForWorld(world);
+  if (!topology.isPlayableCell(cell.x, cell.y)) {
     return { allowed: false, reason: 'off_board' };
   }
 
