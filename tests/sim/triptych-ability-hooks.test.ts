@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
+import { tileId } from '../../src/sim/board-topology';
 import { buildFortification, getFortificationAt } from '../../src/sim/fortifications';
 import { queueBanner, resolveBannerProgress, getBannerState } from '../../src/sim/polarity';
 import { supportPressureForChain, type SupportChain } from '../../src/sim/support';
-import { resolveSettlement } from '../../src/sim/territory';
+import {
+  strategicTiles,
+  type TriptychTerritoryState,
+} from '../../src/sim/territory';
 import { createWorld } from '../../src/sim/world';
 import type { HeroAbilityId, UnitState, WorldState } from '../../src/sim/types';
 
@@ -34,6 +38,21 @@ function withVictoriaAbility(world: WorldState, ability: HeroAbilityId): WorldSt
         },
       },
     },
+  };
+}
+
+function withVictoriaTerritory(world: WorldState, cell: { x: number; y: number }): WorldState {
+  const id = tileId(cell);
+  const tiles = strategicTiles(world);
+  return {
+    ...world,
+    territory: {
+      ...world.territory,
+      tiles: {
+        ...tiles,
+        [id]: { ...tiles[id]!, factionControl: 'victoria' },
+      },
+    } as TriptychTerritoryState,
   };
 }
 
@@ -69,10 +88,10 @@ describe('Victoria abilities modify shared Triptych verbs', () => {
 
   it('Hold the Crown hardens a newly built fortification on friendly territory', () => {
     const cell = { x: 7, y: 10 } as const;
-    let baseline = resolveSettlement(createWorld([
+    let baseline = withVictoriaTerritory(createWorld([
       unit('victoria-queen', 'victoria', 'queen', 6, 10),
       unit('builder', 'victoria', 'pawn', cell.x, cell.y),
-    ]));
+    ]), cell);
     let fortified = withVictoriaAbility(baseline, 'hold_the_crown');
 
     baseline = buildFortification(baseline, {
