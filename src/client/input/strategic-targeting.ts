@@ -1,8 +1,8 @@
 import { canBuildFortification } from '../../sim/fortifications';
 import { getBannerAt } from '../../sim/polarity';
 import {
+  canFactionClaimTile,
   getTileFactionControl,
-  hasAdjacentFactionTile,
   topologyForWorld,
 } from '../../sim/territory';
 import type { Coord, Faction, WorldState } from '../../sim/types';
@@ -31,10 +31,7 @@ function isLegalStrategicTarget(
     return canBuildFortification(world, faction, cell).allowed;
   }
 
-  return (
-    getTileFactionControl(world, cell) === 'neutral' &&
-    hasAdjacentFactionTile(world, cell, faction)
-  );
+  return canFactionClaimTile(world, faction, cell, 'annex_command').allowed;
 }
 
 export function legalStrategicTargets(
