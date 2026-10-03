@@ -81,9 +81,13 @@ export function createWorld(units: readonly UnitState[] = [], options: WorldOpti
 
 export function placeUnit(world: WorldState, unit: UnitState): WorldState {
   const topology = topologyForWorld(world);
+  const requiresMaskedPlacement = topology.id === 'triptych-v2';
   if (
     !isInWorldBounds(world, unit.position)
-    || !topology.isPlayableCell(unit.position.x, unit.position.y)
+    || (
+      requiresMaskedPlacement
+      && !topology.isPlayableCell(unit.position.x, unit.position.y)
+    )
   ) {
     throw new OutOfBoundsError(unit.position);
   }
