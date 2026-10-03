@@ -1,17 +1,42 @@
 import { describe, expect, it } from 'vitest';
+import { tileId } from '../../src/sim/board-topology';
 import { validateMoveGeometry } from '../../src/sim/geometry';
 import { getTilePolarity, queueBanner, resolveBannerProgress } from '../../src/sim/polarity';
-import { getTileFactionControl } from '../../src/sim/territory';
+import {
+  getTileFactionControl,
+  strategicTiles,
+  type TriptychTerritoryState,
+} from '../../src/sim/territory';
 import { militaryRecordFor } from '../../src/sim/rank';
 import { resolveReinforcementPhase } from '../../src/sim/turns';
 import { createWorld } from '../../src/sim/world';
+import type { Faction, WorldState } from '../../src/sim/types';
+
+function withOwnedTile(
+  world: WorldState,
+  cell: { x: number; y: number },
+  faction: Faction,
+): WorldState {
+  const id = tileId(cell);
+  const tiles = strategicTiles(world);
+  return {
+    ...world,
+    territory: {
+      ...world.territory,
+      tiles: {
+        ...tiles,
+        [id]: { ...tiles[id]!, factionControl: faction },
+      },
+    } as TriptychTerritoryState,
+  };
+}
 
 describe('Triptych strategic round boundary', () => {
   it('annexes at reinforcement and delays a two-round polarity flip until the following command phase', () => {
     const cell = { x: 7, y: 10 } as const;
-    let world = createWorld([
+    let world = withOwnedTile(createWorld([
       { id: 'victoria-pawn', faction: 'victoria', kind: 'pawn', position: cell },
-    ]);
+    ]), { x: 7, y: 9 }, 'victoria');
     const initialPolarity = getTilePolarity(world, cell);
     world = queueBanner(world, {
       bannerId: 'boundary-banner',
@@ -46,10 +71,10 @@ describe('Triptych strategic round boundary', () => {
     const futureLanding = { x: 13, y: 12 } as const;
     const settlementCell = { x: 7, y: 10 } as const;
 
-    let world = createWorld([
+    let world = withOwnedTile(createWorld([
       { id: 'victoria-knight', faction: 'victoria', kind: 'knight', position: knightStart },
       { id: 'victoria-pawn', faction: 'victoria', kind: 'pawn', position: settlementCell },
-    ]);
+    ]), { x: 7, y: 9 }, 'victoria');
 
     expect(validateMoveGeometry(world, world.units['victoria-knight']!, futureLanding))
       .toEqual({ legal: true });
