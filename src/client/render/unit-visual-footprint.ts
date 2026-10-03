@@ -1,14 +1,17 @@
-import { BOARD_HEIGHT } from '../../sim/board-topology';
+import { getBattlefieldTopology } from '../../sim/battlefield-topology-authority';
 
 export interface UnitVisualFootprintInput {
   boardY: number;
   cellHeight: number;
+  boardHeight?: number;
 }
 
 export function unitVisualHeightForRank(
   input: UnitVisualFootprintInput,
 ): number {
-  const maxRow = BOARD_HEIGHT - 1;
+  const boardHeight = input.boardHeight
+    ?? getBattlefieldTopology('triptych-v1').height;
+  const maxRow = boardHeight - 1;
   const clampedY = Math.max(
     0,
     Math.min(maxRow, input.boardY),
@@ -17,8 +20,8 @@ export function unitVisualHeightForRank(
   const t = maxRow > 0 ? clampedY / maxRow : 0;
 
   // Perspective remains intentionally subtle: far-side pieces are slightly
-  // smaller than near-side pieces, but the logical cell height now comes from
-  // the authoritative 24-row Triptych battlefield.
+  // smaller than near-side pieces, while row ranking follows the selected
+  // battlefield height supplied by the live scene.
   const farScale = 1.82;
   const nearScale = 2.10;
 
