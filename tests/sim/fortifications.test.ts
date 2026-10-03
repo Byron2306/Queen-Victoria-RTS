@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createWorld } from '../../src/sim/world';
-import { resolveSettlement, strategicTiles } from '../../src/sim/territory';
+import { strategicTiles } from '../../src/sim/territory';
 import { validateMoveGeometry } from '../../src/sim/geometry';
 import {
   buildFortification,
@@ -8,6 +8,25 @@ import {
   damageFortification,
   getFortificationAt,
 } from '../../src/sim/fortifications';
+import type { Coord, WorldState } from '../../src/sim/types';
+
+function withVictoriaTerritory(world: WorldState, cell: Coord): WorldState {
+  const tiles = strategicTiles(world);
+  const id = `${cell.x},${cell.y}` as keyof typeof tiles;
+  return {
+    ...world,
+    territory: {
+      ...world.territory,
+      tiles: {
+        ...tiles,
+        [id]: {
+          ...tiles[id]!,
+          factionControl: 'victoria',
+        },
+      },
+    } as typeof world.territory,
+  };
+}
 
 describe('Triptych fortifications', () => {
   it('builds only on friendly faction territory with durability 3', () => {
@@ -15,7 +34,7 @@ describe('Triptych fortifications', () => {
     let world = createWorld([
       { id: 'victoria-pawn', faction: 'victoria', kind: 'pawn', position: cell },
     ]);
-    world = resolveSettlement(world);
+    world = withVictoriaTerritory(world, cell);
 
     expect(canBuildFortification(world, 'victoria', cell)).toEqual({ allowed: true });
     expect(canBuildFortification(world, 'obsidian', cell)).toEqual({
@@ -42,7 +61,7 @@ describe('Triptych fortifications', () => {
     let world = createWorld([
       { id: 'victoria-pawn', faction: 'victoria', kind: 'pawn', position: cell },
     ]);
-    world = resolveSettlement(world);
+    world = withVictoriaTerritory(world, cell);
     world = buildFortification(world, {
       id: 'fort-v-1',
       faction: 'victoria',
@@ -62,7 +81,7 @@ describe('Triptych fortifications', () => {
     let world = createWorld([
       { id: 'builder', faction: 'victoria', kind: 'pawn', position: fortCell },
     ]);
-    world = resolveSettlement(world);
+    world = withVictoriaTerritory(world, fortCell);
     world = buildFortification(world, {
       id: 'fort-v-1',
       faction: 'victoria',
