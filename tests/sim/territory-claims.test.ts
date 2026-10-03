@@ -2,11 +2,14 @@ import { describe, expect, it } from 'vitest';
 
 import { createPhase6SkirmishWorld } from '../../src/client/session/skirmish';
 import {
+  annexTile,
   canFactionClaimTile,
   claimFactionTile,
   getTileFactionControl,
+  resolveSettlement,
   strategicTiles,
 } from '../../src/sim/territory';
+import { placeUnit } from '../../src/sim/world';
 
 describe('canonical faction claim authority', () => {
   it('allows an adjacent neutral frontier claim', () => {
@@ -85,5 +88,80 @@ describe('canonical faction claim authority', () => {
     });
     expect(result.state).toBe(world);
     expect(getTileFactionControl(result.state, cell)).toBe('neutral');
+  });
+
+  it('gives annex and settlement the same adjacent neutral ownership result', () => {
+    const base = createPhase6SkirmishWorld();
+    const cell = { x: 8, y: 14 };
+
+    const annexed = annexTile(base, 'victoria', cell);
+    let settledWorld = placeUnit(base, {
+      id: 'settler', faction: 'victoria', kind: 'pawn', position: cell,
+    });
+    settledWorld = resolveSettlement(settledWorld);
+
+    expect(annexed.accepted).toBe(true);
+    expect(getTileFactionControl(annexed.state, cell)).toBe('victoria');
+    expect(getTileFactionControl(settledWorld, cell)).toBe('victoria');
+  });
+
+  it('keeps a remote neutral raider in place without granting ownership', () => {
+    const cell = { x: 10, y: 14 };
+    let world = createPhase6SkirmishWorld();
+    world = placeUnit(world, {
+      id: 'remote-raider', faction: 'victoria', kind: 'knight', position: cell,
+    });
+
+    const settled = resolveSettlement(world);
+
+    expect(settled.units['remote-raider']!.position).toEqual(cell);
+    expect(getTileFactionControl(settled, cell)).toBe('neutral');
+  });
+
+  it('does not flip enemy territory merely because an enemy unit occupies it', () => {
+    const cell = { x: 24, y: 14 };
+    let world = createPhase6SkirmishWorld();
+    world = placeUnit(world, {
+      id: 'occupier', faction: 'victoria', kind: 'knight', position: cell,
+    });
+
+    const settled = resolveSettlement(world);
+
+    expect(settled.units.occupier!.position).toEqual(cell);
+    expect(getTileFactionControl(settled, cell)).toBe('obsidian');
+  });
+
+  it('ignores dead units during settlement claims', () => {
+    const cell = { x: 8, y: 14 };
+    let world = createPhase6SkirmishWorld();
+    world = placeUnit(world, {
+      id: 'dead-settler', faction: 'victoria', kind: 'pawn', position: cell,
+    });
+    world = {
+      ...world,
+      combat: {
+        ...world.combat,
+        'dead-settler': { ...world.combat['dead-settler']!, health: 0 },
+      },
+    };
+
+    const settled = resolveSettlement(world);
+
+    expect(getTileFactionControl(settled, cell)).toBe('neutral');
+  });
+
+  it('processes settlement claims in unit-id order regardless of insertion order', () => {
+    let world = createPhase6SkirmishWorld();
+    world = placeUnit(world, {
+      id: 'b-next', faction: 'victoria', kind: 'pawn', position: { x: 9, y: 14 },
+    });
+    world = placeUnit(world, {
+      id: 'a-frontier', faction: 'victoria', kind: 'pawn', position: { x: 8, y: 14 },
+    });
+
+    const settled = resolveSettlement(world);
+
+    expect(getTileFactionControl(settled, { x: 8, y: 14 })).toBe('victoria');
+    expect(getTileFactionControl(settled, { x: 9, y: 14 })).toBe('victoria');
   });
 });
