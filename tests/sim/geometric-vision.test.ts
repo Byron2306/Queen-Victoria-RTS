@@ -8,7 +8,6 @@ import {
   type FortificationState,
 } from '../../src/sim/fortifications';
 import {
-  resolveSettlement,
   strategicTiles,
   type TriptychTerritoryState,
 } from '../../src/sim/territory';
@@ -19,7 +18,7 @@ import {
   visibleCellsForUnit,
 } from '../../src/sim/vision';
 import { createWorld, placeUnit } from '../../src/sim/world';
-import type { UnitState } from '../../src/sim/types';
+import type { Faction, UnitState, WorldState } from '../../src/sim/types';
 
 const ids = (cells: readonly { x: number; y: number }[]) => new Set(cells.map(tileId));
 
@@ -28,6 +27,25 @@ function unit(
   position: UnitState['position'] = { x: 11, y: 11 },
 ): UnitState {
   return { id: kind, faction: 'victoria', kind, position };
+}
+
+function withOwnedTile(
+  world: WorldState,
+  cell: { x: number; y: number },
+  faction: Faction,
+): WorldState {
+  const id = tileId(cell);
+  const tiles = strategicTiles(world);
+  return {
+    ...world,
+    territory: {
+      ...world.territory,
+      tiles: {
+        ...tiles,
+        [id]: { ...tiles[id]!, factionControl: faction },
+      },
+    } as TriptychTerritoryState,
+  };
 }
 
 describe('chess-geometric battlefield vision', () => {
@@ -89,7 +107,7 @@ describe('chess-geometric battlefield vision', () => {
 
     expect(ids(visibleCellsForUnit(world, rook))).toContain('11,14');
 
-    world = resolveSettlement(world);
+    world = withOwnedTile(world, { x: 11, y: 12 }, 'victoria');
     world = buildFortification(world, {
       id: 'blocking-bastion', faction: 'victoria', cell: { x: 11, y: 12 }, kind: 'bastion',
     }).state;
@@ -100,10 +118,7 @@ describe('chess-geometric battlefield vision', () => {
   });
 
   it('treats owned territory and controlled nodes as live vision sources', () => {
-    let world = createWorld([
-      { id: 'settler', faction: 'victoria', kind: 'pawn', position: { x: 11, y: 14 } },
-    ]);
-    world = resolveSettlement(world);
+    let world = withOwnedTile(createWorld(), { x: 11, y: 14 }, 'victoria');
     world = {
       ...world,
       territory: {
@@ -135,10 +150,9 @@ describe('chess-geometric battlefield vision', () => {
     expect(ids(visibleCellsForFortification(world, bastion))).not.toContain('15,11');
     expect(ids(visibleCellsForFortification(world, redoubt))).toContain('15,11');
 
-    let fortified = createWorld([
+    let fortified = withOwnedTile(createWorld([
       { id: 'builder', faction: 'victoria', kind: 'pawn', position: { x: 11, y: 14 } },
-    ]);
-    fortified = resolveSettlement(fortified);
+    ]), { x: 11, y: 14 }, 'victoria');
     fortified = buildFortification(fortified, {
       id: 'watch', faction: 'victoria', cell: { x: 11, y: 14 }, kind: 'redoubt',
     }).state;
