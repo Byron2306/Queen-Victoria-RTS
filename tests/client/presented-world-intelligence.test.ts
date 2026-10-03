@@ -12,8 +12,8 @@ import { createWorld } from '../../src/sim/world';
 
 function worldWithObservedAndHiddenEnemies() {
   let world = createWorld([
-    { id: 'v-rook', faction: 'victoria', kind: 'rook', position: { x: 7, y: 7 } },
-    { id: 'seen-pawn', faction: 'obsidian', kind: 'pawn', position: { x: 7, y: 10 } },
+    { id: 'v-rook', faction: 'victoria', kind: 'rook', position: { x: 7, y: 8 } },
+    { id: 'seen-pawn', faction: 'obsidian', kind: 'pawn', position: { x: 7, y: 11 } },
     { id: 'hidden-knight', faction: 'obsidian', kind: 'knight', position: { x: 14, y: 14 } },
   ]);
 
@@ -32,8 +32,8 @@ describe('faction-safe presented battlefield world', () => {
 
   it('presents remembered enemy contacts as ghosts rather than live units', () => {
     let world = worldWithObservedAndHiddenEnemies();
-    const memory = world.intelligence.byFaction.victoria['7,10']!;
-    const { ['7,10']: _oldOccupant, ...occupancyWithoutOldCell } = world.occupancy;
+    const memory = world.intelligence.byFaction.victoria['7,11']!;
+    const { ['7,11']: _oldOccupant, ...occupancyWithoutOldCell } = world.occupancy;
 
     world = {
       ...world,
@@ -54,7 +54,7 @@ describe('faction-safe presented battlefield world', () => {
           ...world.intelligence.byFaction,
           victoria: {
             ...world.intelligence.byFaction.victoria,
-            '7,10': {
+            '7,11': {
               ...memory,
               visibility: 'remembered',
               lastSeenRound: 4,
@@ -71,14 +71,14 @@ describe('faction-safe presented battlefield world', () => {
     expect(presented.units.map(unit => unit.id)).not.toContain('seen-pawn');
     expect(presented.ghosts).toContainEqual({
       unitId: 'seen-pawn',
-      cell: { x: 7, y: 10 },
+      cell: { x: 7, y: 11 },
       lastSeenRound: 4,
     });
   });
 
   it('uses stale remembered polarity rather than hidden authoritative polarity', () => {
     let world = worldWithObservedAndHiddenEnemies();
-    const memory = world.intelligence.byFaction.victoria['7,10']!;
+    const memory = world.intelligence.byFaction.victoria['7,11']!;
     const tiles = strategicTiles(world);
 
     world = {
@@ -87,8 +87,8 @@ describe('faction-safe presented battlefield world', () => {
         ...world.territory,
         tiles: {
           ...tiles,
-          '7,10': {
-            ...tiles['7,10']!,
+          '7,11': {
+            ...tiles['7,11']!,
             polarity: 'black',
           },
         },
@@ -99,7 +99,7 @@ describe('faction-safe presented battlefield world', () => {
           ...world.intelligence.byFaction,
           victoria: {
             ...world.intelligence.byFaction.victoria,
-            '7,10': {
+            '7,11': {
               ...memory,
               visibility: 'remembered',
               lastSeenRound: 3,
@@ -111,7 +111,7 @@ describe('faction-safe presented battlefield world', () => {
     };
 
     const presented = createPresentedWorld(world, 'victoria');
-    const tile = presented.tiles.find(tile => tile.id === '7,10');
+    const tile = presented.tiles.find(tile => tile.id === '7,11');
 
     expect(tile).toMatchObject({
       visibility: 'remembered',
