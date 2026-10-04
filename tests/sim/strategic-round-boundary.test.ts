@@ -8,7 +8,8 @@ import {
   type TriptychTerritoryState,
 } from '../../src/sim/territory';
 import { militaryRecordFor } from '../../src/sim/rank';
-import { resolveReinforcementPhase } from '../../src/sim/turns';
+import { queueRecruitment } from '../../src/sim/production';
+import { resolveReinforcementPhase, TRIPTYCH_ROUND_STAGE_ORDER } from '../../src/sim/turns';
 import { createWorld } from '../../src/sim/world';
 import type { Faction, WorldState } from '../../src/sim/types';
 
@@ -103,4 +104,98 @@ describe('Triptych strategic round boundary', () => {
     expect(validateMoveGeometry(next, next.units['victoria-knight']!, futureLanding))
       .toEqual({ legal: false, reason: 'polarity_mismatch' });
   });
+
+  it('declares supply attrition after node control and before crown income', () => {
+    expect(TRIPTYCH_ROUND_STAGE_ORDER).toEqual([
+      'settlement',
+      'node_control',
+      'supply_attrition',
+      'crown_income',
+      'banner_progress',
+      'polarity_flip',
+      'promotion',
+      'deployment',
+      'military_rank',
+      'hero_round_state',
+      'hero_respawn',
+      'sovereign_truth',
+    ]);
+  });
+
+  it('lets a Crown captured this boundary supply its disconnected controlled component immediately', () => {
+    let world = createWorld([
+      {
+        id: 'victoria-queen',
+        faction: 'victoria',
+        kind: 'queen',
+        position: { x: 15, y: 1 },
+      },
+      {
+        id: 'forward-pawn',
+        faction: 'victoria',
+        kind: 'pawn',
+        position: { x: 15, y: 3 },
+      },
+    ], { topologyId: 'triptych-v2' });
+
+    world = withOwnedTile(world, { x: 15, y: 2 }, 'victoria');
+    world = withOwnedTile(world, { x: 15, y: 3 }, 'victoria');
+    world = {
+      ...world,
+      supply: {
+        exposureRoundsByUnit: {
+          'forward-pawn': 2,
+        },
+      },
+      turn: { ...world.turn, phase: 'reinforcement' },
+    };
+
+    const next = resolveReinforcementPhase(world);
+
+    expect(next.territory.nodes.crown?.owner).toBe('victoria');
+    expect(next.supply.exposureRoundsByUnit['forward-pawn']).toBe(0);
+  });
+
+  it('evaluates existing units before deployment so a fresh recruit gets no same-boundary exposure', () => {
+    let world = createWorld([
+      {
+        id: 'cut-off',
+        faction: 'victoria',
+        kind: 'pawn',
+        position: { x: 5, y: 15 },
+      },
+    ], { topologyId: 'triptych-v2' });
+
+    world = withOwnedTile(world, { x: 5, y: 15 }, 'victoria');
+    world = {
+      ...world,
+      economy: {
+        crownPower: {
+          ...world.economy.crownPower,
+          victoria: 20,
+        },
+      },
+    };
+
+    const queued = queueRecruitment(world, {
+      type: 'recruit',
+      sequence: 1,
+      issuedTick: 0,
+      faction: 'victoria',
+      unitKind: 'pawn',
+    });
+    expect(queued.receipt.accepted).toBe(true);
+
+    world = {
+      ...queued.state,
+      turn: { ...queued.state.turn, phase: 'reinforcement' },
+    };
+
+    const next = resolveReinforcementPhase(world);
+
+    expect(next.supply.exposureRoundsByUnit['cut-off']).toBe(1);
+    expect(next.units['unit:victoria-recruit-1']).toBeDefined();
+    expect(next.supply.exposureRoundsByUnit['unit:victoria-recruit-1']).toBeUndefined();
+  });
+
 });
