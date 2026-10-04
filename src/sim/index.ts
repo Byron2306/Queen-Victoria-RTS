@@ -19,3 +19,4 @@ export * from './ai';
 export * from './abilities';
 export * from './spawn';
 export * from './turns';
+export * from './supply';
