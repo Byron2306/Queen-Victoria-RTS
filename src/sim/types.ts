@@ -14,6 +14,9 @@ export type FactionIntelligenceState = Readonly<Record<import('./board-topology'
 export type IntelligenceState = Readonly<{
   byFaction: Readonly<Record<Faction, FactionIntelligenceState>>;
 }>;
+export type SupplyState = Readonly<{
+  exposureRoundsByUnit: Readonly<Record<string, number>>;
+}>;
 export type UnitKind = 'pawn' | 'knight' | 'bishop' | 'rook' | 'queen' | 'king';
 export type CombatStance = 'guard';
 export type RecruitableUnitKind = 'pawn' | 'knight' | 'bishop' | 'rook';
@@ -238,6 +241,7 @@ export type WorldState = Readonly<{
   heroes: Readonly<Record<Faction, HeroState>>;
   ai: Readonly<Record<Faction, AICommanderState>>;
   intelligence: IntelligenceState;
+  supply: SupplyState;
   turn: import('./turns').TurnState;
   pendingOrders: readonly import('./orders').TacticalOrder[];
 }>;
