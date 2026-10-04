@@ -168,3 +168,52 @@ export function advanceSupplyExposure(world: WorldState): WorldState {
     },
   };
 }
+
+
+export const SUPPLY_ATTRITION_DAMAGE = 10;
+
+export function resolveSupplyAttrition(world: WorldState): WorldState {
+  const exposed = advanceSupplyExposure(world);
+  const units = { ...exposed.units };
+  const occupancy = { ...exposed.occupancy };
+  const combat = { ...exposed.combat };
+  const military = { ...exposed.military };
+  const exposureRoundsByUnit = {
+    ...exposed.supply.exposureRoundsByUnit,
+  };
+
+  for (const unitId of Object.keys(units).sort()) {
+    const unit = units[unitId];
+    const combatState = combat[unitId];
+    if (!unit || !combatState || combatState.health <= 0) continue;
+
+    const exposureRounds = exposureRoundsByUnit[unitId] ?? 0;
+    if (exposureRounds < 3) continue;
+
+    const health = Math.max(0, combatState.health - SUPPLY_ATTRITION_DAMAGE);
+    if (health > 0) {
+      combat[unitId] = {
+        ...combatState,
+        health,
+      };
+      continue;
+    }
+
+    delete occupancy[coordKey(unit.position)];
+    delete units[unitId];
+    delete combat[unitId];
+    delete military[unitId];
+    delete exposureRoundsByUnit[unitId];
+  }
+
+  return {
+    ...exposed,
+    units,
+    occupancy,
+    combat,
+    military,
+    supply: {
+      exposureRoundsByUnit,
+    },
+  };
+}
