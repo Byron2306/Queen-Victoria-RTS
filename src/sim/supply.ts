@@ -1,6 +1,7 @@
 import { tileId, type TileId } from './board-topology';
 import { strategicTiles, topologyForWorld } from './territory';
-import type { Faction, WorldState } from './types';
+import { coordKey } from './world';
+import type { Coord, Faction, WorldState } from './types';
 
 export type SupplyStatus =
   | 'supplied'
@@ -18,6 +19,47 @@ function homeEdgeX(world: WorldState, faction: Faction): number {
   return faction === 'victoria' ? 0 : world.width - 1;
 }
 
+function blockedByLivingEnemy(
+  world: WorldState,
+  faction: Faction,
+  cell: Coord,
+): boolean {
+  const occupantId = world.occupancy[coordKey(cell)];
+  if (!occupantId) return false;
+
+  const occupant = world.units[occupantId];
+  if (!occupant || occupant.faction === faction) return false;
+
+  const combat = world.combat[occupantId];
+  return !combat || combat.health > 0;
+}
+
+function crownRootCells(
+  world: WorldState,
+  faction: Faction,
+): readonly Coord[] {
+  const topology = topologyForWorld(world);
+  const cells: Coord[] = [];
+
+  for (const nodeId of Object.keys(world.territory.nodes).sort()) {
+    const node = world.territory.nodes[nodeId]!;
+    if (
+      node.kind !== 'crown' ||
+      node.owner !== faction ||
+      node.contested
+    ) {
+      continue;
+    }
+
+    cells.push(
+      node.center,
+      ...topology.orthogonalNeighbors(node.center.x, node.center.y),
+    );
+  }
+
+  return cells;
+}
+
 export function deriveFactionSupply(
   world: WorldState,
   faction: Faction,
@@ -26,10 +68,19 @@ export function deriveFactionSupply(
   const tiles = strategicTiles(world);
   const edgeX = homeEdgeX(world, faction);
 
-  const rootTileIds = topology.allPlayableCells()
-    .filter((cell) => cell.x === edgeX)
+  const homeRoots = topology.allPlayableCells()
+    .filter((cell) => cell.x === edgeX);
+
+  const rootTileIds = [...homeRoots, ...crownRootCells(world, faction)]
     .map(tileId)
-    .filter((id) => tiles[id]?.factionControl === faction)
+    .filter((id, index, all) => all.indexOf(id) === index)
+    .filter((id) => {
+      const tile = tiles[id];
+      return (
+        tile?.factionControl === faction &&
+        !blockedByLivingEnemy(world, faction, tile)
+      );
+    })
     .sort();
 
   const supplied = new Set<TileId>();
@@ -40,7 +91,13 @@ export function deriveFactionSupply(
     if (supplied.has(id)) continue;
 
     const tile = tiles[id];
-    if (!tile || tile.factionControl !== faction) continue;
+    if (
+      !tile ||
+      tile.factionControl !== faction ||
+      blockedByLivingEnemy(world, faction, tile)
+    ) {
+      continue;
+    }
 
     supplied.add(id);
 
