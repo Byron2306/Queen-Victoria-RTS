@@ -117,3 +117,54 @@ export function deriveFactionSupply(
     suppliedTileIds: [...supplied].sort(),
   };
 }
+
+
+function statusFromExposure(exposureRounds: number): SupplyStatus {
+  if (exposureRounds >= 3) return 'attrition';
+  if (exposureRounds >= 2) return 'strained';
+  return 'exposed';
+}
+
+export function supplyStatusForUnit(
+  world: WorldState,
+  unitId: string,
+  snapshot?: FactionSupplySnapshot,
+): SupplyStatus {
+  const unit = world.units[unitId];
+  if (!unit) return 'exposed';
+
+  const factionSupply = snapshot ?? deriveFactionSupply(world, unit.faction);
+  if (factionSupply.suppliedTileIds.includes(tileId(unit.position))) {
+    return 'supplied';
+  }
+
+  return statusFromExposure(
+    world.supply.exposureRoundsByUnit[unitId] ?? 0,
+  );
+}
+
+export function advanceSupplyExposure(world: WorldState): WorldState {
+  const exposureRoundsByUnit: Record<string, number> = {};
+  const snapshots: Partial<Record<Faction, FactionSupplySnapshot>> = {};
+
+  for (const unitId of Object.keys(world.units).sort()) {
+    const unit = world.units[unitId]!;
+    const combat = world.combat[unitId];
+    if (combat && combat.health <= 0) continue;
+
+    const snapshot = snapshots[unit.faction] ??
+      (snapshots[unit.faction] = deriveFactionSupply(world, unit.faction));
+
+    const supplied = snapshot.suppliedTileIds.includes(tileId(unit.position));
+    exposureRoundsByUnit[unitId] = supplied
+      ? 0
+      : (world.supply.exposureRoundsByUnit[unitId] ?? 0) + 1;
+  }
+
+  return {
+    ...world,
+    supply: {
+      exposureRoundsByUnit,
+    },
+  };
+}
