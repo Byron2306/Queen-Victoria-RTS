@@ -8,6 +8,7 @@ import { advanceHeroRoundState } from './turn-abilities';
 import { resolveSettlement } from './territory';
 import { applyMaturePolarityFlips, resolveBannerProgress } from './polarity';
 import { resolveRankUps } from './rank';
+import { resolveSupplyAttrition } from './supply';
 import type { Faction, WorldState } from './types';
 
 export const ROYAL_COMMANDS_PER_ROUND = 4;
@@ -15,6 +16,7 @@ export const ROYAL_COMMANDS_PER_ROUND = 4;
 export const TRIPTYCH_ROUND_STAGE_ORDER = [
   'settlement',
   'node_control',
+  'supply_attrition',
   'crown_income',
   'banner_progress',
   'polarity_flip',
@@ -94,6 +96,7 @@ function resolveGeographyStage(world: WorldState): WorldState {
   // can immediately supply a node at this same round boundary.
   let working = resolveSettlement(world);
   working = evaluateNodeControlForRound(working).state;
+  working = resolveSupplyAttrition(working);
   return applyCrownIncome(working).state;
 }
 
