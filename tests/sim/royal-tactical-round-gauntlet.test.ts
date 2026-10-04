@@ -115,13 +115,30 @@ describe('Royal Tactical full-round gauntlet', () => {
 
   it('wall-clock fixed ticks have no strategic authority', () => {
     const initial = startingWorld();
-    const runtime = new FixedTickRuntime(initial);
+    const exposed = {
+      ...initial,
+      combat: {
+        ...initial.combat,
+        vknight: {
+          ...initial.combat.vknight!,
+          health: 47,
+        },
+      },
+      supply: {
+        exposureRoundsByUnit: {
+          vknight: 2,
+        },
+      },
+    };
+    const runtime = new FixedTickRuntime(exposed);
     const before = JSON.stringify(runtime.world);
 
     const result = runtime.advance(SIM_TICK_MS * 20);
 
     expect(result.steps).toBe(20);
     expect(result.events).toEqual([]);
+    expect(runtime.world.supply.exposureRoundsByUnit.vknight).toBe(2);
+    expect(runtime.world.combat.vknight?.health).toBe(47);
     expect(JSON.stringify(runtime.world)).toBe(before);
   });
 });
