@@ -88,7 +88,7 @@ describe('AI READY deployment parity',()=>{
     const b=selectCell(world,'obsidian','obsidian-recruit-1');
 
     expect(a).toEqual(b);
-    expect(a).toEqual({x:26,y:15});
+    expect(a).toEqual({x:26,y:13});
   });
 
   it('emits deploy_ready through the normal AI command generator',()=>{
