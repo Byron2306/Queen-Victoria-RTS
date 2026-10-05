@@ -74,7 +74,7 @@ describe('Triptych production feedback', () => {
     });
   });
 
-  it('reports invalid deployment territory rather than silently retaining the queue head', () => {
+  it('matures a purchased head to READY regardless of legacy anchor validity', () => {
     const queued = queueRecruitment(
       withCrown(createWorld(), 20),
       recruit('pawn'),
@@ -92,14 +92,18 @@ describe('Triptych production feedback', () => {
 
     const result = deployReinforcements(invalidAnchor);
     expect(result.receipts.victoria).toMatchObject({
-      accepted: false,
-      reason: 'invalid_deployment_territory',
-      queued: true,
+      accepted: true,
+      reason: null,
+      queued: false,
       placed: false,
+      queueEntryId: 'victoria-recruit-1',
     });
+    expect(result.state.production.queues.victoria).toEqual([]);
+    expect(result.state.production.ready.victoria.map(entry => entry.id))
+      .toEqual(['victoria-recruit-1']);
   });
 
-  it('reports a fully occupied battlefield as blocked spawn rather than failing silently', () => {
+  it('matures to READY even when the battlefield is fully occupied', () => {
     const queued = queueRecruitment(
       withCrown(createWorld(), 20),
       recruit('pawn'),
@@ -111,10 +115,11 @@ describe('Triptych production feedback', () => {
 
     const result = deployReinforcements({ ...queued, occupancy });
     expect(result.receipts.victoria).toMatchObject({
-      accepted: false,
-      reason: 'blocked_spawn',
-      queued: true,
+      accepted: true,
+      reason: null,
+      queued: false,
       placed: false,
     });
+    expect(result.state.production.ready.victoria).toHaveLength(1);
   });
 });
