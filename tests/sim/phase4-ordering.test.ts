@@ -255,7 +255,14 @@ describe(
         next.units[
           'unit:victoria-recruit-1'
         ],
-      ).toBeDefined();
+      ).toBeUndefined();
+
+      expect(
+        next.production.ready.victoria
+          .map(entry => entry.id),
+      ).toEqual([
+        'victoria-recruit-1',
+      ]);
     });
 
     it('promotion during reinforcement leaves sovereign threat truth current for the next command phase', () => {
