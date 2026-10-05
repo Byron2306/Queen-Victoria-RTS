@@ -7,6 +7,7 @@ import { refreshFactionIntelligence } from './intelligence';
 import { createFactionKnowledgeView, createFactionPlanningWorld } from './intelligence-view';
 import { targetIsObserved, validateMoveKnowledge } from './knowledge-legality';
 import { topologyForWorld } from './territory';
+import { legalDeploymentCells } from './deployment';
 
 function initialAI(enabled: boolean): AICommanderState {
   return {
@@ -249,6 +250,21 @@ export function pawnIsPromotionEligible(world:WorldState,faction:Faction,positio
   return faction==='victoria'?position.y>=14:position.y<=1;
 }
 
+export function selectAIReadyDeploymentCell(
+  world: WorldState,
+  faction: Faction,
+  readyId: string,
+): Coord | null {
+  const objective = aiFrontObjective(world, faction);
+  const legal = [...legalDeploymentCells(world, faction, readyId)];
+  legal.sort((a, b) =>
+    distance(a, objective) - distance(b, objective)
+    || a.y - b.y
+    || a.x - b.x
+  );
+  return legal[0] ? { ...legal[0] } : null;
+}
+
 function objectivePosition(world:WorldState,faction:Faction,commitment:StrategicCommitment):Coord|null {
   const informed=refreshFactionIntelligence(world,faction);
   const view=createFactionKnowledgeView(informed,faction);
@@ -358,6 +374,20 @@ export function commandsForCommitments(world:WorldState,faction:Faction,commitme
   let sequence=informed.ai[faction].nextCommandOrdinal;
   const push=(command:SimCommand)=>{ if(commands.length<6){commands.push(command);sequence+=1;} };
 
+  for (const entry of [...informed.production.ready[faction]].sort((a,b)=>a.id.localeCompare(b.id))) {
+    if (commands.length >= 6) break;
+    const to = selectAIReadyDeploymentCell(informed, faction, entry.id);
+    if (!to) continue;
+    push({
+      type: 'deploy_ready',
+      sequence,
+      issuedTick: informed.tick,
+      faction,
+      readyId: entry.id,
+      to,
+    });
+  }
+
   const ability=heroAbilityForCommitments(informed,faction,commitments);
   const heroId=informed.heroes[faction].heroUnitId;
   if(ability&&heroId) push({type:'hero_ability',sequence,issuedTick:informed.tick,faction,heroId,ability});
@@ -396,6 +426,7 @@ function commandActorId(command:SimCommand):string {
   if(command.type==='hero_ability') return command.heroId;
   if(command.type==='recruit') return command.faction;
   if(command.type==='promote') return command.pawnId;
+  if(command.type==='deploy_ready') return command.readyId;
   return command.unitId;
 }
 
