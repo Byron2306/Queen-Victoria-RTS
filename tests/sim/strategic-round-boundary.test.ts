@@ -156,7 +156,7 @@ describe('Triptych strategic round boundary', () => {
     expect(next.supply.exposureRoundsByUnit['forward-pawn']).toBe(0);
   });
 
-  it('evaluates existing units before deployment so a fresh recruit gets no same-boundary exposure', () => {
+  it('evaluates existing units before queue maturation so a fresh READY recruit gets no same-boundary exposure', () => {
     let world = createWorld([
       {
         id: 'cut-off',
@@ -194,7 +194,13 @@ describe('Triptych strategic round boundary', () => {
     const next = resolveReinforcementPhase(world);
 
     expect(next.supply.exposureRoundsByUnit['cut-off']).toBe(1);
-    expect(next.units['unit:victoria-recruit-1']).toBeDefined();
+    expect(next.units['unit:victoria-recruit-1']).toBeUndefined();
+    expect(next.production.ready.victoria).toContainEqual(
+      expect.objectContaining({
+        id: 'victoria-recruit-1',
+        unitKind: 'pawn',
+      }),
+    );
     expect(next.supply.exposureRoundsByUnit['unit:victoria-recruit-1']).toBeUndefined();
   });
 
