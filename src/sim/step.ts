@@ -4,6 +4,7 @@ import { evaluateBalancedAI } from './ai';
 import { compareSimCommands } from './commands';
 import { resolveCombatTick } from './combat';
 import { applyKillRewards } from './economy';
+import { deployReadyUnit } from './deployment';
 import { validateMoveGeometry } from './geometry';
 import { refreshGuardTargets } from './guard';
 import { queueRecruitment } from './production';
@@ -54,6 +55,7 @@ function terminalRejection(world: WorldState, command: SimCommand): SimEvent {
   if (command.type === 'hero_ability') return { type: 'hero.ability.rejected', tick: world.tick, faction: command.faction, heroId: command.heroId, ability: command.ability, reason: 'match_ended' };
   if (command.type === 'recruit') return { type: 'production.rejected', tick: world.tick, faction: command.faction, unitKind: command.unitKind, reason: 'match_ended' };
   if (command.type === 'promote') return { type: 'promotion.rejected', tick: world.tick, faction: command.faction, pawnId: command.pawnId, targetKind: command.targetKind, reason: 'match_ended' };
+  if (command.type === 'deploy_ready') return { type: 'reinforcement.deployment_rejected', tick: world.tick, faction: command.faction, queueEntryId: command.readyId, position: { ...command.to }, reason: 'match_ended' };
   return { type: 'command.rejected', tick: world.tick, sequence: command.sequence, unitId: command.unitId, commandType: command.type, reason: 'match_ended' };
 }
 
@@ -100,6 +102,7 @@ export function stepWorld(world: WorldState, commands: readonly SimCommand[]): S
   // Stage 9: ordinary tactical commands. Recruitment/promotion retain Phase 4 delayed phases.
   const recruitCommands: Extract<SimCommand, { type: 'recruit' }>[] = [];
   const promoteCommands: Extract<SimCommand, { type: 'promote' }>[] = [];
+  const deployCommands: Extract<SimCommand, { type: 'deploy_ready' }>[] = [];
   for (const command of ordinaryCommands) {
     if (command.type === 'attack') {
       const result = resolveAttackOrder(working, command); working = result.state; events.push(result.event); continue;
@@ -109,6 +112,7 @@ export function stepWorld(world: WorldState, commands: readonly SimCommand[]): S
     }
     if (command.type === 'recruit') recruitCommands.push(command);
     else if (command.type === 'promote') promoteCommands.push(command);
+    else if (command.type === 'deploy_ready') deployCommands.push(command);
   }
 
   // Strategic territory, Crown income, production deployment,
@@ -121,6 +125,16 @@ export function stepWorld(world: WorldState, commands: readonly SimCommand[]): S
   }
   for (const command of promoteCommands) {
     const result = queuePromotionRequest(working, command); working = result.state; events.push(...result.events);
+  }
+  for (const command of deployCommands) {
+    const result = deployReadyUnit(
+      working,
+      command.faction,
+      command.readyId,
+      command.to,
+    );
+    working = result.state;
+    events.push(...result.events);
   }
 
   // Stage 19: AI may observe the fully resolved tick, but only schedules commands for T+1.
