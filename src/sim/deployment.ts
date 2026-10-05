@@ -3,8 +3,10 @@ import type {
   Coord,
   Faction,
   ReadyDeployment,
+  SimEvent,
   WorldState,
 } from './types';
+import { placeUnit } from './world';
 
 export type DeploymentRejectReason =
   | 'match_ended'
@@ -12,7 +14,8 @@ export type DeploymentRejectReason =
   | 'wrong_faction'
   | 'outside_deployment_zone'
   | 'unplayable_cell'
-  | 'occupied_cell';
+  | 'occupied_cell'
+  | 'wrong_phase';
 
 export type DeploymentDecision = Readonly<{
   allowed: boolean;
@@ -108,4 +111,89 @@ export function legalDeploymentCells(
 ): readonly Coord[] {
   return deploymentZoneForFaction(world, faction)
     .filter(cell => canDeployReadyUnit(world, faction, readyId, cell).allowed);
+}
+
+
+export type ReadyDeploymentResult = Readonly<{
+  state: WorldState;
+  events: readonly SimEvent[];
+}>;
+
+function phaseAllowsDeployment(
+  world: WorldState,
+  faction: Faction,
+): boolean {
+  return faction === 'victoria'
+    ? world.turn.phase === 'victoria_command'
+    : world.turn.phase === 'shadow_command';
+}
+
+export function deployReadyUnit(
+  world: WorldState,
+  faction: Faction,
+  readyId: string,
+  cell: Coord,
+): ReadyDeploymentResult {
+  const decision = canDeployReadyUnit(world, faction, readyId, cell);
+  if (!decision.allowed) {
+    return {
+      state: world,
+      events: [{
+        type: 'reinforcement.deployment_rejected',
+        tick: world.tick,
+        faction,
+        queueEntryId: readyId,
+        position: { ...cell },
+        reason: decision.reason!,
+      }],
+    };
+  }
+
+  if (!phaseAllowsDeployment(world, faction)) {
+    return {
+      state: world,
+      events: [{
+        type: 'reinforcement.deployment_rejected',
+        tick: world.tick,
+        faction,
+        queueEntryId: readyId,
+        position: { ...cell },
+        reason: 'wrong_phase',
+      }],
+    };
+  }
+
+  const entry = readyEntryForFaction(world, faction, readyId)!;
+  const unitId = `unit:${entry.id}`;
+  const placed = placeUnit(world, {
+    id: unitId,
+    faction,
+    kind: entry.unitKind,
+    position: { ...cell },
+  });
+
+  const ready = {
+    ...placed.production.ready,
+    [faction]: placed.production.ready[faction]
+      .filter(candidate => candidate.id !== readyId),
+  };
+
+  return {
+    state: {
+      ...placed,
+      production: {
+        ...placed.production,
+        ready,
+      },
+    },
+    events: [{
+      type: 'reinforcement.deployed',
+      tick: world.tick,
+      faction,
+      queueEntryId: entry.id,
+      unitId,
+      unitKind: entry.unitKind,
+      position: { ...cell },
+    }],
+  };
 }
