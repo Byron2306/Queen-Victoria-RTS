@@ -60,6 +60,7 @@ export function createWorld(units: readonly UnitState[] = [], options: WorldOpti
     economy: { crownPower: { victoria: 0, obsidian: 0 } },
     production: {
       queues: { victoria: [], obsidian: [] },
+      ready: { victoria: [], obsidian: [] },
       nextEntryOrdinal: { victoria: 1, obsidian: 1 },
       reinforcementAnchors,
     },
