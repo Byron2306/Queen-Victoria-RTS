@@ -113,6 +113,18 @@ export function canonicalSnapshot(result: ReplayResult): string {
     ),
   };
 
+  const supplyUnitIds = Object.keys(
+    result.state.supply.exposureRoundsByUnit,
+  ).sort();
+  const supply = {
+    exposureRoundsByUnit: Object.fromEntries(
+      supplyUnitIds.map((id) => [
+        id,
+        result.state.supply.exposureRoundsByUnit[id],
+      ]),
+    ),
+  };
+
   return JSON.stringify({
     state: {
       tick: result.state.tick,
@@ -131,6 +143,7 @@ export function canonicalSnapshot(result: ReplayResult): string {
       turn,
       pendingOrders,
       intelligence,
+      supply,
     },
     eventsByTick: result.eventsByTick,
   });
