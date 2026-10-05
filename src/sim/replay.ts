@@ -44,6 +44,10 @@ export function canonicalSnapshot(result: ReplayResult): string {
       victoria: [...result.state.production.queues.victoria],
       obsidian: [...result.state.production.queues.obsidian],
     },
+    ready: {
+      victoria: [...result.state.production.ready.victoria],
+      obsidian: [...result.state.production.ready.obsidian],
+    },
     nextEntryOrdinal: {
       victoria: result.state.production.nextEntryOrdinal.victoria,
       obsidian: result.state.production.nextEntryOrdinal.obsidian,
