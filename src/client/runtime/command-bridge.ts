@@ -249,6 +249,20 @@ export class ClientCommandBridge {
     });
   }
 
+  deployReady(
+    issuedTick: number,
+    faction: Faction,
+    readyId: string,
+    to: Coord,
+  ): void {
+    this.scheduleLegacy(issuedTick, {
+      type: 'deploy_ready',
+      faction,
+      readyId,
+      to: { ...to },
+    });
+  }
+
   heroAbility(
     world: WorldState,
     faction: Faction,
