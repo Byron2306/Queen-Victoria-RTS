@@ -177,7 +177,9 @@ describe('Royal War Triptych whole-system gauntlet', () => {
     expect(result.world.territory.nodes['minor-nw']?.owner).toBe('victoria');
     expect(getFortificationAt(result.world, result.supplyCell)?.durability).toBe(3);
 
-    expect(result.world.units['unit:victoria-recruit-1']).toBeDefined();
+    expect(result.world.units['unit:victoria-recruit-1']).toBeUndefined();
+    expect(result.world.production.ready.victoria.map(entry => entry.id))
+      .toContain('victoria-recruit-1');
     expect(getTilePolarity(result.world, result.matureCell)).not.toBe(result.polarityBefore);
     expect(getBannerState(result.world, 'contested-banner')).toMatchObject({
       roundsHeld: 1,
