@@ -1,10 +1,51 @@
 import { describe, expect, it } from 'vitest';
 
-import readyTargetingSource from '../../src/client/input/ready-deployment-targeting.ts?raw';
-import {
-  legalReadyDeploymentTargets,
-  stageReadyDeploymentTarget,
-} from '../../src/client/input/ready-deployment-targeting';
+const READY_TARGETING_MODULES = import.meta.glob(
+  '../../src/client/input/ready-deployment-targeting.ts',
+  { eager: true },
+) as Record<string, {
+  legalReadyDeploymentTargets?: Function;
+  stageReadyDeploymentTarget?: Function;
+}>;
+
+const READY_TARGETING_SOURCES = import.meta.glob(
+  '../../src/client/input/ready-deployment-targeting.ts',
+  { query: '?raw', import: 'default', eager: true },
+) as Record<string, string>;
+
+function readyTargetingModule() {
+  return READY_TARGETING_MODULES[
+    '../../src/client/input/ready-deployment-targeting.ts'
+  ];
+}
+
+function readyTargetingSource(): string {
+  return READY_TARGETING_SOURCES[
+    '../../src/client/input/ready-deployment-targeting.ts'
+  ] ?? '';
+}
+
+function legalReadyDeploymentTargets(
+  world: WorldState,
+  faction: 'victoria' | 'obsidian',
+  readyId: string,
+) {
+  const fn = readyTargetingModule()?.legalReadyDeploymentTargets;
+  expect(fn).toBeTypeOf('function');
+  return fn!(world, faction, readyId) as readonly { x: number; y: number }[];
+}
+
+function stageReadyDeploymentTarget(
+  bridge: ClientCommandBridge,
+  world: WorldState,
+  faction: 'victoria' | 'obsidian',
+  readyId: string,
+  cell: { x: number; y: number },
+) {
+  const fn = readyTargetingModule()?.stageReadyDeploymentTarget;
+  expect(fn).toBeTypeOf('function');
+  return fn!(bridge, world, faction, readyId, cell) as boolean;
+}
 import { ClientCommandBridge } from '../../src/client/runtime/command-bridge';
 import { legalDeploymentCells } from '../../src/sim/deployment';
 import type { ReadyDeployment, WorldState } from '../../src/sim/types';
@@ -117,9 +158,10 @@ describe('READY deployment client targeting', () => {
   });
 
   it('delegates legality to the canonical deployment authority', () => {
-    expect(readyTargetingSource).toContain('legalDeploymentCells');
-    expect(readyTargetingSource).toContain('canDeployReadyUnit');
-    expect(readyTargetingSource).not.toContain('x >= 1');
-    expect(readyTargetingSource).not.toContain('x <= 5');
+    const source = readyTargetingSource();
+    expect(source).toContain('legalDeploymentCells');
+    expect(source).toContain('canDeployReadyUnit');
+    expect(source).not.toContain('x >= 1');
+    expect(source).not.toContain('x <= 5');
   });
 });
