@@ -36,12 +36,14 @@ export function capacityUsage(world: WorldState, faction: Faction): number {
     if (unit.faction === faction) total += CAPACITY_WEIGHT[unit.kind];
   }
   for (const entry of world.production.queues[faction]) total += entry.capacityWeight;
+  for (const entry of world.production.ready[faction]) total += entry.capacityWeight;
   return total;
 }
 
 export function pieceCountWithQueue(world: WorldState, faction: Faction, kind: RecruitableUnitKind): number {
   let total = Object.values(world.units).filter((unit) => unit.faction === faction && unit.kind === kind).length;
   total += world.production.queues[faction].filter((entry) => entry.unitKind === kind).length;
+  total += world.production.ready[faction].filter((entry) => entry.unitKind === kind).length;
   return total;
 }
 
