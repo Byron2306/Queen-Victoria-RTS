@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createPhase6SkirmishWorld } from '../../src/client/session/skirmish';
 import { getBattlefieldTopology } from '../../src/sim/battlefield-topology-authority';
-import { findReinforcementSpawn } from '../../src/sim/production';
+import { findReinforcementSpawn } from '../../src/sim/spawn';
 import { strategicTiles } from '../../src/sim/territory';
 import { tileId } from '../../src/sim/board-topology';
 
