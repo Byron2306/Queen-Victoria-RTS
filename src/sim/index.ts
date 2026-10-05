@@ -20,3 +20,4 @@ export * from './abilities';
 export * from './spawn';
 export * from './turns';
 export * from './supply';
+export * from './deployment';
