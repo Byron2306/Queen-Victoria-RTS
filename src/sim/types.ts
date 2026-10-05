@@ -65,8 +65,18 @@ export type ProductionQueueEntry = Readonly<{
   capacityWeight: number;
   queuedTick: number;
 }>;
+export type ReadyDeployment = Readonly<{
+  id: string;
+  faction: Faction;
+  unitKind: RecruitableUnitKind;
+  cost: number;
+  capacityWeight: number;
+  queuedTick: number;
+  readyRound: number;
+}>;
 export type ProductionState = Readonly<{
   queues: Readonly<Record<Faction, readonly ProductionQueueEntry[]>>;
+  ready: Readonly<Record<Faction, readonly ReadyDeployment[]>>;
   nextEntryOrdinal: Readonly<Record<Faction, number>>;
   reinforcementAnchors: Readonly<Record<Faction, Coord>>;
 }>;
