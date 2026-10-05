@@ -231,7 +231,14 @@ describe(
         next.units[
           'unit:victoria-recruit-1'
         ],
-      ).toBeDefined();
+      ).toBeUndefined();
+
+      expect(
+        next.production.ready.victoria
+          .map(entry => entry.id),
+      ).toEqual([
+        'victoria-recruit-1',
+      ]);
 
       const repeated =
         resolveReinforcementPhase(
@@ -249,7 +256,7 @@ describe(
       ).toHaveLength(1);
     });
 
-    it('preserves recruitment unlock, cap, and capacity legality at the reinforcement boundary', () => {
+    it('honours purchased commitments when unlock conditions later change', () => {
       let world =
         reinforcementWorld();
 
@@ -283,6 +290,12 @@ describe(
       expect(
         next.production
           .queues
+          .victoria,
+      ).toEqual([]);
+
+      expect(
+        next.production
+          .ready
           .victoria
           .map(
             entry => entry.id,
