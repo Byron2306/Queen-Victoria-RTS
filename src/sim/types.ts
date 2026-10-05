@@ -168,7 +168,22 @@ export type PromoteCommand = Readonly<{
   targetKind: PromotableUnitKind;
 }>;
 
-export type SimCommand = MoveCommand | AttackCommand | RecruitCommand | PromoteCommand | HeroAbilityCommand;
+export type DeployReadyCommand = Readonly<{
+  type: 'deploy_ready';
+  sequence: number;
+  issuedTick: number;
+  faction: Faction;
+  readyId: string;
+  to: Coord;
+}>;
+
+export type SimCommand =
+  | MoveCommand
+  | AttackCommand
+  | RecruitCommand
+  | PromoteCommand
+  | HeroAbilityCommand
+  | DeployReadyCommand;
 export type ScheduledAICommand = Readonly<{ executeTick: number; command: SimCommand }>;
 export type AICommanderState = Readonly<{
   enabled: boolean;
@@ -218,6 +233,7 @@ export type SimEvent =
   | Readonly<{ type: 'production.rejected'; tick: number; faction: Faction; unitKind: RecruitableUnitKind; reason: 'match_ended' | 'locked' | 'insufficient_crown' | 'capacity_exceeded' | 'piece_cap_reached' }>
   | Readonly<{ type: 'reinforcement.ready'; tick: number; faction: Faction; queueEntryId: string; unitKind: RecruitableUnitKind }>
   | Readonly<{ type: 'reinforcement.deployed'; tick: number; faction: Faction; queueEntryId: string; unitId: string; unitKind: RecruitableUnitKind; position: Coord }>
+  | Readonly<{ type: 'reinforcement.deployment_rejected'; tick: number; faction: Faction; queueEntryId: string; position: Coord; reason: import('./deployment').DeploymentRejectReason }>
   | Readonly<{ type: 'promotion.requested'; tick: number; faction: Faction; pawnId: string; targetKind: PromotableUnitKind }>
   | Readonly<{ type: 'promotion.rejected'; tick: number; faction: Faction; pawnId: string; targetKind: PromotableUnitKind; reason: 'match_ended' | 'missing_pawn' | 'wrong_faction' | 'not_pawn' | 'not_in_zone' | 'already_pending' | 'locked' | 'insufficient_crown' | 'capacity_exceeded' | 'piece_cap_reached' }>
   | Readonly<{ type: 'promotion.completed'; tick: number; faction: Faction; pawnId: string; promotedUnitId: string; targetKind: PromotableUnitKind; position: Coord }>
