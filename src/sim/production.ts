@@ -6,19 +6,13 @@ import {
   isRecruitUnlocked,
   pieceCountWithQueue,
 } from './economy';
-import { topologyForWorld } from './territory';
 import type {
   Faction,
-  ProductionQueueEntry,
   RecruitCommand,
   RecruitableUnitKind,
   SimEvent,
-  UnitState,
   WorldState,
 } from './types';
-import { placeUnit } from './world';
-import { findReinforcementSpawn } from './spawn';
-export { findReinforcementSpawn } from './spawn';
 
 export const RECRUITMENT_COST: Readonly<Record<RecruitableUnitKind, number>> = {
   pawn: 10,
@@ -164,31 +158,9 @@ export function queueRecruitment(
   };
 }
 
-function deploymentLegal(world: WorldState, entry: ProductionQueueEntry): boolean {
-  if (!isRecruitUnlocked(world, entry.faction, entry.unitKind)) return false;
-  if (capacityUsage(world, entry.faction) > commandCapacity(world, entry.faction)) return false;
-  if (pieceCountWithQueue(world, entry.faction, entry.unitKind) > PIECE_CAP[entry.unitKind]) return false;
-  return true;
-}
-
-function blockedReceipt(
+export function matureQueuedReinforcements(
   world: WorldState,
-  entry: ProductionQueueEntry,
-  reason: ProductionFeedbackReason,
-): ProductionReceipt {
-  return {
-    accepted: false,
-    reason,
-    unitKind: entry.unitKind,
-    cost: entry.cost,
-    remainingCurrency: world.economy.crownPower[entry.faction],
-    queued: true,
-    placed: false,
-    queueEntryId: entry.id,
-  };
-}
-
-export function deployReinforcements(world: WorldState): DeploymentResult {
+): DeploymentResult {
   let working = world;
   const events: SimEvent[] = [];
   const receipts: Record<Faction, ProductionReceipt | null> = {
@@ -200,68 +172,40 @@ export function deployReinforcements(world: WorldState): DeploymentResult {
     const head = working.production.queues[faction][0];
     if (!head) continue;
 
-    const anchor = working.production.reinforcementAnchors[faction];
-    const topology = topologyForWorld(working);
-    if (!topology.isPlayableCell(anchor.x, anchor.y)) {
-      receipts[faction] = blockedReceipt(
-        working,
-        head,
-        'invalid_deployment_territory',
-      );
-      continue;
-    }
-
-    if (!deploymentLegal(working, head)) {
-      receipts[faction] = blockedReceipt(working, head, 'deployment_relocked');
-      continue;
-    }
-
-    const unitId = `unit:${head.id}`;
-    if (working.units[unitId]) {
-      receipts[faction] = {
-        accepted: true,
-        reason: null,
-        unitKind: head.unitKind,
-        cost: head.cost,
-        remainingCurrency: working.economy.crownPower[faction],
-        queued: false,
-        placed: true,
-        queueEntryId: head.id,
-        unitId,
-      };
-      continue;
-    }
-
-    const position = findReinforcementSpawn(working, faction);
-    if (!position) {
-      receipts[faction] = blockedReceipt(working, head, 'blocked_spawn');
-      continue;
-    }
-
-    const unit: UnitState = {
-      id: unitId,
-      faction,
-      kind: head.unitKind,
-      position,
+    const readyEntry = {
+      ...head,
+      readyRound: working.turn.round,
     };
-    working = placeUnit(working, unit);
+
     const queues = {
       ...working.production.queues,
       [faction]: working.production.queues[faction].slice(1),
     };
+    const ready = {
+      ...working.production.ready,
+      [faction]: [
+        ...working.production.ready[faction],
+        readyEntry,
+      ],
+    };
+
     working = {
       ...working,
-      production: { ...working.production, queues },
+      production: {
+        ...working.production,
+        queues,
+        ready,
+      },
     };
+
     events.push({
-      type: 'reinforcement.deployed',
+      type: 'reinforcement.ready',
       tick: world.tick,
       faction,
       queueEntryId: head.id,
-      unitId,
       unitKind: head.unitKind,
-      position,
-    });
+    } as SimEvent);
+
     receipts[faction] = {
       accepted: true,
       reason: null,
@@ -269,11 +213,12 @@ export function deployReinforcements(world: WorldState): DeploymentResult {
       cost: head.cost,
       remainingCurrency: working.economy.crownPower[faction],
       queued: false,
-      placed: true,
+      placed: false,
       queueEntryId: head.id,
-      unitId,
     };
   }
 
   return { state: working, events, receipts };
 }
+
+export const deployReinforcements = matureQueuedReinforcements;
