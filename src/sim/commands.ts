@@ -6,6 +6,7 @@ function actorKey(command: OrderedCommand): string {
   if (command.type === 'hero_ability') return command.heroId;
   if (command.type === 'recruit') return command.faction;
   if (command.type === 'promote') return command.pawnId;
+  if (command.type === 'deploy_ready') return command.readyId;
   return command.unitId;
 }
 
