@@ -216,6 +216,7 @@ export type SimEvent =
   | Readonly<{ type: 'crown.spent'; tick: number; faction: Faction; amount: number; resultingCrownPower: number; reason: 'recruitment' | 'promotion' }>
   | Readonly<{ type: 'production.queued'; tick: number; faction: Faction; queueEntryId: string; unitKind: RecruitableUnitKind; cost: number }>
   | Readonly<{ type: 'production.rejected'; tick: number; faction: Faction; unitKind: RecruitableUnitKind; reason: 'match_ended' | 'locked' | 'insufficient_crown' | 'capacity_exceeded' | 'piece_cap_reached' }>
+  | Readonly<{ type: 'reinforcement.ready'; tick: number; faction: Faction; queueEntryId: string; unitKind: RecruitableUnitKind }>
   | Readonly<{ type: 'reinforcement.deployed'; tick: number; faction: Faction; queueEntryId: string; unitId: string; unitKind: RecruitableUnitKind; position: Coord }>
   | Readonly<{ type: 'promotion.requested'; tick: number; faction: Faction; pawnId: string; targetKind: PromotableUnitKind }>
   | Readonly<{ type: 'promotion.rejected'; tick: number; faction: Faction; pawnId: string; targetKind: PromotableUnitKind; reason: 'match_ended' | 'missing_pawn' | 'wrong_faction' | 'not_pawn' | 'not_in_zone' | 'already_pending' | 'locked' | 'insufficient_crown' | 'capacity_exceeded' | 'piece_cap_reached' }>
