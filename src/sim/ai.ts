@@ -7,7 +7,7 @@ import { refreshFactionIntelligence } from './intelligence';
 import { createFactionKnowledgeView, createFactionPlanningWorld } from './intelligence-view';
 import { targetIsObserved, validateMoveKnowledge } from './knowledge-legality';
 import { topologyForWorld } from './territory';
-import { legalDeploymentCells } from './deployment';
+import { deployReadyUnit, legalDeploymentCells } from './deployment';
 
 function initialAI(enabled: boolean): AICommanderState {
   return {
@@ -263,6 +263,43 @@ export function selectAIReadyDeploymentCell(
     || a.x - b.x
   );
   return legal[0] ? { ...legal[0] } : null;
+}
+
+export function executeShadowReadyDeployments(
+  world: WorldState,
+): Readonly<{ state: WorldState; events: readonly SimEvent[] }> {
+  if (
+    world.match.status !== 'active' ||
+    world.turn.phase !== 'shadow_command'
+  ) {
+    return { state: world, events: [] };
+  }
+
+  let working = world;
+  const events: SimEvent[] = [];
+  const readyIds = [...world.production.ready.obsidian]
+    .map(entry => entry.id)
+    .sort((a, b) => a.localeCompare(b));
+
+  for (const readyId of readyIds) {
+    const to = selectAIReadyDeploymentCell(
+      working,
+      'obsidian',
+      readyId,
+    );
+    if (!to) continue;
+
+    const result = deployReadyUnit(
+      working,
+      'obsidian',
+      readyId,
+      to,
+    );
+    working = result.state;
+    events.push(...result.events);
+  }
+
+  return { state: working, events };
 }
 
 function objectivePosition(world:WorldState,faction:Faction,commitment:StrategicCommitment):Coord|null {
