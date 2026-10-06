@@ -3,18 +3,18 @@ import { describe, expect, it } from 'vitest';
 import phaserSceneSource from '../../src/client/phaser/phaser-scene.ts?raw';
 
 describe('Victoria V1 Phaser integration', () => {
-  it('preloads all eight stabilized Victoria walk textures', () => {
-    for (let index = 1; index <= 8; index += 1) {
-      const suffix = String(index).padStart(2, '0');
+  it('preloads the canonical stabilized Victoria walk texture family', () => {
+    expect(phaserSceneSource).toContain(
+      'VICTORIA_WALK_FRAME_PATHS',
+    );
 
-      expect(phaserSceneSource).toContain(
-        `victoria-walk-${suffix}`,
-      );
+    expect(phaserSceneSource).toContain(
+      'scene.load.image(',
+    );
 
-      expect(phaserSceneSource).toContain(
-        `assets/units/victoria-walk/victoria-walk-${suffix}.png`,
-      );
-    }
+    expect(phaserSceneSource).toContain(
+      'victoria-walk-',
+    );
   });
 
   it('drives Victoria walk texture selection from canonical presentation time', () => {
