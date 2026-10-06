@@ -67,18 +67,23 @@ describe('Battlefield live Shadow AI authority', () => {
       controller.world.units['unit:obsidian-ready-1'],
     ).toBeDefined();
     expect(
-      controller.world.production.ready.obsidian,
-    ).toEqual([]);
-
+      controller.world.production.ready.obsidian.map(
+        entry => entry.id,
+      ),
+    ).toEqual([
+      'obsidian-recruit-1',
+    ]);
     expect(
-      controller.world.production.queues.obsidian,
-    ).toHaveLength(1);
-    expect(
-      controller.world.production.queues.obsidian[0],
+      controller.world.production.ready.obsidian[0],
     ).toMatchObject({
       faction: 'obsidian',
       unitKind: 'pawn',
+      readyRound: 1,
     });
+
+    expect(
+      controller.world.production.queues.obsidian,
+    ).toEqual([]);
 
     expect(
       controller.world.economy.crownPower.obsidian,
