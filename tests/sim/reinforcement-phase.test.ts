@@ -190,7 +190,7 @@ describe(
         .toEqual(next);
     });
 
-    it('advances one legal production head exactly once per round', () => {
+    it('matures one production head to READY exactly once per round', () => {
       let world =
         reinforcementWorld();
 
