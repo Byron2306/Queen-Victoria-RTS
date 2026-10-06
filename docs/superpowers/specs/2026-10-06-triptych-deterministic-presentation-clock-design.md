@@ -1,7 +1,7 @@
 # Triptych Deterministic Presentation Clock Design
 
 **Phase:** Ideal-System Restoration — Presentation Clock  
-**Status:** Design specification  
+**Status:** COMPLETE — verified 165/165 files, 721/721 tests, typecheck and build  
 **Scope:** Client presentation time only. No strategic authority.
 
 ## Goal
