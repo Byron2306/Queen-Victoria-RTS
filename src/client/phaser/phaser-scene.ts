@@ -22,6 +22,13 @@ import {
   UnitMotionTracker,
 } from '../render/unit-motion-tracker';
 import {
+  VICTORIA_WALK_FRAME_PATHS,
+  victoriaWalkFrameKey,
+} from '../render/victoria-walk';
+import {
+  CANONICAL_ASSET_PATHS,
+} from '../assets/canonical';
+import {
   createResponsiveBattlefieldLayout,
 } from '../render/responsive-battlefield';
 import {
@@ -62,6 +69,9 @@ interface DisplayObjectLike {
   ) => DisplayObjectLike;
   setVisible?: (
     visible: boolean,
+  ) => DisplayObjectLike;
+  setTexture?: (
+    texture: string,
   ) => DisplayObjectLike;
   setFillStyle?: (
     color: number,
@@ -200,6 +210,22 @@ export function createBattlefieldSceneClass<
           texture.asset,
         );
       }
+
+      scene.load.image(
+        'victoria-idle',
+        CANONICAL_ASSET_PATHS.victoria,
+      );
+
+      VICTORIA_WALK_FRAME_PATHS.forEach(
+        (asset, index) => {
+          scene.load.image(
+            `victoria-walk-${String(
+              index + 1,
+            ).padStart(2, '0')}`,
+            asset,
+          );
+        },
+      );
 
       scene.load.image(
         'hud-top-status',
@@ -1917,6 +1943,24 @@ export function createBattlefieldSceneClass<
             },
             presentationNow,
           );
+
+        if (
+          unit.id === 'victoria-queen'
+        ) {
+          const textureKey =
+            this.motion.isMoving(
+              unit.id,
+              presentationNow,
+            )
+              ? victoriaWalkFrameKey(
+                  presentationNow,
+                )
+              : 'victoria-idle';
+
+          sprite.setTexture?.(
+            textureKey,
+          );
+        }
 
         this.applyUnitVisualFootprint(
           unit.id,
