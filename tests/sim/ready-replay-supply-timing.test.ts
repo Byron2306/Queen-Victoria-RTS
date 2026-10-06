@@ -67,7 +67,7 @@ describe('READY replay and supply timing', () => {
     const id = tileId(cell);
     tiles[id] = {
       ...tiles[id]!,
-      factionControl: null,
+      factionControl: 'neutral',
     };
     world = {
       ...world,
@@ -100,7 +100,7 @@ describe('READY replay and supply timing', () => {
     const id = tileId(cell);
     tiles[id] = {
       ...tiles[id]!,
-      factionControl: null,
+      factionControl: 'neutral',
     };
     world = {
       ...world,
