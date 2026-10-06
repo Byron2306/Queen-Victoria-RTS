@@ -393,7 +393,10 @@ export function createBattlefieldSceneClass<
 
       scale?.on?.(
         'resize',
-        () => this.layoutBattlefield(),
+        () => {
+          this.layoutBattlefield();
+          this.layoutHud();
+        },
       );
 
       const input = (this as any).input;
