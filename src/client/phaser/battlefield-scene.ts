@@ -1,4 +1,6 @@
 import {
+  executeShadowReadyDeployments,
+  executeShadowStrategicEconomy,
   planShadowTurn,
 } from '../../sim/ai';
 
@@ -137,6 +139,22 @@ export class BattlefieldSceneController {
           'shadow_command',
         ),
     };
+
+    const shadowReady =
+      executeShadowReadyDeployments(
+        world,
+      );
+
+    world =
+      shadowReady.state;
+
+    const shadowEconomy =
+      executeShadowStrategicEconomy(
+        world,
+      );
+
+    world =
+      shadowEconomy.state;
 
     const shadowOrders =
       planShadowTurn(world);
