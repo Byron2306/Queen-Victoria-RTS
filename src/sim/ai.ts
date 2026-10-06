@@ -507,6 +507,17 @@ export function planShadowTurn(
     Faction = 'obsidian';
   const informed=refreshFactionIntelligence(world,faction);
   const planning=createFactionPlanningWorld(informed,faction);
+  const availableRoyalCommands = Math.max(
+    0,
+    Math.min(
+      4,
+      informed.turn.royalCommandsRemaining[faction],
+    ),
+  );
+
+  if (availableRoyalCommands === 0) {
+    return [];
+  }
 
   const orders:
     TacticalOrder[] = [];
@@ -530,7 +541,7 @@ export function planShadowTurn(
     order:
       DraftTacticalOrder,
   ): void => {
-    if (orders.length >= 4) {
+    if (orders.length >= availableRoyalCommands) {
       return;
     }
 
@@ -606,7 +617,7 @@ export function planShadowTurn(
         defender,
       );
 
-      if (orders.length >= 4) {
+      if (orders.length >= availableRoyalCommands) {
         return orders;
       }
     }
@@ -621,7 +632,7 @@ export function planShadowTurn(
     Object.keys(planning.units)
       .sort()
   ) {
-    if (orders.length >= 4) {
+    if (orders.length >= availableRoyalCommands) {
       break;
     }
 
@@ -676,7 +687,7 @@ export function planShadowTurn(
     );
   }
 
-  if (orders.length >= 4) {
+  if (orders.length >= availableRoyalCommands) {
     return orders;
   }
 
@@ -695,7 +706,7 @@ export function planShadowTurn(
   for (
     const candidate of intentions
   ) {
-    if (orders.length >= 4) {
+    if (orders.length >= availableRoyalCommands) {
       break;
     }
 
