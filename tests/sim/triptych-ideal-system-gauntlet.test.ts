@@ -28,8 +28,11 @@ import {
   TRIPTYCH_ROUND_STAGE_ORDER,
 } from '../../src/sim/turns';
 import { supplyStatusForUnit } from '../../src/sim/supply';
+import { canonicalSnapshot } from '../../src/sim/replay';
 import type {
   ReadyDeployment,
+  ReplayResult,
+  SimEvent,
   WorldState,
 } from '../../src/sim/types';
 import { placeUnit } from '../../src/sim/world';
@@ -166,6 +169,226 @@ function createIdealSystemFixture(): WorldState {
   };
 
   return world;
+}
+
+
+type IdealRoundResult = Readonly<{
+  state: WorldState;
+  victoriaOrderIds: readonly string[];
+  shadowOrderIds: readonly string[];
+  shadowTargets: readonly string[];
+  readyEvents: readonly SimEvent[];
+  eventsByTick: readonly (readonly SimEvent[])[];
+  snapshot: string;
+}>;
+
+function reverseRecord<T>(
+  record: Readonly<Record<string, T>>,
+): Record<string, T> {
+  return Object.fromEntries(
+    Object.entries(record).reverse(),
+  );
+}
+
+function withReversedInsertionOrder(
+  world: WorldState,
+): WorldState {
+  return {
+    ...world,
+    units: reverseRecord(world.units),
+    occupancy: reverseRecord(world.occupancy),
+    combat: reverseRecord(world.combat),
+    military: reverseRecord(world.military),
+  };
+}
+
+function runIdealRound(
+  initial: WorldState,
+): IdealRoundResult {
+  const runtime =
+    new FixedTickRuntime(initial);
+
+  runtime.advance(
+    SIM_TICK_MS * 250 + 37,
+  );
+
+  let world = runtime.world;
+  const eventsByTick:
+    (readonly SimEvent[])[] = [];
+
+  const bridge =
+    new ClientCommandBridge();
+
+  for (const unitId of [
+    'victoria-queen',
+    'victoria-rook-a',
+    'victoria-knight-a',
+    'victoria-pawn-a',
+    'victoria-pawn-b',
+  ]) {
+    bridge.guard(world, unitId);
+  }
+
+  const victoriaStaged =
+    bridge.drainTactical();
+
+  for (const order of victoriaStaged) {
+    const queued =
+      enqueueTacticalOrder(
+        world,
+        order,
+      );
+
+    if (queued.status !== 'ACCEPTED') {
+      throw new Error(
+        `Victoria order refused in ideal runner: ${queued.reason}`,
+      );
+    }
+
+    world = queued.world;
+  }
+
+  world = {
+    ...world,
+    turn: transitionTurnPhase(
+      world.turn,
+      'victoria_resolve',
+    ),
+  };
+
+  const victoriaResolved =
+    resolveCommittedOrders(
+      world,
+      pendingOrdersForFaction(
+        world,
+        'victoria',
+      ),
+    );
+
+  world =
+    clearPendingOrders(
+      victoriaResolved.world,
+    );
+
+  eventsByTick.push(
+    victoriaResolved.events,
+  );
+
+  world = {
+    ...world,
+    turn: transitionTurnPhase(
+      world.turn,
+      'shadow_command',
+    ),
+  };
+
+  const readyResult =
+    executeShadowReadyDeployments(
+      world,
+    );
+  world = readyResult.state;
+  eventsByTick.push(
+    readyResult.events,
+  );
+
+  const economyResult =
+    executeShadowStrategicEconomy(
+      world,
+    );
+  world = economyResult.state;
+  eventsByTick.push(
+    economyResult.events,
+  );
+
+  const shadowPlanned =
+    planShadowTurn(world);
+
+  for (const order of shadowPlanned) {
+    const queued =
+      enqueueTacticalOrder(
+        world,
+        order,
+      );
+
+    if (queued.status !== 'ACCEPTED') {
+      throw new Error(
+        `Shadow order refused in ideal runner: ${queued.reason}`,
+      );
+    }
+
+    world = queued.world;
+  }
+
+  world = {
+    ...world,
+    turn: transitionTurnPhase(
+      world.turn,
+      'shadow_resolve',
+    ),
+  };
+
+  const shadowResolved =
+    resolveCommittedOrders(
+      world,
+      pendingOrdersForFaction(
+        world,
+        'obsidian',
+      ),
+    );
+
+  world =
+    clearPendingOrders(
+      shadowResolved.world,
+    );
+
+  eventsByTick.push(
+    shadowResolved.events,
+  );
+
+  world = {
+    ...world,
+    turn: transitionTurnPhase(
+      world.turn,
+      'reinforcement',
+    ),
+  };
+
+  world =
+    resolveReinforcementPhase(
+      world,
+    );
+
+  const replay: ReplayResult = {
+    state: world,
+    eventsByTick,
+  };
+
+  return {
+    state: world,
+    victoriaOrderIds:
+      victoriaStaged.map(
+        order => order.orderId,
+      ),
+    shadowOrderIds:
+      shadowPlanned.map(
+        order => order.orderId,
+      ),
+    shadowTargets:
+      shadowPlanned
+        .filter(
+          order =>
+            order.kind === 'attack',
+        )
+        .map(
+          order =>
+            order.targetUnitId,
+        ),
+    readyEvents:
+      readyResult.events,
+    eventsByTick,
+    snapshot:
+      canonicalSnapshot(replay),
+  };
 }
 
 describe('Triptych ideal-system gauntlet fixture', () => {
@@ -982,5 +1205,116 @@ describe('Triptych ideal-system gauntlet fixture', () => {
     expect(
       resolved.turn.pendingOrderIds,
     ).toEqual([]);
+  });
+
+  it('replays deterministically and resists record insertion order', () => {
+    const first =
+      runIdealRound(
+        createIdealSystemFixture(),
+      );
+
+    const second =
+      runIdealRound(
+        createIdealSystemFixture(),
+      );
+
+    const reversed =
+      runIdealRound(
+        withReversedInsertionOrder(
+          createIdealSystemFixture(),
+        ),
+      );
+
+    expect(
+      first.victoriaOrderIds,
+    ).toEqual([
+      'victoria-r1-o0',
+      'victoria-r1-o1',
+      'victoria-r1-o2',
+      'victoria-r1-o3',
+    ]);
+
+    expect(
+      first.shadowOrderIds.length,
+    ).toBeLessThanOrEqual(4);
+
+    expect(
+      first.shadowOrderIds,
+    ).toEqual(
+      first.shadowOrderIds.map(
+        (_, index) =>
+          `obsidian-r1-o${index}`,
+      ),
+    );
+
+    expect(
+      first.shadowTargets,
+    ).not.toContain(
+      'victoria-pawn-b',
+    );
+
+    expect(
+      first.victoriaOrderIds,
+    ).toEqual(
+      second.victoriaOrderIds,
+    );
+    expect(
+      first.shadowOrderIds,
+    ).toEqual(
+      second.shadowOrderIds,
+    );
+    expect(
+      first.shadowTargets,
+    ).toEqual(
+      second.shadowTargets,
+    );
+    expect(
+      first.readyEvents,
+    ).toEqual(
+      second.readyEvents,
+    );
+    expect(
+      first.eventsByTick,
+    ).toEqual(
+      second.eventsByTick,
+    );
+    expect(first.snapshot).toBe(
+      second.snapshot,
+    );
+
+    expect(
+      reversed.victoriaOrderIds,
+    ).toEqual(
+      first.victoriaOrderIds,
+    );
+    expect(
+      reversed.shadowOrderIds,
+    ).toEqual(
+      first.shadowOrderIds,
+    );
+    expect(
+      reversed.shadowTargets,
+    ).toEqual(
+      first.shadowTargets,
+    );
+    expect(
+      reversed.readyEvents,
+    ).toEqual(
+      first.readyEvents,
+    );
+    expect(
+      reversed.eventsByTick,
+    ).toEqual(
+      first.eventsByTick,
+    );
+    expect(reversed.snapshot).toBe(
+      first.snapshot,
+    );
+
+    expect(
+      reversed.state,
+    ).toEqual(
+      first.state,
+    );
   });
 });
