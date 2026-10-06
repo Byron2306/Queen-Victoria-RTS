@@ -44,7 +44,7 @@ describe('Phase 5 determinism and fairness murder chamber', () => {
     expect(defeatA.map(e => e.type === 'hero.defeated' ? e.faction : null)).toEqual(['victoria', 'obsidian']);
   });
 
-  it('due AI recruitment uses the same ordinary Crown validator as an external recruitment command', () => {
+  it('legacy pending AI recruitment is inert while an external recruitment command still uses the ordinary Crown validator', () => {
     const base = createWorld([
       { id: 'oking', faction: 'obsidian', kind: 'king', position: { x: 14, y: 14 } },
       { id: 'opawn', faction: 'obsidian', kind: 'pawn', position: { x: 10, y: 10 } },
@@ -53,22 +53,37 @@ describe('Phase 5 determinism and fairness murder chamber', () => {
     const pending: ScheduledAICommand = { executeTick: 0, command };
     const aiWorld = { ...base, ai: { ...base.ai, obsidian: { ...base.ai.obsidian, pendingCommands: [pending], nextEvaluationTick: 999 } } };
     const externalWorld = { ...base, ai: { ...base.ai, obsidian: { ...base.ai.obsidian, enabled: false, nextEvaluationTick: 999 } } };
-    const a = stepWorld(aiWorld, []);
-    const b = stepWorld(externalWorld, [command]);
-    expect(a.state.economy.crownPower.obsidian).toBe(b.state.economy.crownPower.obsidian);
-    expect(a.state.production.queues.obsidian).toEqual(b.state.production.queues.obsidian);
-    expect(a.events.filter(e => e.type === 'production.rejected')).toEqual(b.events.filter(e => e.type === 'production.rejected'));
+
+    const legacy = stepWorld(aiWorld, []);
+    const external = stepWorld(externalWorld, [command]);
+
+    expect(legacy.state.economy.crownPower.obsidian).toBe(0);
+    expect(legacy.state.production.queues.obsidian).toEqual([]);
+    expect(legacy.events.some(e => e.type === 'production.rejected')).toBe(false);
+    expect(legacy.state.ai.obsidian.pendingCommands).toEqual([pending]);
+
+    expect(external.state.production.queues.obsidian).toEqual([]);
+    expect(external.events.filter(e => e.type === 'production.rejected')).toEqual([
+      expect.objectContaining({
+        faction: 'obsidian',
+        reason: 'insufficient_crown',
+        unitKind: 'pawn',
+      }),
+    ]);
   });
 
-  it('a pending AI command that becomes illegal is rejected by the ordinary validator', () => {
+  it('legacy pending AI commands remain quarantined even when their embedded command is illegal', () => {
     let world = createWorld([
       { id: 'oking', faction: 'obsidian', kind: 'king', position: { x: 14, y: 14 } },
     ], { aiFactions: ['obsidian'] });
     const pending: ScheduledAICommand = { executeTick: 0, command: { type: 'recruit', sequence: 1, issuedTick: -1, faction: 'obsidian', unitKind: 'pawn' } };
     world = { ...world, economy: { crownPower: { ...world.economy.crownPower, obsidian: 0 } }, ai: { ...world.ai, obsidian: { ...world.ai.obsidian, pendingCommands: [pending], nextEvaluationTick: 999 } } };
+
     const result = stepWorld(world, []);
-    expect(result.events.find(e => e.type === 'production.rejected')).toMatchObject({ faction: 'obsidian', reason: 'insufficient_crown' });
+
+    expect(result.events.find(e => e.type === 'production.rejected')).toBeUndefined();
     expect(result.state.production.queues.obsidian).toHaveLength(0);
+    expect(result.state.ai.obsidian.pendingCommands).toEqual([pending]);
   });
 
   it('invalid commitments are retained between cadence ticks and re-evaluated only on cadence', () => {
