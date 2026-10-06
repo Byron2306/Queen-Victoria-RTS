@@ -23,7 +23,9 @@ import {
   resolveCommittedOrders,
 } from '../../src/sim/resolve-orders';
 import {
+  resolveReinforcementPhase,
   transitionTurnPhase,
+  TRIPTYCH_ROUND_STAGE_ORDER,
 } from '../../src/sim/turns';
 import { supplyStatusForUnit } from '../../src/sim/supply';
 import type {
@@ -790,5 +792,195 @@ describe('Triptych ideal-system gauntlet fixture', () => {
     expect(world.turn.phase).toBe(
       'shadow_resolve',
     );
+  });
+
+  it('composes supply, production maturation, and round reset only at reinforcement', () => {
+    let world = createIdealSystemFixture();
+
+    const isolatedId =
+      'victoria-isolated-pawn';
+    const queuedId =
+      'victoria-recruit-1';
+
+    const healthBefore =
+      world.combat[isolatedId]!.health;
+
+    world = {
+      ...world,
+      supply: {
+        exposureRoundsByUnit: {
+          ...world.supply.exposureRoundsByUnit,
+          [isolatedId]: 2,
+        },
+      },
+    };
+
+    const readyBefore =
+      world.production.ready.victoria;
+    const queuesBefore =
+      world.production.queues.victoria;
+
+    expect(
+      queuesBefore.map(
+        entry => entry.id,
+      ),
+    ).toContain(queuedId);
+
+    expect(
+      readyBefore.map(
+        entry => entry.id,
+      ),
+    ).not.toContain(queuedId);
+
+    expect(
+      world.units[
+        `unit:${queuedId}`
+      ],
+    ).toBeUndefined();
+
+    expect(
+      world.supply
+        .exposureRoundsByUnit[
+          isolatedId
+        ],
+    ).toBe(2);
+
+    world = {
+      ...world,
+      turn: transitionTurnPhase(
+        world.turn,
+        'victoria_resolve',
+      ),
+    };
+
+    world = {
+      ...world,
+      turn: transitionTurnPhase(
+        world.turn,
+        'shadow_command',
+      ),
+    };
+
+    world = {
+      ...world,
+      turn: transitionTurnPhase(
+        world.turn,
+        'shadow_resolve',
+      ),
+    };
+
+    world = {
+      ...world,
+      turn: transitionTurnPhase(
+        world.turn,
+        'reinforcement',
+      ),
+    };
+
+    expect(world.turn.phase).toBe(
+      'reinforcement',
+    );
+
+    expect(
+      TRIPTYCH_ROUND_STAGE_ORDER,
+    ).toEqual([
+      'settlement',
+      'node_control',
+      'supply_attrition',
+      'crown_income',
+      'banner_progress',
+      'polarity_flip',
+      'promotion',
+      'deployment',
+      'military_rank',
+      'hero_round_state',
+      'hero_respawn',
+      'sovereign_truth',
+    ]);
+
+    const resolved =
+      resolveReinforcementPhase(
+        world,
+      );
+
+    expect(
+      resolved.supply
+        .exposureRoundsByUnit[
+          isolatedId
+        ],
+    ).toBe(3);
+
+    expect(
+      resolved.combat[
+        isolatedId
+      ]?.health,
+    ).toBe(
+      healthBefore - 10,
+    );
+
+    expect(
+      resolved.production.queues
+        .victoria
+        .map(entry => entry.id),
+    ).not.toContain(queuedId);
+
+    const matured =
+      resolved.production.ready
+        .victoria
+        .find(
+          entry =>
+            entry.id === queuedId,
+        );
+
+    expect(matured).toBeDefined();
+    expect(matured).toMatchObject({
+      id: queuedId,
+      faction: 'victoria',
+      unitKind: 'pawn',
+      queuedTick: 0,
+      readyRound: 1,
+    });
+
+    expect(
+      resolved.units[
+        `unit:${queuedId}`
+      ],
+    ).toBeUndefined();
+
+    expect(
+      resolved.occupancy[
+        '3,16'
+      ],
+    ).not.toBe(
+      `unit:${queuedId}`,
+    );
+
+    expect(
+      resolved.supply
+        .exposureRoundsByUnit[
+          `unit:${queuedId}`
+        ],
+    ).toBeUndefined();
+
+    expect(
+      resolved.turn.round,
+    ).toBe(2);
+    expect(
+      resolved.turn.phase,
+    ).toBe(
+      'victoria_command',
+    );
+
+    expect(
+      resolved.turn
+        .royalCommandsRemaining,
+    ).toEqual({
+      victoria: 4,
+      obsidian: 4,
+    });
+
+    expect(
+      resolved.turn.pendingOrderIds,
+    ).toEqual([]);
   });
 });
