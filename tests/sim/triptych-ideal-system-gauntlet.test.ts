@@ -21,8 +21,28 @@ function createIdealSystemFixture(): WorldState {
     position: { x: 15, y: 15 },
   });
 
+  const victoriaCapacityNode =
+    Object.values(world.territory.nodes)
+      .filter(node => node.kind === 'minor')
+      .sort((a, b) => a.id.localeCompare(b.id))[0];
+
+  expect(victoriaCapacityNode).toBeDefined();
+
   world = {
     ...world,
+    territory: {
+      ...world.territory,
+      nodes: {
+        ...world.territory.nodes,
+        [victoriaCapacityNode!.id]: {
+          ...victoriaCapacityNode!,
+          owner: 'victoria',
+          capturingFaction: null,
+          captureProgressTicks: 0,
+          contested: false,
+        },
+      },
+    },
     economy: {
       crownPower: {
         ...world.economy.crownPower,
