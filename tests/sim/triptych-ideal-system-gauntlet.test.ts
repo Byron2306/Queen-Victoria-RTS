@@ -42,17 +42,22 @@ function createIdealSystemFixture(): WorldState {
     position: { x: 15, y: 15 },
   });
 
-  const victoriaCapacityNodes =
+  const minorNodes =
     Object.values(world.territory.nodes)
       .filter(node => node.kind === 'minor')
-      .sort((a, b) => a.id.localeCompare(b.id))
-      .slice(0, 2);
+      .sort((a, b) => a.id.localeCompare(b.id));
+
+  const victoriaCapacityNodes =
+    minorNodes.slice(0, 2);
+  const obsidianCapacityNodes =
+    minorNodes.slice(-2);
 
   expect(victoriaCapacityNodes).toHaveLength(2);
+  expect(obsidianCapacityNodes).toHaveLength(2);
 
   const ownedCapacityNodes =
-    Object.fromEntries(
-      victoriaCapacityNodes.map(node => [
+    Object.fromEntries([
+      ...victoriaCapacityNodes.map(node => [
         node.id,
         {
           ...node,
@@ -61,8 +66,18 @@ function createIdealSystemFixture(): WorldState {
           captureProgressTicks: 0,
           contested: false,
         },
-      ]),
-    );
+      ] as const),
+      ...obsidianCapacityNodes.map(node => [
+        node.id,
+        {
+          ...node,
+          owner: 'obsidian' as const,
+          capturingFaction: null,
+          captureProgressTicks: 0,
+          contested: false,
+        },
+      ] as const),
+    ]);
 
   world = {
     ...world,
