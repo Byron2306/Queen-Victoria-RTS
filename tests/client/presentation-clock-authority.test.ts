@@ -29,8 +29,8 @@ describe('presentation clock authority architecture', () => {
   it('reads canonical presentation elapsed time after runtime advancement', () => {
     const update = updateSource();
 
-    expect(update).toContain(
-      'this.controller.runtime.presentationClock.elapsedMs',
+    expect(update).toMatch(
+      /this\.controller\.runtime\s*\.presentationClock\.elapsedMs/,
     );
   });
 
