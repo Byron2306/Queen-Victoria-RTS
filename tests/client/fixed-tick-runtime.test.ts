@@ -13,6 +13,57 @@ describe('Royal Tactical fixed-tick runtime', () => {
     expect(runtime.world.height).toBe(32);
   });
 
+
+  it('exposes a zeroed canonical presentation clock at startup', () => {
+    const runtime = new FixedTickRuntime();
+
+    expect(runtime.presentationClock).toEqual({
+      elapsedMs: 0,
+      tick: 0,
+      remainderMs: 0,
+      alpha: 0,
+    });
+  });
+
+  it('accumulates canonical presentation time across advances', () => {
+    const runtime = new FixedTickRuntime();
+
+    const first = runtime.advance(40);
+    const second = runtime.advance(60);
+
+    expect(first.presentationClock).toEqual({
+      elapsedMs: 40,
+      tick: 0,
+      remainderMs: 40,
+      alpha: 0.4,
+    });
+
+    expect(second.presentationClock).toEqual({
+      elapsedMs: 100,
+      tick: 1,
+      remainderMs: 0,
+      alpha: 0,
+    });
+
+    expect(runtime.presentationClock).toEqual(
+      second.presentationClock,
+    );
+  });
+
+  it('reports tick, remainder, and alpha from cumulative presentation time', () => {
+    const runtime = new FixedTickRuntime();
+
+    const result = runtime.advance(250);
+
+    expect(result.steps).toBe(2);
+    expect(result.presentationClock).toEqual({
+      elapsedMs: 250,
+      tick: 2,
+      remainderMs: 50,
+      alpha: 0.5,
+    });
+  });
+
   it('does nothing before one presentation tick', () => {
     const runtime = new FixedTickRuntime();
     const before = runtime.world;
