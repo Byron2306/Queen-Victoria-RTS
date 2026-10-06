@@ -57,8 +57,14 @@ export class FixedTickRuntime {
   }
 
   advance(elapsedMs: number): RuntimeAdvanceResult {
-    this.accumulatedMs += elapsedMs;
-    this.elapsedPresentationMs += elapsedMs;
+    const acceptedMs =
+      Number.isFinite(elapsedMs) &&
+      elapsedMs > 0
+        ? elapsedMs
+        : 0;
+
+    this.accumulatedMs += acceptedMs;
+    this.elapsedPresentationMs += acceptedMs;
 
     let steps = 0;
 
