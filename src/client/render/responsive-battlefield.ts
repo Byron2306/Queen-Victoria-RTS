@@ -97,11 +97,17 @@ export function createResponsiveBattlefieldLayout(
     !landscape;
 
   const topHudHeight =
-    viewportHeight * 0.12;
+    Math.max(
+      72,
+      viewportHeight * 0.12,
+    );
 
   const bottomHudHeight =
-    viewportHeight *
-    (landscape ? 0.18 : 0.22);
+    Math.max(
+      landscape ? 110 : 120,
+      viewportHeight *
+        (landscape ? 0.18 : 0.22),
+    );
 
   const battlefieldY =
     topHudHeight;
