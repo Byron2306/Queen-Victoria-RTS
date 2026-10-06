@@ -646,4 +646,149 @@ describe('Triptych ideal-system gauntlet fixture', () => {
       world.ai.obsidian.pendingCommands,
     ).toEqual([]);
   });
+
+  it('resolves Shadow orders through the same committed-order authority as Victoria', () => {
+    let world = createIdealSystemFixture();
+
+    world = {
+      ...world,
+      turn: transitionTurnPhase(
+        world.turn,
+        'victoria_resolve',
+      ),
+    };
+
+    world = {
+      ...world,
+      turn: transitionTurnPhase(
+        world.turn,
+        'shadow_command',
+      ),
+    };
+
+    world =
+      executeShadowReadyDeployments(
+        world,
+      ).state;
+
+    world =
+      executeShadowStrategicEconomy(
+        world,
+      ).state;
+
+    const planned =
+      planShadowTurn(world);
+
+    for (const order of planned) {
+      const queued =
+        enqueueTacticalOrder(
+          world,
+          order,
+        );
+
+      expect(queued.status).toBe(
+        'ACCEPTED',
+      );
+
+      if (
+        queued.status !==
+        'ACCEPTED'
+      ) {
+        throw new Error(
+          `expected accepted Shadow order: ${queued.reason}`,
+        );
+      }
+
+      world = queued.world;
+    }
+
+    const committed =
+      pendingOrdersForFaction(
+        world,
+        'obsidian',
+      );
+
+    expect(
+      committed.map(
+        order => order.orderId,
+      ),
+    ).toEqual(
+      planned.map(
+        order => order.orderId,
+      ),
+    );
+
+    const beforeResolveUnits =
+      world.units;
+    const beforeResolveCombat =
+      world.combat;
+
+    world = {
+      ...world,
+      turn: transitionTurnPhase(
+        world.turn,
+        'shadow_resolve',
+      ),
+    };
+
+    expect(world.turn.phase).toBe(
+      'shadow_resolve',
+    );
+
+    const resolved =
+      resolveCommittedOrders(
+        world,
+        committed,
+      );
+
+    expect(
+      resolved.outcomes,
+    ).toHaveLength(
+      committed.length,
+    );
+
+    expect(
+      resolved.outcomes.map(
+        outcome => outcome.orderId,
+      ),
+    ).toEqual(
+      committed.map(
+        order => order.orderId,
+      ),
+    );
+
+    if (committed.length > 0) {
+      expect(
+        resolved.world.units ===
+          beforeResolveUnits &&
+        resolved.world.combat ===
+          beforeResolveCombat,
+      ).toBe(false);
+    }
+
+    world =
+      clearPendingOrders(
+        resolved.world,
+      );
+
+    expect(
+      world.pendingOrders,
+    ).toEqual([]);
+    expect(
+      world.turn.pendingOrderIds,
+    ).toEqual([]);
+    expect(
+      pendingOrdersForFaction(
+        world,
+        'obsidian',
+      ),
+    ).toEqual([]);
+
+    expect(
+      world.ai.obsidian.pendingCommands,
+    ).toEqual([]);
+    expect(world.turn.phase).toBe(
+      'shadow_resolve',
+    );
+  });
 });
