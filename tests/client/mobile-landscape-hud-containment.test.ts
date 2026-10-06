@@ -8,7 +8,7 @@ describe('mobile landscape HUD containment', () => {
   it('reserves a visible bottom HUD deck on a phone-sized landscape viewport', () => {
     const viewport = {
       width: 1638,
-      height: 664,
+      height: 508,
     };
 
     const layout =
@@ -40,7 +40,7 @@ describe('mobile landscape HUD containment', () => {
     const layout =
       createResponsiveBattlefieldLayout(
         1638,
-        664,
+        508,
       );
 
     expect(layout.board.y)
@@ -51,7 +51,7 @@ describe('mobile landscape HUD containment', () => {
     const layout =
       createResponsiveBattlefieldLayout(
         1638,
-        664,
+        508,
       );
 
     expect(layout.boardRender.height)
