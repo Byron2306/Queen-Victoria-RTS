@@ -246,14 +246,19 @@ describe(
         );
 
       expect(
-        Object.keys(
-          repeated.units,
-        ).filter(
-          id =>
-            id ===
-            'unit:victoria-recruit-1',
-        ),
+        repeated.production.ready.victoria
+          .filter(
+            entry =>
+              entry.id ===
+              'victoria-recruit-1',
+          ),
       ).toHaveLength(1);
+
+      expect(
+        repeated.units[
+          'unit:victoria-recruit-1'
+        ],
+      ).toBeUndefined();
     });
 
     it('honours purchased commitments when unlock conditions later change', () => {
