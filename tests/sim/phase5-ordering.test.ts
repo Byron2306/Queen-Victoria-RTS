@@ -7,7 +7,7 @@ function withCombat(world:WorldState,id:string,patch:Partial<WorldState['combat'
 }
 
 describe('Phase 5 tick ordering',()=>{
-  it('executes due prior-tick AI commands with external commands but not newly generated commands',()=>{
+  it('keeps legacy pending AI commands inert and never generates new strategic commands from fixed ticks',()=>{
     let world=createWorld([
       {id:'oking',faction:'obsidian',kind:'king',position:{x:14,y:14}},
       {id:'opawn',faction:'obsidian',kind:'pawn',position:{x:10,y:10}},
@@ -15,9 +15,11 @@ describe('Phase 5 tick ordering',()=>{
     ],{aiFactions:['obsidian']});
     const pending:ScheduledAICommand={executeTick:0,command:{type:'move',sequence:1,issuedTick:-1,unitId:'opawn',to:{x:10,y:9}}};
     world={...world,ai:{...world.ai,obsidian:{...world.ai.obsidian,pendingCommands:[pending],nextEvaluationTick:10}}};
+
     const result=stepWorld(world,[]);
-    expect(result.state.units.opawn!.position).toEqual({x:10,y:9});
-    expect(result.state.ai.obsidian.pendingCommands).toHaveLength(0);
+
+    expect(result.state.units.opawn!.position).toEqual({x:10,y:10});
+    expect(result.state.ai.obsidian.pendingCommands).toEqual([pending]);
 
     const evalWorld=createWorld([
       {id:'oking',faction:'obsidian',kind:'king',position:{x:14,y:14}},
@@ -25,8 +27,9 @@ describe('Phase 5 tick ordering',()=>{
       {id:'vking',faction:'victoria',kind:'king',position:{x:1,y:1}},
     ],{aiFactions:['obsidian']});
     const evaluated=stepWorld(evalWorld,[]);
-    expect(evaluated.state.ai.obsidian.pendingCommands.every(p=>p.executeTick===1)).toBe(true);
+    expect(evaluated.state.ai.obsidian.pendingCommands).toEqual([]);
     expect(evaluated.state.units.opawn!.position).toEqual({x:10,y:10});
+    expect(evaluated.events.some(e=>e.type==='ai.command.scheduled')).toBe(false);
   });
 
   it('resolves combat before ability activation and Hold then rejects same-tick hero movement',()=>{
