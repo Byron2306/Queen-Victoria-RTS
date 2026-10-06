@@ -377,3 +377,31 @@ The Ideal-System Gauntlet phase is complete only when:
 
 After this phase, the remaining restoration work is visual/art/animation integration,
 not ruleset reconstruction.
+
+
+## Completion evidence
+
+Status: **COMPLETE**
+
+The ideal-system gauntlet was completed under strict test-first execution and final live-path audit.
+
+Verified evidence:
+
+- Integrated V2 fixture is legal under canonical capacity, supply, production, intelligence, and topology rules.
+- Presentation time advanced 25,037 ms without mutating strategic WorldState.
+- Victoria staged exactly four deterministic Royal Command orders, refused a fifth at the staging budget, then resolved through shared committed-order authority.
+- Shadow executed the live authority composition in canonical order: free READY deployment, strategic economy, bounded planning, canonical enqueue.
+- Shadow remembered-only contacts were not used as direct attack targets.
+- Shadow orders resolved through the same committed-order authority as Victoria.
+- Reinforcement boundary preserved the frozen stage order and proved supply exposure, 10 HP attrition at exposure round 3, queue-to-READY maturation, no automatic READY placement, no retroactive supply exposure, and next-round 4/4 Royal Command reset.
+- Deterministic replay produced identical order IDs, targets, READY events, event history, canonical snapshots, and final state across repeated runs.
+- Equivalent worlds with reversed insertion order for units, occupancy, combat, and military produced the same canonical outcome.
+- Architecture tripwires confirmed no strategic stepWorld authority in the live battlefield path, no legacy Shadow scheduler use, no READY fallback spawn, no client READY mutation, no stray territory ownership authority, and no presentation-time strategic dependency.
+- Focused cross-system regression cluster: 12 files, 65 tests PASS.
+- Full repository verification: 167 files, 735 tests PASS.
+- TypeScript typecheck PASS.
+- Vite production build PASS. The Phaser chunk-size notice is a non-failing bundling warning.
+- Final live-path audit confirmed the canonical sequence:
+  `Victoria enqueue -> Victoria resolve -> Shadow READY -> Shadow economy -> Shadow plan/enqueue -> Shadow resolve -> reinforcement -> next round`.
+
+With these checks complete, the rules/system restoration is complete. Remaining work belongs to the art, animation, audiovisual, and presentation-polish phase rather than strategic authority restoration.
