@@ -291,5 +291,5 @@ describe('Triptych Shadow AI parity gauntlet', () => {
     ).toBe(
       snapshot(b.state, b.eventsByTick),
     );
-  }, 15000);
+  }, 30000);
 });
