@@ -64,6 +64,79 @@ describe('Royal Tactical fixed-tick runtime', () => {
     });
   });
 
+
+  it('treats negative, NaN, Infinity, and zero presentation deltas as inert', () => {
+    const runtime = new FixedTickRuntime();
+    const before = runtime.world;
+
+    const negative = runtime.advance(-10);
+    const nan = runtime.advance(Number.NaN);
+    const infinity = runtime.advance(Number.POSITIVE_INFINITY);
+    const zero = runtime.advance(0);
+
+    for (const result of [
+      negative,
+      nan,
+      infinity,
+      zero,
+    ]) {
+      expect(result.steps).toBe(0);
+      expect(result.presentationClock).toEqual({
+        elapsedMs: 0,
+        tick: 0,
+        remainderMs: 0,
+        alpha: 0,
+      });
+    }
+
+    expect(runtime.world).toBe(before);
+  });
+
+  it('is deterministic across equivalent frame partitions', () => {
+    const chunked = new FixedTickRuntime();
+    const single = new FixedTickRuntime();
+
+    chunked.advance(20);
+    chunked.advance(30);
+    chunked.advance(50);
+
+    single.advance(100);
+
+    expect(chunked.presentationClock).toEqual(
+      single.presentationClock,
+    );
+
+    const chunkedLarge = new FixedTickRuntime();
+    const singleLarge = new FixedTickRuntime();
+
+    chunkedLarge.advance(100);
+    chunkedLarge.advance(100);
+    chunkedLarge.advance(50);
+
+    singleLarge.advance(250);
+
+    expect(chunkedLarge.presentationClock).toEqual(
+      singleLarge.presentationClock,
+    );
+  });
+
+  it('never changes world identity while accumulating accepted presentation time', () => {
+    const runtime = new FixedTickRuntime();
+    const before = runtime.world;
+
+    runtime.advance(25);
+    runtime.advance(75);
+    runtime.advance(150);
+
+    expect(runtime.world).toBe(before);
+    expect(runtime.presentationClock).toEqual({
+      elapsedMs: 250,
+      tick: 2,
+      remainderMs: 50,
+      alpha: 0.5,
+    });
+  });
+
   it('does nothing before one presentation tick', () => {
     const runtime = new FixedTickRuntime();
     const before = runtime.world;
