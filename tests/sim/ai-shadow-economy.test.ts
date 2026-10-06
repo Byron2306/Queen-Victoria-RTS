@@ -49,7 +49,7 @@ function promotionWorld(): WorldState {
       id: 'opawn',
       faction: 'obsidian',
       kind: 'pawn',
-      position: { x: 10, y: 14 },
+      position: { x: 10, y: 1 },
     },
     {
       id: 'opawn-2',
