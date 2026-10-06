@@ -6,6 +6,11 @@ import {
   SIM_TICK_MS,
 } from '../../src/client/runtime/fixed-tick-runtime';
 import { ClientCommandBridge } from '../../src/client/runtime/command-bridge';
+import {
+  executeShadowReadyDeployments,
+  executeShadowStrategicEconomy,
+  planShadowTurn,
+} from '../../src/sim/ai';
 import { getBattlefieldTopology } from '../../src/sim/battlefield-topology-authority';
 import { tileId } from '../../src/sim/board-topology';
 import { queueRecruitment } from '../../src/sim/production';
@@ -453,5 +458,177 @@ describe('Triptych ideal-system gauntlet fixture', () => {
       world.units['victoria-queen']
         ?.position,
     );
+  });
+
+  it('composes live Shadow READY, economy, planning, and canonical enqueue authority', () => {
+    let world = createIdealSystemFixture();
+
+    world = {
+      ...world,
+      turn: transitionTurnPhase(
+        world.turn,
+        'victoria_resolve',
+      ),
+    };
+
+    world = {
+      ...world,
+      turn: transitionTurnPhase(
+        world.turn,
+        'shadow_command',
+      ),
+    };
+
+    expect(world.turn.phase).toBe(
+      'shadow_command',
+    );
+
+    const crownBefore =
+      world.economy.crownPower.obsidian;
+    const queueBefore =
+      world.production.queues.obsidian.length;
+
+    const readyResult =
+      executeShadowReadyDeployments(
+        world,
+      );
+
+    world = readyResult.state;
+
+    expect(
+      readyResult.events.filter(
+        event =>
+          event.type ===
+          'reinforcement.deployed',
+      ),
+    ).toHaveLength(1);
+
+    expect(
+      world.production.ready.obsidian
+        .some(
+          entry =>
+            entry.id ===
+            'obsidian-ready-pawn',
+        ),
+    ).toBe(false);
+
+    const deployed =
+      world.units[
+        'unit:obsidian-ready-pawn'
+      ];
+
+    expect(deployed).toBeDefined();
+
+    const topology =
+      getBattlefieldTopology(
+        'triptych-v2',
+      );
+
+    expect(
+      topology.isPlayableCell(
+        deployed!.position.x,
+        deployed!.position.y,
+      ),
+    ).toBe(true);
+
+    expect(
+      world.turn.royalCommandsRemaining
+        .obsidian,
+    ).toBe(4);
+
+    const economyResult =
+      executeShadowStrategicEconomy(
+        world,
+      );
+
+    world = economyResult.state;
+
+    expect(
+      world.production.queues.obsidian.length,
+    ).toBeGreaterThan(queueBefore);
+
+    expect(
+      world.economy.crownPower.obsidian,
+    ).toBeLessThan(crownBefore);
+
+    const planned =
+      planShadowTurn(world);
+
+    expect(
+      planned.length,
+    ).toBeLessThanOrEqual(4);
+
+    expect(
+      planned.map(order => order.orderId),
+    ).toEqual(
+      planned.map(
+        (_, index) =>
+          `obsidian-r1-o${index}`,
+      ),
+    );
+
+    const rememberedId =
+      'victoria-pawn-b';
+
+    expect(
+      planned
+        .filter(
+          order =>
+            order.kind === 'attack',
+        )
+        .map(
+          order =>
+            order.targetUnitId,
+        ),
+    ).not.toContain(
+      rememberedId,
+    );
+
+    for (const order of planned) {
+      const queued =
+        enqueueTacticalOrder(
+          world,
+          order,
+        );
+
+      expect(queued.status).toBe(
+        'ACCEPTED',
+      );
+
+      if (
+        queued.status !==
+        'ACCEPTED'
+      ) {
+        throw new Error(
+          `expected accepted Shadow order: ${queued.reason}`,
+        );
+      }
+
+      world = queued.world;
+    }
+
+    expect(
+      world.turn.royalCommandsRemaining
+        .obsidian,
+    ).toBe(
+      4 - planned.length,
+    );
+
+    expect(
+      pendingOrdersForFaction(
+        world,
+        'obsidian',
+      ).map(
+        order => order.orderId,
+      ),
+    ).toEqual(
+      planned.map(
+        order => order.orderId,
+      ),
+    );
+
+    expect(
+      world.ai.obsidian.pendingCommands,
+    ).toEqual([]);
   });
 });
