@@ -27,7 +27,7 @@ describe('Victoria V1 Phaser integration', () => {
     );
 
     expect(phaserSceneSource).toContain(
-      "unit.id === 'victoria-hero'",
+      "unit.id === 'victoria-queen'",
     );
 
     expect(phaserSceneSource).toContain(
