@@ -7,9 +7,9 @@ import {
 } from '../../src/client/phaser/shell';
 
 describe('Phase 6 Phaser shell', () => {
-  it('uses the canonical 4:3 client viewport', () => {
+  it('uses the canonical 16:9 client viewport', () => {
     expect(GAME_WIDTH).toBe(1600);
-    expect(GAME_HEIGHT).toBe(1200);
+    expect(GAME_HEIGHT).toBe(900);
   });
 
   it('mounts into one stable browser root', () => {
@@ -49,7 +49,7 @@ describe('Phase 6 Phaser shell', () => {
 
     expect(shell).toMatchObject({
       width: 1600,
-      height: 1200,
+      height: 900,
       background: '#100d18',
       transparent: false,
     });
