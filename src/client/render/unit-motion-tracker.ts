@@ -3,6 +3,7 @@ import type {
 } from '../board/projection';
 import {
   interpolateUnitMotion,
+  UNIT_MOVE_VISUAL_MS,
 } from './unit-motion';
 
 interface UnitMotionState {
@@ -101,6 +102,30 @@ export class UnitMotionTracker {
         this.states.delete(unitId);
       }
     }
+  }
+
+  isMoving(
+    unitId: string,
+    nowMs: number,
+  ): boolean {
+    const state =
+      this.states.get(unitId);
+
+    if (!state) {
+      return false;
+    }
+
+    if (samePoint(state.from, state.to)) {
+      return false;
+    }
+
+    const elapsed =
+      nowMs - state.startedAtMs;
+
+    return (
+      elapsed >= 0 &&
+      elapsed < UNIT_MOVE_VISUAL_MS
+    );
   }
 
   has(unitId: string): boolean {
