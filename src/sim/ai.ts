@@ -206,8 +206,8 @@ import { canUnitAttackTarget } from './combat';
 import { CAPACITY_WEIGHT, PIECE_CAP, capacityUsage, commandCapacity, isRecruitUnlocked, pieceCountWithQueue } from './economy';
 import { validateMoveGeometry } from './geometry';
 import { qualifiesForSovereignLine } from './abilities';
-import { RECRUITMENT_COST } from './production';
-import { PROMOTION_COST } from './promotion';
+import { queueRecruitment, RECRUITMENT_COST } from './production';
+import { PROMOTION_COST, queuePromotionRequest } from './promotion';
 import type { Coord, HeroAbilityId, PromotableUnitKind, RecruitableUnitKind } from './types';
 
 const TACTICAL_KIND_PRIORITY:Readonly<Record<UnitKind,number>>={king:0,queen:2,rook:2,bishop:3,knight:3,pawn:4};
@@ -368,6 +368,49 @@ function legalPromotion(world:WorldState,faction:Faction):{pawnId:string;targetK
     }
   }
   return null;
+}
+
+export function executeShadowStrategicEconomy(
+  world: WorldState,
+): Readonly<{ state: WorldState; events: readonly SimEvent[] }> {
+  if (
+    world.match.status !== 'active' ||
+    world.turn.phase !== 'shadow_command'
+  ) {
+    return { state: world, events: [] };
+  }
+
+  const faction: Faction = 'obsidian';
+  let working = world;
+  const events: SimEvent[] = [];
+
+  const recruitKind = legalRecruitKind(working, faction);
+  if (recruitKind) {
+    const recruitment = queueRecruitment(working, {
+      type: 'recruit',
+      sequence: working.ai[faction].nextCommandOrdinal,
+      issuedTick: working.tick,
+      faction,
+      unitKind: recruitKind,
+    });
+    working = recruitment.state;
+    events.push(...recruitment.events);
+  }
+
+  const promotion = legalPromotion(working, faction);
+  if (promotion) {
+    const requested = queuePromotionRequest(working, {
+      type: 'promote',
+      sequence: working.ai[faction].nextCommandOrdinal,
+      issuedTick: working.tick,
+      faction,
+      ...promotion,
+    });
+    working = requested.state;
+    events.push(...requested.events);
+  }
+
+  return { state: working, events };
 }
 
 function nearbyAllies(world:WorldState,faction:Faction,heroId:string,radius:number):number {
