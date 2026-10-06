@@ -51,6 +51,36 @@ function promotionWorld(): WorldState {
       kind: 'pawn',
       position: { x: 10, y: 14 },
     },
+    {
+      id: 'opawn-2',
+      faction: 'obsidian',
+      kind: 'pawn',
+      position: { x: 11, y: 10 },
+    },
+    {
+      id: 'opawn-3',
+      faction: 'obsidian',
+      kind: 'pawn',
+      position: { x: 12, y: 10 },
+    },
+    {
+      id: 'opawn-4',
+      faction: 'obsidian',
+      kind: 'pawn',
+      position: { x: 13, y: 10 },
+    },
+    {
+      id: 'opawn-5',
+      faction: 'obsidian',
+      kind: 'pawn',
+      position: { x: 14, y: 10 },
+    },
+    {
+      id: 'opawn-6',
+      faction: 'obsidian',
+      kind: 'pawn',
+      position: { x: 15, y: 10 },
+    },
   ], { aiFactions: ['obsidian'] });
 
   const nodeIds = Object.keys(world.territory.nodes).sort().slice(0, 2);
