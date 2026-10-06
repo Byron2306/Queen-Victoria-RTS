@@ -5,9 +5,21 @@ import {
   FixedTickRuntime,
   SIM_TICK_MS,
 } from '../../src/client/runtime/fixed-tick-runtime';
+import { ClientCommandBridge } from '../../src/client/runtime/command-bridge';
 import { getBattlefieldTopology } from '../../src/sim/battlefield-topology-authority';
 import { tileId } from '../../src/sim/board-topology';
 import { queueRecruitment } from '../../src/sim/production';
+import {
+  clearPendingOrders,
+  enqueueTacticalOrder,
+  pendingOrdersForFaction,
+} from '../../src/sim/orders';
+import {
+  resolveCommittedOrders,
+} from '../../src/sim/resolve-orders';
+import {
+  transitionTurnPhase,
+} from '../../src/sim/turns';
 import { supplyStatusForUnit } from '../../src/sim/supply';
 import type {
   ReadyDeployment,
@@ -322,5 +334,124 @@ describe('Triptych ideal-system gauntlet fixture', () => {
     expect(
       runtime.commands.peekTactical(),
     ).toEqual([]);
+  });
+
+  it('stages exactly four deterministic Victoria orders and resolves them through shared authority', () => {
+    let world = createIdealSystemFixture();
+    const bridge = new ClientCommandBridge();
+
+    const unitsBefore = world.units;
+    const combatBefore = world.combat;
+
+    for (const unitId of [
+      'victoria-queen',
+      'victoria-rook-a',
+      'victoria-knight-a',
+      'victoria-pawn-a',
+      'victoria-pawn-b',
+    ]) {
+      bridge.guard(world, unitId);
+    }
+
+    const staged = bridge.peekTactical();
+
+    expect(staged).toHaveLength(4);
+    expect(
+      staged.map(order => order.orderId),
+    ).toEqual([
+      'victoria-r1-o0',
+      'victoria-r1-o1',
+      'victoria-r1-o2',
+      'victoria-r1-o3',
+    ]);
+
+    expect(
+      world.turn.royalCommandsRemaining.victoria,
+    ).toBe(4);
+    expect(world.units).toBe(unitsBefore);
+    expect(world.combat).toBe(combatBefore);
+    expect(world.pendingOrders).toEqual([]);
+
+    for (const order of bridge.drainTactical()) {
+      const queued =
+        enqueueTacticalOrder(world, order);
+
+      expect(queued.status).toBe(
+        'ACCEPTED',
+      );
+
+      if (queued.status !== 'ACCEPTED') {
+        throw new Error(
+          `expected accepted Victoria order: ${queued.reason}`,
+        );
+      }
+
+      world = queued.world;
+    }
+
+    expect(
+      world.turn.royalCommandsRemaining.victoria,
+    ).toBe(0);
+
+    expect(
+      pendingOrdersForFaction(
+        world,
+        'victoria',
+      ).map(order => order.orderId),
+    ).toEqual([
+      'victoria-r1-o0',
+      'victoria-r1-o1',
+      'victoria-r1-o2',
+      'victoria-r1-o3',
+    ]);
+
+    world = {
+      ...world,
+      turn: transitionTurnPhase(
+        world.turn,
+        'victoria_resolve',
+      ),
+    };
+
+    const resolved =
+      resolveCommittedOrders(
+        world,
+        pendingOrdersForFaction(
+          world,
+          'victoria',
+        ),
+      );
+
+    expect(
+      resolved.outcomes.map(
+        outcome => outcome.status,
+      ),
+    ).toEqual([
+      'RESOLVED',
+      'RESOLVED',
+      'RESOLVED',
+      'RESOLVED',
+    ]);
+
+    world =
+      clearPendingOrders(
+        resolved.world,
+      );
+
+    expect(world.pendingOrders).toEqual([]);
+    expect(
+      world.turn.pendingOrderIds,
+    ).toEqual([]);
+    expect(world.turn.phase).toBe(
+      'victoria_resolve',
+    );
+
+    expect(
+      world.combat['victoria-queen']
+        ?.guardAnchor,
+    ).toEqual(
+      world.units['victoria-queen']
+        ?.position,
+    );
   });
 });
