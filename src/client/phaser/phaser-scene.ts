@@ -1876,6 +1876,10 @@ export function createBattlefieldSceneClass<
     ): void {
       this.controller.update(delta);
 
+      const presentationNow =
+        this.controller.runtime
+          .presentationClock.elapsedMs;
+
       const scene = this as any;
 
       const layout =
@@ -1911,7 +1915,7 @@ export function createBattlefieldSceneClass<
               x: unit.x,
               y: unit.y,
             },
-            time,
+            presentationNow,
           );
 
         this.applyUnitVisualFootprint(
