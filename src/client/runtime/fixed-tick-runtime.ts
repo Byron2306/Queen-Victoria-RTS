@@ -7,9 +7,17 @@ import { ClientCommandBridge } from './command-bridge';
 
 export const SIM_TICK_MS = 100;
 
+export interface PresentationClockSnapshot {
+  elapsedMs: number;
+  tick: number;
+  remainderMs: number;
+  alpha: number;
+}
+
 export interface RuntimeAdvanceResult {
   steps: number;
   events: readonly SimEvent[];
+  presentationClock: PresentationClockSnapshot;
 }
 
 /**
@@ -24,6 +32,7 @@ export class FixedTickRuntime {
   public readonly commands: ClientCommandBridge;
 
   private accumulatedMs = 0;
+  private elapsedPresentationMs = 0;
 
   constructor(
     world: WorldState = createPhase6SkirmishWorld(),
@@ -33,8 +42,23 @@ export class FixedTickRuntime {
     this.commands = commands;
   }
 
+  get presentationClock(): PresentationClockSnapshot {
+    const remainderMs =
+      this.elapsedPresentationMs % SIM_TICK_MS;
+
+    return {
+      elapsedMs: this.elapsedPresentationMs,
+      tick: Math.floor(
+        this.elapsedPresentationMs / SIM_TICK_MS,
+      ),
+      remainderMs,
+      alpha: remainderMs / SIM_TICK_MS,
+    };
+  }
+
   advance(elapsedMs: number): RuntimeAdvanceResult {
     this.accumulatedMs += elapsedMs;
+    this.elapsedPresentationMs += elapsedMs;
 
     let steps = 0;
 
@@ -46,6 +70,8 @@ export class FixedTickRuntime {
     return {
       steps,
       events: [],
+      presentationClock:
+        this.presentationClock,
     };
   }
 }
