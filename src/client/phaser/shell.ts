@@ -1,5 +1,5 @@
 export const GAME_WIDTH = 1600;
-export const GAME_HEIGHT = 1200;
+export const GAME_HEIGHT = 900;
 export const PHASER_PARENT_ID = 'queen-victoria-rts';
 
 export interface PhaserShellDescriptor {
