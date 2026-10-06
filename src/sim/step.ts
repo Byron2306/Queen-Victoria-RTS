@@ -1,6 +1,5 @@
 import { advanceTick } from './clock';
 import { activateHeroAbility, heroMovementAnchored } from './abilities';
-import { evaluateBalancedAI } from './ai';
 import { compareSimCommands } from './commands';
 import { resolveCombatTick } from './combat';
 import { applyKillRewards } from './economy';
@@ -63,22 +62,12 @@ export function stepWorld(world: WorldState, commands: readonly SimCommand[]): S
   const externalOrdered = [...commands].sort(compareSimCommands);
   if (world.match.status !== 'active') return { state: world, events: externalOrdered.map((command) => terminalRejection(world, command)) };
 
-  // Phase 5 stage 2: consume AI commands scheduled by a prior evaluation.
-  let preCombatWorld = world;
-  const dueAICommands: SimCommand[] = [];
-  for (const faction of ['victoria', 'obsidian'] as const) {
-    const ai = preCombatWorld.ai[faction];
-    const due = ai.pendingCommands.filter((pending) => pending.executeTick <= preCombatWorld.tick);
-    const remaining = ai.pendingCommands.filter((pending) => pending.executeTick > preCombatWorld.tick);
-    if (due.length) dueAICommands.push(...due.map((pending) => pending.command));
-    if (remaining.length !== ai.pendingCommands.length) {
-      preCombatWorld = { ...preCombatWorld, ai: { ...preCombatWorld.ai, [faction]: { ...ai, pendingCommands: remaining } } };
-    }
-  }
-  const ordered = [...externalOrdered, ...dueAICommands].sort(compareSimCommands);
+  // Fixed ticks consume only commands explicitly supplied by the caller.
+  // Strategic AI planning belongs to Royal Tactical Shadow-turn authority.
+  const ordered = externalOrdered;
 
   // Stages 3-6: Guard, combat, sovereign outcome, decisive terminal gate.
-  const guarded = refreshGuardTargets(preCombatWorld);
+  const guarded = refreshGuardTargets(world);
   const combatResult = resolveCombatTick(guarded);
   const outcome = interpretSovereignDefeats(guarded, combatResult.state, combatResult.events);
   let working = outcome.state;
@@ -137,10 +126,7 @@ export function stepWorld(world: WorldState, commands: readonly SimCommand[]): S
     events.push(...result.events);
   }
 
-  // Stage 19: AI may observe the fully resolved tick, but only schedules commands for T+1.
-  for (const faction of ['victoria', 'obsidian'] as const) {
-    const aiResult = evaluateBalancedAI(working, faction); working = aiResult.state; events.push(...aiResult.events);
-  }
+  // Strategic AI evaluation occurs only in Royal Tactical Shadow-turn authority.
 
   // Stages 20-21: sovereign threat truth then fixed tick advance.
   const sovereign = evaluateSovereignThreats(working); events.push(...sovereign.events);
