@@ -2,9 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   canonicalSnapshot,
-  clearPendingOrders,
   createWorld,
-  enqueueTacticalOrder,
   executeShadowReadyDeployments,
   executeShadowStrategicEconomy,
   planShadowTurn,
@@ -12,6 +10,7 @@ import {
   stepWorld,
   transitionTurnPhase,
 } from '../../src/sim';
+import { clearPendingOrders, enqueueTacticalOrder } from '../../src/sim/orders';
 import { resolveCommittedOrders } from '../../src/sim/resolve-orders';
 import { tileId } from '../../src/sim/board-topology';
 import type {
