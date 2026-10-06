@@ -231,10 +231,10 @@ describe('Triptych Shadow AI parity gauntlet', () => {
   it('proves one deterministic Shadow authority across time, knowledge, READY, budget, resolution, and reinforcement', () => {
     const initial = startingWorld();
 
-    const afterTicks = Array.from({ length: 5 }).reduce(
-      state => stepWorld(state, []).state,
-      initial,
-    );
+    let afterTicks: WorldState = initial;
+    for (let index = 0; index < 5; index += 1) {
+      afterTicks = stepWorld(afterTicks, []).state;
+    }
     expect(afterTicks.ai.obsidian.commitments).toEqual([]);
     expect(afterTicks.ai.obsidian.pendingCommands).toEqual([]);
     expect(afterTicks.production.queues.obsidian).toEqual([]);
