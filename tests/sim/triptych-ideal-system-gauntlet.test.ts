@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { createPhase6SkirmishWorld } from '../../src/client/session/skirmish';
+import {
+  FixedTickRuntime,
+  SIM_TICK_MS,
+} from '../../src/client/runtime/fixed-tick-runtime';
 import { getBattlefieldTopology } from '../../src/sim/battlefield-topology-authority';
 import { tileId } from '../../src/sim/board-topology';
 import { queueRecruitment } from '../../src/sim/production';
@@ -249,5 +253,74 @@ describe('Triptych ideal-system gauntlet fixture', () => {
     expect(world.turn.phase).toBe(
       'victoria_command',
     );
+  });
+
+  it('keeps the integrated strategic world inert under presentation time', () => {
+    const world = createIdealSystemFixture();
+    const runtime = new FixedTickRuntime(world);
+    const before = runtime.world;
+
+    const strategic = {
+      phase: before.turn.phase,
+      round: before.turn.round,
+      crown: before.economy.crownPower,
+      queues: before.production.queues,
+      ready: before.production.ready,
+      supply: before.supply,
+      units: before.units,
+      occupancy: before.occupancy,
+      pendingOrders: before.pendingOrders,
+      ai: before.ai,
+    };
+
+    const result = runtime.advance(
+      SIM_TICK_MS * 250 + 37,
+    );
+
+    expect(
+      result.presentationClock,
+    ).toEqual({
+      elapsedMs: 25_037,
+      tick: 250,
+      remainderMs: 37,
+      alpha: 0.37,
+    });
+
+    expect(runtime.world).toBe(before);
+    expect(runtime.world.turn.phase).toBe(
+      strategic.phase,
+    );
+    expect(runtime.world.turn.round).toBe(
+      strategic.round,
+    );
+    expect(
+      runtime.world.economy.crownPower,
+    ).toEqual(strategic.crown);
+    expect(
+      runtime.world.production.queues,
+    ).toEqual(strategic.queues);
+    expect(
+      runtime.world.production.ready,
+    ).toEqual(strategic.ready);
+    expect(runtime.world.supply).toEqual(
+      strategic.supply,
+    );
+    expect(runtime.world.units).toEqual(
+      strategic.units,
+    );
+    expect(runtime.world.occupancy).toEqual(
+      strategic.occupancy,
+    );
+    expect(
+      runtime.world.pendingOrders,
+    ).toEqual(strategic.pendingOrders);
+    expect(runtime.world.ai).toEqual(
+      strategic.ai,
+    );
+    expect(runtime.world.tick).toBe(0);
+
+    expect(
+      runtime.commands.peekTactical(),
+    ).toEqual([]);
   });
 });
