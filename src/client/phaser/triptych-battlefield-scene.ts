@@ -45,6 +45,9 @@ import {
 import {
   assetUrl,
 } from '../assets/base-url';
+import {
+  publishLiveDebug,
+} from '../debug/live-debug-overlay';
 
 type PhaserSceneBase = new (config?: any) => object;
 
@@ -508,6 +511,18 @@ export function createTriptychBattlefieldSceneClass<
           const y = Number(pointer.y);
           if (Number.isFinite(x) && Number.isFinite(y)) {
             this.cameraDragPoint = { x, y };
+
+            publishLiveDebug(
+              'pointerdown',
+              {
+                x,
+                y,
+                dragAnchor:
+                  this.cameraDragPoint,
+                camera:
+                  getBattlefieldCameraState(),
+              },
+            );
           }
         },
       );
@@ -525,12 +540,39 @@ export function createTriptychBattlefieldSceneClass<
           const delta = dragPanDelta(this.cameraDragPoint, next);
           this.cameraDragPoint = next;
 
-          panStoredBattlefieldCamera(delta, this.cameraBounds());
+          const camera =
+            panStoredBattlefieldCamera(
+              delta,
+              this.cameraBounds(),
+            );
+
+          publishLiveDebug(
+            'pointermove',
+            {
+              x,
+              y,
+              delta,
+              dragAnchor:
+                this.cameraDragPoint,
+              camera,
+            },
+          );
+
           this.layoutBattlefield();
         },
       );
 
       const endDrag = () => {
+        publishLiveDebug(
+          'pointerup',
+          {
+            dragAnchor:
+              this.cameraDragPoint,
+            camera:
+              getBattlefieldCameraState(),
+          },
+        );
+
         this.cameraDragPoint = null;
       };
 
