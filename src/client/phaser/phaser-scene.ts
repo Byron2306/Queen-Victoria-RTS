@@ -44,6 +44,9 @@ import {
 import type {
   BoardProjection,
 } from '../board/projection';
+import {
+  publishLiveDebug,
+} from '../debug/live-debug-overlay';
 
 type PhaserSceneBase = new (
   config?: any,
@@ -1949,11 +1952,14 @@ export function createBattlefieldSceneClass<
         if (
           unit.id === 'victoria-queen'
         ) {
-          const textureKey =
+          const moving =
             this.motion.isMoving(
               unit.id,
               presentationNow,
-            )
+            );
+
+          const textureKey =
+            moving
               ? victoriaWalkFrameKey(
                   presentationNow,
                 )
@@ -1961,6 +1967,41 @@ export function createBattlefieldSceneClass<
 
           sprite.setTexture?.(
             textureKey,
+          );
+
+          publishLiveDebug(
+            'victoria',
+            {
+              logical:
+                this.controller.world
+                  .units[unit.id]
+                  ?.position,
+              authoritativeScreen: {
+                x: unit.x,
+                y: unit.y,
+              },
+              visualScreen: {
+                x: visual.x,
+                y: visual.y,
+              },
+              spriteScreen: {
+                x: sprite.x,
+                y: sprite.y,
+              },
+              moving,
+              presentationNow,
+              round:
+                this.controller.world
+                  .turn.round,
+              phase:
+                this.controller.world
+                  .turn.phase,
+              pendingOrders:
+                this.controller.runtime
+                  .commands
+                  .peekTactical()
+                  .length,
+            },
           );
         }
 
