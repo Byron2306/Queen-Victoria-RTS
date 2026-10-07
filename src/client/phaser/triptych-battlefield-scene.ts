@@ -514,8 +514,8 @@ export function createTriptychBattlefieldSceneClass<
 
       input?.on?.(
         'pointermove',
-        (pointer: { x?: number; y?: number; isDown?: boolean }) => {
-          if (!pointer.isDown || !this.cameraDragPoint) return;
+        (pointer: { x?: number; y?: number }) => {
+          if (!this.cameraDragPoint) return;
 
           const x = Number(pointer.x);
           const y = Number(pointer.y);
