@@ -973,7 +973,6 @@ export function createBattlefieldSceneClass<
 
       this.controller.endTurn();
 
-      this.layoutBattlefield();
       this.refreshHudText();
     }
 
