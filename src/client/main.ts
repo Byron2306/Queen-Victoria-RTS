@@ -1,8 +1,17 @@
 import './style.css'
 import { startPhaserGame } from './phaser/bootstrap'
 import { assetUrl } from './assets/base-url'
+import {
+  installLiveDebugOverlay,
+} from './debug/live-debug-overlay'
 
 const root = document.getElementById('queen-victoria-rts')
+
+if (
+  window.location.search.includes('debug=1')
+) {
+  installLiveDebugOverlay()
+}
 
 if (!root) {
   throw new Error('Missing Queen Victoria RTS root')
