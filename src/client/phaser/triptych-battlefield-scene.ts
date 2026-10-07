@@ -89,6 +89,7 @@ export function createTriptychBattlefieldSceneClass<
     private ghostVisualFingerprint = '';
     private bannerSprites: any[] = [];
     private bannerVisualFingerprint = '';
+    private triptychPresentationReady = false;
 
     private cameraBounds(): {
       minX: number;
@@ -465,15 +466,20 @@ export function createTriptychBattlefieldSceneClass<
 
     layoutBattlefield(): void {
       super.layoutBattlefield();
-      this.enforceTriptychUnitPresentation();
-      this.refreshCameraBoundPresentation(true);
+
+      if (this.triptychPresentationReady) {
+        this.enforceTriptychUnitPresentation();
+        this.refreshCameraBoundPresentation(true);
+      }
     }
 
     create(): void {
       super.create();
+
+      this.triptychPresentationReady = true;
+
       this.enforceTriptychUnitPresentation();
-      this.refreshBattlefieldIntelligence(true);
-      this.refreshBannerSprites(true);
+      this.refreshCameraBoundPresentation(true);
 
       const scene = this as any;
       const keyboard = scene.input?.keyboard;
