@@ -1,3 +1,4 @@
+import type { BattlefieldTopologyId } from '../../sim/battlefield-topology-authority';
 import {
   tileCenter,
   type BoardProjection,
@@ -26,6 +27,7 @@ const GHOST_DEPTH = 860;
 export function createGhostContactVisuals(
   presented: PresentedWorld,
   projection: BoardProjection,
+  topologyId?: BattlefieldTopologyId,
 ): readonly GhostContactVisual[] {
   return presented.ghosts
     .map((ghost) => ({
@@ -35,6 +37,7 @@ export function createGhostContactVisuals(
       anchor: tileCenter(
         ghost.cell,
         projection,
+        topologyId,
       ),
       opacity: GHOST_OPACITY,
       depth: GHOST_DEPTH,

@@ -1,3 +1,4 @@
+import { topologyForWorld } from '../../sim/territory';
 import { assetUrl } from '../assets/base-url';
 import {
   fitAspectInside,
@@ -1614,6 +1615,7 @@ export function createBattlefieldSceneClass<
       return resolveBoardPointerCell(
         point,
         projection,
+        topologyForWorld(this.controller.world).id,
       );
     }
 

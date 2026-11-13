@@ -1,3 +1,4 @@
+import { topologyForWorld } from '../../sim/territory';
 import { createBattlefieldSceneClass } from './phaser-scene';
 import { createRoyalBattlefieldGuidance } from './royal-battlefield-guidance';
 import { findVictoriaUnitAtPoint } from '../input/unit-tap-target';
@@ -510,7 +511,7 @@ export function createRoyalBattlefieldSceneClass<TBase extends PhaserSceneBase>(
           );
           const targetRender = runtime.frame.units.find((unit: any) => unit.id === targetId);
           const targetPolygon = targetRender
-            ? (awaitlessTilePolygon(target.position, layout.projection))
+            ? (awaitlessTilePolygon(target.position, layout.projection, topologyForWorld(self.controller.world).id))
             : null;
           const marker = this.drawTilePolygon(
             targetPolygon,
@@ -666,7 +667,8 @@ export function createRoyalBattlefieldSceneClass<TBase extends PhaserSceneBase>(
       const staged = [...self.controller.runtime.commands.peekTactical()];
       self.controller.endTurn();
       const after = self.controller.world as WorldState;
-      self.layoutBattlefield?.();
+      // Let the frame update interpolate from the existing visual positions.
+      // Layout rebases motion and is reserved for viewport/camera changes.
       self.refreshHudText?.();
       this.lastProductionFeedback = null;
       this.showCombatDelta(before, after, staged);

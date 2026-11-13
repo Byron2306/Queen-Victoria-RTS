@@ -17,7 +17,7 @@ import {
   type TacticalBonus,
 } from './tactical-bonuses';
 import { interpretSovereignDefeats } from './sovereign';
-import { coordKey, isInBounds } from './world';
+import { coordKey, isInWorldBounds } from './world';
 import {
   supportPressureForChain,
   validateSupportGraph,
@@ -37,11 +37,9 @@ import {
 } from './fortifications';
 import {
   annexTile,
+  topologyForWorld,
   getTileFactionControl,
 } from './territory';
-import {
-  isPlayableCell,
-} from './board-topology';
 import type {
   AssaultOrder,
   AttackOrder,
@@ -97,7 +95,7 @@ function resolveMove(world: WorldState, order: MoveOrder): SingleResolution {
   const actorCombat = world.combat[order.unitId];
   if (!actorCombat || actorCombat.health <= 0) return skipped(world, order.orderId, 'actor_dead');
   if (actor.faction !== order.faction) return refused(world, order.orderId, 'wrong_faction');
-  if (!isInBounds(order.destination)) return refused(world, order.orderId, 'out_of_bounds');
+  if (!isInWorldBounds(world, order.destination)) return refused(world, order.orderId, 'out_of_bounds');
 
   const destinationKey = coordKey(order.destination);
   if (world.occupancy[destinationKey]) return refused(world, order.orderId, 'occupied');
@@ -142,7 +140,7 @@ function resolveDeployBanner(
   world: WorldState,
   order: Extract<TacticalOrder, { kind: 'deploy_banner' }>,
 ): SingleResolution {
-  if (!isPlayableCell(order.cell.x, order.cell.y)) {
+  if (!topologyForWorld(world).isPlayableCell(order.cell.x, order.cell.y)) {
     return refused(world, order.orderId, 'illegal_banner_cell');
   }
   if (getTileFactionControl(world, order.cell) !== order.faction) {

@@ -51,7 +51,13 @@ describe('Phaser pointer resolution seam', () => {
 
     const scene = new ProbeScene();
 
-    scene.handleBoardPointer({ x: 20, y: 20   it('resolves taps with the live V2 topology rather than the legacy default', () => {
+    scene.handleBoardPointer({ x: 20, y: 20 });
+
+    expect(scene.resolveCalls).toBe(1);
+    expect(scene.selectedUnitId).not.toBeNull();
+  });
+
+  it('resolves taps with the live V2 topology rather than the legacy default', () => {
     const BattlefieldScene =
       createBattlefieldSceneClass(FakeSceneBase);
 
@@ -79,10 +85,5 @@ describe('Phaser pointer resolution seam', () => {
 
     expect(scene.selectedUnitId)
       .toBe('victoria-queen');
-  });
-});
-
-    expect(scene.resolveCalls).toBe(1);
-    expect(scene.selectedUnitId).not.toBeNull();
   });
 });

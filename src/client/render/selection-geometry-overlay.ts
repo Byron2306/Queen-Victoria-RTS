@@ -1,3 +1,4 @@
+import { topologyForWorld } from '../../sim/territory';
 import type {
   BoardProjection,
   ScreenPoint,
@@ -47,21 +48,23 @@ export function createSelectionGeometryOverlay(
   const unit = world.units[selectedUnitId];
   if (!unit) return EMPTY_OVERLAY;
 
+  const topologyId = topologyForWorld(world).id;
+
   const selectedCell = {
     x: unit.position.x,
     y: unit.position.y,
   };
 
-  const selectedAnchor = boardCellToScreen(selectedCell, projection);
-  const selectedPolygon = tilePolygon(selectedCell, projection);
+  const selectedAnchor = boardCellToScreen(selectedCell, projection, topologyId);
+  const selectedPolygon = tilePolygon(selectedCell, projection, topologyId);
 
   const destinations = legalDestinationsForUnit(
     world,
     selectedUnitId,
   ).map((cell) => ({
     cell,
-    anchor: boardCellToScreen(cell, projection),
-    polygon: tilePolygon(cell, projection),
+    anchor: boardCellToScreen(cell, projection, topologyId),
+    polygon: tilePolygon(cell, projection, topologyId),
   }));
 
   return {

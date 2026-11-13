@@ -3,7 +3,7 @@ name: Deploy Queen Victoria RTS
 on:
   push:
     branches:
-      - agent/royal-war-triptych
+      - agent/triptych-ideal-system-restoration
   workflow_dispatch:
 
 permissions:
@@ -28,6 +28,8 @@ jobs:
           cache: npm
 
       - run: npm ci
+      - run: npm test -- --maxWorkers=1
+      - run: npm run typecheck
       - run: npm run build
 
       - uses: actions/configure-pages@v5

@@ -1,3 +1,4 @@
+import { topologyForWorld } from '../../sim/territory';
 import { createRoyalBattlefieldSceneClass } from './royal-battlefield-scene';
 import { removeStaleUnitSprites } from './unit-sprite-lifecycle';
 import {
@@ -195,7 +196,7 @@ export function createTriptychBattlefieldSceneClass<
       }
 
       for (const visual of visuals) {
-        const points = tilePolygon(visual.cell, layout.projection);
+        const points = tilePolygon(visual.cell, layout.projection, topologyForWorld(this.controller.world).id);
         const center = points.reduce(
           (sum, point) => ({
             x: sum.x + point.x / points.length,
@@ -233,6 +234,7 @@ export function createTriptychBattlefieldSceneClass<
       const ghosts = createGhostContactVisuals(
         runtime.presented,
         layout.projection,
+        topologyForWorld(this.controller.world).id,
       );
       const camera = getBattlefieldCameraState();
       const fingerprint = [
