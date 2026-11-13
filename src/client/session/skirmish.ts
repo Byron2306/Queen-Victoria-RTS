@@ -1,3 +1,4 @@
+import { refreshAllIntelligence } from '../../sim/intelligence';
 import {
   createWorld,
   type WorldState,
@@ -23,5 +24,5 @@ export function createPhase6SkirmishWorld(): WorldState {
   });
 
   world = applyTriptychOpeningTerritory(world);
-  return applyTriptychOpeningFortifications(world);
+  return refreshAllIntelligence(applyTriptychOpeningFortifications(world));
 }

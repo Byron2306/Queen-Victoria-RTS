@@ -1,3 +1,4 @@
+import { createWorld } from '../../src/sim/world';
 import { expect, it } from 'vitest';
 import { createTriptychBattlefieldSceneClass } from '../../src/client/phaser/triptych-battlefield-scene';
 
@@ -9,6 +10,7 @@ class FakeSceneBase {
 it('renders the full V2 fog frontier without treating outer cells as out of bounds', () => {
   const Scene = createTriptychBattlefieldSceneClass(FakeSceneBase);
   const scene = new Scene() as any;
+  scene.controller.runtime.world = createWorld([], { topologyId: 'triptych-v2' });
   const polygons: number[][] = [];
   scene.add = {
     polygon(_x: number, _y: number, points: number[]) {

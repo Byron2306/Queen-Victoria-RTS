@@ -1,3 +1,5 @@
+import { refreshFactionIntelligence } from '../../sim/intelligence';
+import { validateMoveKnowledge } from '../../sim/knowledge-legality';
 import {
   validateMoveGeometry,
 } from '../../sim/geometry';
@@ -18,9 +20,10 @@ export function legalDestinationsForUnit(
   }
 
   const destinations: Coord[] = [];
+  const knownWorld = refreshFactionIntelligence(world, unit.faction);
 
-  for (let y = 0; y < 16; y += 1) {
-    for (let x = 0; x < 16; x += 1) {
+  for (let y = 0; y < world.height; y += 1) {
+    for (let x = 0; x < world.width; x += 1) {
       if (
         world.occupancy[
           `${x},${y}`
@@ -36,6 +39,9 @@ export function legalDestinationsForUnit(
           world,
           unit,
           to,
+        ).legal &&
+        validateMoveKnowledge(
+          knownWorld, unit.faction, unit.position, to, unit.kind,
         ).legal
       ) {
         destinations.push(to);
