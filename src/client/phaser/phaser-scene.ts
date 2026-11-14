@@ -1,3 +1,6 @@
+import { tilePolygon } from '../board/projection';
+import { getBattlefieldCameraState, zoomStoredBattlefieldCamera } from '../camera/battlefield-camera-store';
+import { applyBattlefieldHudLayout } from '../hud/responsive-layout';
 import { topologyForWorld } from '../../sim/territory';
 import { assetUrl } from '../assets/base-url';
 import {
@@ -598,6 +601,16 @@ export function createBattlefieldSceneClass<
         ) as TextObjectLike;
 
       this.hudText = {
+        deployLabel: makeText(commandValueStyle),
+        pawnCost: makeText(commandValueStyle),
+        knightCost: makeText(commandValueStyle),
+        bishopCost: makeText(commandValueStyle),
+        rookCost: makeText(commandValueStyle),
+        zoomIn: makeText(royalLabelStyle),
+        zoomOut: makeText(royalLabelStyle),
+        selectedName: makeText(liveValueStyle),
+        selectedHealth: makeText(commandValueStyle),
+
         crown:
           makeText(commandValueStyle),
 
@@ -675,7 +688,14 @@ export function createBattlefieldSceneClass<
       }
 
       this.hudText.cancelLast
-        ?.setText?.('CANCEL LAST');
+        ?.setText?.('UNDO');
+      for (const [key, label, factor] of [['zoomIn', '+', 1.2], ['zoomOut', '−', 1/1.2]] as const) {
+        this.hudText[key]?.setText?.(label);
+        this.hudText[key]?.setInteractive?.({ useHandCursor: true })?.on?.('pointerdown', () => {
+          zoomStoredBattlefieldCamera(getBattlefieldCameraState().zoom * factor);
+          this.layoutBattlefield();
+        });
+      }
 
       this.hudText.commitOrders
         ?.setText?.(
@@ -732,7 +752,7 @@ export function createBattlefieldSceneClass<
 
       this.hudText.command
         ?.setText?.(
-          text.top.commandCapacity,
+          text.top.commandCapacity.replace('CAPACITY', 'ARMY'),
         );
 
       this.hudText.royalCommands
@@ -744,7 +764,7 @@ export function createBattlefieldSceneClass<
         ?.setText?.(text.top.round);
 
       this.hudText.phase
-        ?.setText?.(text.top.phase);
+        ?.setText?.(`${text.top.turnBanner} · ${text.top.round}`);
 
       this.hudText.turnBanner
         ?.setText?.(
@@ -778,18 +798,12 @@ export function createBattlefieldSceneClass<
 
       this.hudText.royalCommands
         ?.setText?.(
-          `ROYAL COMMANDS ${royalRemaining}/${hud.turn.royalCommandsMaximum}`,
+          `ORDERS ${royalRemaining}/${hud.turn.royalCommandsMaximum}`,
         );
 
-      const pendingText =
-        stagedOrders.length === 0
-          ? text.top.pendingOrders
-          : `PENDING: ${stagedOrders
-              .map(
-                (order, index) =>
-                  `${index + 1} ${order.kind.toUpperCase()}`,
-              )
-              .join(' · ')}`;
+      const pendingText = stagedOrders.length === 0
+        ? 'NO ORDERS QUEUED'
+        : `${stagedOrders.length} ORDER${stagedOrders.length === 1 ? '' : 'S'} QUEUED`;
 
       this.hudText.pendingOrders
         ?.setText?.(
@@ -815,120 +829,23 @@ export function createBattlefieldSceneClass<
         ?.setText?.(
           text.enemy.health,
         );
+
+      this.hudText.deployLabel?.setText?.('RECRUIT');
+      for (const kind of ['pawn', 'knight', 'bishop', 'rook'] as const) {
+        this.hudText[`${kind}Cost`]?.setText?.(`${hud.deploy[kind].cost}`);
+      }
+      const selected = hud.selectedUnit;
+      this.hudText.selectedName?.setText?.(selected
+        ? selected.id === 'victoria-queen' ? 'VICTORIA · QUEEN' : selected.kind.toUpperCase()
+        : 'SELECT A UNIT');
+      this.hudText.selectedHealth?.setText?.(selected
+        ? `HP ${hud.selectedCombat?.health ?? 0}/${hud.selectedMaxHealth ?? 0}`
+        : 'Tap a piece on the board');
+      applyBattlefieldHudLayout(this);
     }
 
     private layoutHudChildren(): void {
-      const abilities =
-        this.hudRegions.abilities;
-
-      if (
-        abilities &&
-        abilities.displayWidth &&
-        abilities.displayHeight
-      ) {
-        const railWidth =
-          abilities.displayWidth;
-
-        const railHeight =
-          abilities.displayHeight;
-
-        const offsets = [
-          -0.30,
-          -0.10,
-          0.10,
-          0.30,
-        ];
-
-        const abilityArt = [
-          this.hudArtwork.royalDecree,
-          this.hudArtwork.holdTheCrown,
-          this.hudArtwork.sovereignLine,
-          this.hudArtwork.imperialGambit,
-        ];
-
-        const slotSize =
-          Math.min(
-            railHeight * 0.52,
-            railWidth * 0.16,
-          );
-
-        abilityArt.forEach(
-          (artwork, index) => {
-            if (!artwork) {
-              return;
-            }
-
-            artwork.setPosition?.(
-              abilities.x +
-                railWidth *
-                  offsets[index]!,
-              abilities.y,
-            );
-
-            this.fitHudArtwork(
-              artwork,
-              slotSize,
-              slotSize,
-            );
-          },
-        );
-      }
-
-      const deploy =
-        this.hudRegions.deployUnits;
-
-      if (
-        deploy &&
-        deploy.displayWidth &&
-        deploy.displayHeight
-      ) {
-        const panelWidth =
-          deploy.displayWidth;
-
-        const panelHeight =
-          deploy.displayHeight;
-
-        const offsets = [
-          -0.30,
-          -0.10,
-          0.10,
-          0.30,
-        ];
-
-        const deployArt = [
-          this.hudArtwork.pawn,
-          this.hudArtwork.knight,
-          this.hudArtwork.bishop,
-          this.hudArtwork.rook,
-        ];
-
-        const slotSize =
-          Math.min(
-            panelHeight * 0.42,
-            panelWidth * 0.17,
-          );
-
-        deployArt.forEach(
-          (artwork, index) => {
-            if (!artwork) {
-              return;
-            }
-
-            artwork.setPosition?.(
-              deploy.x +
-                panelWidth *
-                  offsets[index]!,
-              deploy.y,
-            );
-
-            this.fitHudArtwork(
-              artwork,
-              slotSize,
-              slotSize,
-            );
-          },
-        );
-      }
+      applyBattlefieldHudLayout(this);
     }
 
     private cancelLastStagedOrder(): void {
@@ -981,157 +898,7 @@ export function createBattlefieldSceneClass<
     }
 
     private layoutHudText(): void {
-    const top =
-      this.hudRegions.topStatus;
-
-    if (
-      top &&
-      top.displayWidth
-    ) {
-      const w =
-        top.displayWidth;
-
-      const y =
-        top.y;
-
-      const upperY =
-        y - 8;
-
-      const lowerY =
-        y + 10;
-
-      this.hudText.crown
-        ?.setPosition?.(
-          top.x - w * 0.32,
-          upperY,
-        );
-
-      this.hudText.nodes
-        ?.setPosition?.(
-          top.x - w * 0.11,
-          upperY,
-        );
-
-      this.hudText.command
-        ?.setPosition?.(
-          top.x + w * 0.12,
-          upperY,
-        );
-
-      this.hudText.royalCommands
-        ?.setPosition?.(
-          top.x + w * 0.34,
-          upperY,
-        );
-
-      this.hudText.round
-        ?.setPosition?.(
-          top.x - w * 0.16,
-          lowerY,
-        );
-
-      this.hudText.phase
-        ?.setPosition?.(
-          top.x + w * 0.16,
-          lowerY,
-        );
-
-      this.hudText.turnBanner
-        ?.setPosition?.(
-          top.x,
-          y + 34,
-        );
-
-      this.hudText.pendingOrders
-        ?.setPosition?.(
-          top.x,
-          y + 54,
-        );
-    }
-
-    const scene =
-      this as any;
-
-    const commandLayout =
-      createResponsiveBattlefieldLayout(
-        Number(
-          scene.scale?.width,
-        ) || 1600,
-        Number(
-          scene.scale?.height,
-        ) || 900,
-      );
-
-    const commandY =
-      commandLayout.hud.y +
-      commandLayout.hud.height *
-        0.16;
-
-    this.hudText.cancelLast
-      ?.setPosition?.(
-        commandLayout.hud.x +
-          commandLayout.hud.width *
-            0.48,
-        commandY,
-      );
-
-    this.hudText.commitOrders
-      ?.setPosition?.(
-        commandLayout.hud.x +
-          commandLayout.hud.width *
-            0.64,
-        commandY,
-      );
-
-    const victoria =
-        this.hudRegions.victoriaStatus;
-
-      if (
-        victoria &&
-        victoria.displayWidth
-      ) {
-        const x =
-          victoria.x +
-          victoria.displayWidth *
-            0.72;
-
-        this.hudText.victoriaName
-          ?.setPosition?.(
-            x,
-            victoria.y - 10,
-          );
-
-        this.hudText.victoriaHealth
-          ?.setPosition?.(
-            x,
-            victoria.y + 14,
-          );
-      }
-
-      const enemy =
-        this.hudRegions.enemyStatus;
-
-      if (
-        enemy &&
-        enemy.displayWidth
-      ) {
-        const x =
-          enemy.x -
-          enemy.displayWidth *
-            0.72;
-
-        this.hudText.enemyName
-          ?.setPosition?.(
-            x,
-            enemy.y - 10,
-          );
-
-        this.hudText.enemyHealth
-          ?.setPosition?.(
-            x,
-            enemy.y + 14,
-          );
-      }
+      applyBattlefieldHudLayout(this);
     }
 
     private fitHudArtwork(
@@ -1164,321 +931,7 @@ export function createBattlefieldSceneClass<
     }
 
     private layoutHud(): void {
-      const scene = this as any;
-
-      const width =
-        Number(scene.scale?.width) || 1600;
-
-      const height =
-        Number(scene.scale?.height) || 900;
-
-      const landscape =
-        width >= height;
-
-      const topH =
-        Math.max(
-          72,
-          Math.min(
-            118,
-            height * 0.12,
-          ),
-        );
-
-      const bottomH =
-        Math.max(
-          110,
-          Math.min(
-            180,
-            height * 0.18,
-          ),
-        );
-
-      const sideW =
-        Math.max(
-          180,
-          Math.min(
-            280,
-            width * 0.18,
-          ),
-        );
-
-      const centreW =
-        Math.max(
-          320,
-          width - sideW * 2 - 40,
-        );
-
-      const abilities =
-        this.hudRegions.abilities;
-
-      const deploy =
-        this.hudRegions.deployUnits;
-
-      if (abilities) {
-        const abilityY =
-          abilities.y;
-
-        const abilitySpacing =
-          landscape
-            ? Math.max(
-                52,
-                centreW * 0.11,
-              )
-            : Math.max(
-                58,
-                width * 0.18,
-              );
-
-        const abilityStart =
-          abilities.x -
-          abilitySpacing * 1.5;
-
-        const abilityArt = [
-          this.hudArtwork.royalDecree,
-          this.hudArtwork.holdTheCrown,
-          this.hudArtwork.sovereignLine,
-          this.hudArtwork.imperialGambit,
-        ];
-
-        abilityArt.forEach(
-          (artwork, index) => {
-            artwork
-              ?.setPosition?.(
-                abilityStart +
-                  abilitySpacing * index,
-                abilityY,
-              )
-              ?.setDisplaySize?.(
-                landscape
-                  ? Math.max(
-                      54,
-                      bottomH * 0.46,
-                    )
-                  : Math.max(
-                      62,
-                      width * 0.14,
-                    ),
-                landscape
-                  ? Math.max(
-                      54,
-                      bottomH * 0.46,
-                    )
-                  : Math.max(
-                      62,
-                      width * 0.14,
-                    ),
-              );
-          },
-        );
-      }
-
-      if (deploy) {
-        const deployY =
-          deploy.y;
-
-        const deploySpacing =
-          landscape
-            ? Math.max(
-                38,
-                sideW * 0.22,
-              )
-            : Math.max(
-                56,
-                width * 0.17,
-              );
-
-        const deployStart =
-          deploy.x -
-          deploySpacing * 1.5;
-
-        const deployArt = [
-          this.hudArtwork.pawn,
-          this.hudArtwork.knight,
-          this.hudArtwork.bishop,
-          this.hudArtwork.rook,
-        ];
-
-        deployArt.forEach(
-          (artwork, index) => {
-            artwork
-              ?.setPosition?.(
-                deployStart +
-                  deploySpacing * index,
-                deployY,
-              )
-              ?.setDisplaySize?.(
-                landscape
-                  ? Math.max(
-                      42,
-                      bottomH * 0.34,
-                    )
-                  : Math.max(
-                      54,
-                      width * 0.13,
-                    ),
-                landscape
-                  ? Math.max(
-                      42,
-                      bottomH * 0.34,
-                    )
-                  : Math.max(
-                      54,
-                      width * 0.13,
-                    ),
-              );
-          },
-        );
-      }
-
-
-      if (landscape) {
-        this.hudRegions.victoriaStatus
-          ?.setPosition?.(
-            sideW / 2 + 12,
-            topH / 2 + 8,
-          );
-
-        this.fitHudArtwork(
-          this.hudRegions.victoriaStatus,
-          topH,
-          topH,
-        );
-
-        this.hudRegions.topStatus
-          ?.setPosition?.(
-            width / 2,
-            topH / 2 + 8,
-          );
-
-        this.fitHudArtwork(
-          this.hudRegions.topStatus,
-          centreW,
-          topH * 0.86,
-        );
-
-        this.hudRegions.enemyStatus
-          ?.setPosition?.(
-            width - sideW / 2 - 12,
-            topH / 2 + 8,
-          );
-
-        this.fitHudArtwork(
-          this.hudRegions.enemyStatus,
-          topH,
-          topH,
-        );
-
-        this.hudRegions.selectedUnit
-          ?.setPosition?.(
-            sideW / 2 + 12,
-            height - bottomH / 2 - 32,
-          );
-
-        this.fitHudArtwork(
-          this.hudRegions.selectedUnit,
-          sideW,
-          bottomH * 0.88,
-        );
-
-        this.hudRegions.abilities
-          ?.setPosition?.(
-            width / 2,
-            height - bottomH / 2 - 32,
-          );
-
-        this.fitHudArtwork(
-          this.hudRegions.abilities,
-          centreW * 0.62,
-          bottomH * 0.88,
-        );
-
-        this.hudRegions.deployUnits
-          ?.setPosition?.(
-            width - sideW / 2 - 12,
-            height - bottomH / 2 - 32,
-          );
-
-        this.fitHudArtwork(
-          this.hudRegions.deployUnits,
-          sideW,
-          bottomH * 0.88,
-        );
-
-        this.layoutHudChildren();
-        this.layoutHudText();
-
-        return;
-      }
-
-      const portraitSideW =
-        width * 0.46;
-
-      this.hudRegions.victoriaStatus
-        ?.setPosition?.(
-          width * 0.25,
-          70,
-        );
-
-      this.fitHudArtwork(
-        this.hudRegions.victoriaStatus,
-        110,
-        110,
-      );
-
-      this.hudRegions.enemyStatus
-        ?.setPosition?.(
-          width * 0.75,
-          70,
-        );
-
-      this.fitHudArtwork(
-        this.hudRegions.enemyStatus,
-        110,
-        110,
-      );
-
-      this.hudRegions.topStatus
-        ?.setPosition?.(
-          width / 2,
-          150,
-        )
-        ?.setDisplaySize?.(
-          width * 0.94,
-          70,
-        );
-
-      this.hudRegions.selectedUnit
-        ?.setPosition?.(
-          width / 2,
-          height - 390,
-        )
-        ?.setDisplaySize?.(
-          width * 0.94,
-          130,
-        );
-
-      this.hudRegions.abilities
-        ?.setPosition?.(
-          width / 2,
-          height - 240,
-        )
-        ?.setDisplaySize?.(
-          width * 0.94,
-          130,
-        );
-
-      this.hudRegions.deployUnits
-        ?.setPosition?.(
-          width / 2,
-          height - 90,
-        )
-        ?.setDisplaySize?.(
-          width * 0.94,
-          130,
-        );
-
-      this.layoutHudChildren();
-      this.layoutHudText();
+      applyBattlefieldHudLayout(this);
     }
 
     setBoardDebugVisible(
@@ -1634,8 +1087,8 @@ export function createBattlefieldSceneClass<
         );
 
       if (
-        point.y >=
-        layout.hud.y
+        point.y < layout.board.y ||
+        point.y >= layout.hud.y
       ) {
         return;
       }
@@ -2063,6 +1516,17 @@ export function createBattlefieldSceneClass<
           );
       }
 
+      const selected = this.controller.world.units[frame.selection.unitId];
+      if (selected) {
+        const layout = createResponsiveBattlefieldLayout(
+          Number(scene.scale?.width) || 1600, Number(scene.scale?.height) || 900,
+        );
+        const points = tilePolygon(selected.position, layout.projection, topologyForWorld(this.controller.world).id);
+        this.selectionMarker?.setDisplaySize?.(
+          (Math.max(...points.map(p => p.x))-Math.min(...points.map(p => p.x)))*.82,
+          (Math.max(...points.map(p => p.y))-Math.min(...points.map(p => p.y)))*.6,
+        );
+      }
       this.selectionMarker
         ?.setPosition?.(
           frame.selection.x,

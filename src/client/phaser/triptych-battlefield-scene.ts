@@ -42,6 +42,7 @@ import {
 } from '../render/unit-grounding';
 import {
   unitVisualHeightForRank,
+  unitDisplaySize,
 } from '../render/unit-visual-footprint';
 import {
   assetUrl,
@@ -154,11 +155,12 @@ export function createTriptychBattlefieldSceneClass<
         });
         const rawWidth = Number(sprite.width) || visualHeight;
         const rawHeight = Number(sprite.height) || visualHeight;
-        const aspect = rawHeight > 0 ? rawWidth / rawHeight : 1;
+        const footprint = unitDisplaySize(rawWidth, rawHeight, visualHeight,
+          tilePolygon(worldUnit.position, layout.projection, topologyForWorld(this.controller.world).id));
 
         sprite
           .setOrigin?.(UNIT_SPRITE_ORIGIN.x, UNIT_SPRITE_ORIGIN.y)
-          ?.setDisplaySize?.(visualHeight * aspect, visualHeight);
+          ?.setDisplaySize?.(footprint.width, footprint.height);
 
         const scaleX = Math.abs(Number(sprite.scaleX) || 1);
         const scaleY = Math.abs(Number(sprite.scaleY) || 1);
@@ -512,6 +514,8 @@ export function createTriptychBattlefieldSceneClass<
           const x = Number(pointer.x);
           const y = Number(pointer.y);
           if (Number.isFinite(x) && Number.isFinite(y)) {
+            const { layout } = this.currentPresentationRuntime();
+            if (y < layout.board.y || y >= layout.hud.y) return;
             this.cameraDragPoint = { x, y };
 
             publishLiveDebug(

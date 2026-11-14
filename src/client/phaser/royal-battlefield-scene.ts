@@ -1,3 +1,4 @@
+import { applyBattlefieldHudLayout } from '../hud/responsive-layout';
 import { topologyForWorld } from '../../sim/territory';
 import { createBattlefieldSceneClass } from './phaser-scene';
 import { createRoyalBattlefieldGuidance } from './royal-battlefield-guidance';
@@ -160,6 +161,24 @@ export function createRoyalBattlefieldSceneClass<TBase extends PhaserSceneBase>(
 
     handleBoardPointer(point: Point): void {
       const self = this as any;
+      const layout = createResponsiveBattlefieldLayout(
+        Number(self.scale?.width) || 1600, Number(self.scale?.height) || 900,
+      );
+      if (point.y < layout.board.y || point.y >= layout.hud.y) return;
+      // Empty legal cells win over oversized unit touch targets. Otherwise
+      // tapping an adjacent move simply reselects the same nearby sprite.
+      const cell = this.resolvePointerCell(point, layout.projection);
+      if (self.selectedUnitId && cell &&
+          !self.controller.world.occupancy[`${cell.x},${cell.y}`] &&
+          self.currentSelectionOverlay.destinations.some((destination: any) =>
+            destination.cell.x === cell.x && destination.cell.y === cell.y)) {
+        super.handleBoardPointer(point);
+        this.lastProductionFeedback = null;
+        self.refreshHudText?.();
+        this.refreshRoyalGuidance();
+        this.redrawRoyalMoveMarkers();
+        return;
+      }
       const candidates = Array.from(self.unitSprites?.entries?.() ?? []).map((entry: any) => {
         const [id, sprite] = entry;
         return {
@@ -246,23 +265,12 @@ export function createRoyalBattlefieldSceneClass<TBase extends PhaserSceneBase>(
         });
       });
 
-      // Touch-first: make the whole deployment panel quarters tappable rather
-      // than forcing the player to hit the small unit illustration itself.
-      const panel = self.hudRegions?.deployUnits;
-      if (panel && self.add?.zone && panel.displayWidth && panel.displayHeight) {
-        const offsets = [-0.30, -0.10, 0.10, 0.30];
-        offsets.forEach((offset, index) => {
-          self.add.zone(
-            panel.x + panel.displayWidth * offset,
-            panel.y,
-            panel.displayWidth * 0.18,
-            panel.displayHeight * 0.72,
-          )?.setDepth?.(5100)?.setInteractive?.({ useHandCursor: true })?.on?.(
-            'pointerdown',
-            () => this.recruitOrPromote(DEPLOY_KINDS[index]!),
-          );
-        });
-      }
+      // Touch targets share the responsive footer geometry with their icons.
+      self.recruitTouchZones = DEPLOY_KINDS.map((kind) =>
+        self.add?.zone?.(0, 0, 1, 1)?.setDepth?.(200030)
+          ?.setInteractive?.({ useHandCursor: true })?.on?.('pointerdown',
+            () => this.recruitOrPromote(kind)));
+      applyBattlefieldHudLayout(this);
     }
 
     private queueVictoriaAbility(ability: HeroAbilityId): void {
@@ -351,16 +359,7 @@ export function createRoyalBattlefieldSceneClass<TBase extends PhaserSceneBase>(
     }
 
     private tuneHudReadability(): void {
-      const hudText = (this as any).hudText ?? {};
-      for (const key of ['crown', 'nodes', 'command', 'royalCommands']) {
-        hudText[key]?.setFontSize?.(11);
-      }
-      hudText.round?.setFontSize?.(10);
-      hudText.phase?.setFontSize?.(10);
-      hudText.pendingOrders?.setFontSize?.(10);
-      hudText.turnBanner?.setVisible?.(false);
-      hudText.cancelLast?.setFontSize?.(14);
-      hudText.commitOrders?.setFontSize?.(16);
+      applyBattlefieldHudLayout(this);
     }
 
     private attackableTargetIds(): string[] {
@@ -397,6 +396,7 @@ export function createRoyalBattlefieldSceneClass<TBase extends PhaserSceneBase>(
       this.royalGuideHeadline?.setText?.(guidance.headline);
       this.royalGuideInstruction?.setText?.(guidance.instruction);
       this.royalGuideDetail?.setText?.(guidance.detail);
+      applyBattlefieldHudLayout(this);
     }
 
     private clearRoyalMoveMarkers(): void {
@@ -417,7 +417,8 @@ export function createRoyalBattlefieldSceneClass<TBase extends PhaserSceneBase>(
       const graphics = self.add.graphics?.();
       if (!graphics) return null;
       graphics.fillStyle?.(fill, alpha);
-      graphics.lineStyle?.(strokeWidth, stroke, Math.min(1, alpha + 0.18));
+      const tileWidth = Math.max(...polygon.map(p => p.x))-Math.min(...polygon.map(p => p.x));
+      graphics.lineStyle?.(Math.min(strokeWidth, Math.max(1,tileWidth*.045)), stroke, Math.min(1, alpha + 0.18));
       polygonPath(graphics, polygon);
       graphics.fillPath?.();
       graphics.strokePath?.();

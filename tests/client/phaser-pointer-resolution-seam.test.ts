@@ -51,7 +51,7 @@ describe('Phaser pointer resolution seam', () => {
 
     const scene = new ProbeScene();
 
-    scene.handleBoardPointer({ x: 20, y: 20 });
+    scene.handleBoardPointer({ x: 20, y: 150 });
 
     expect(scene.resolveCalls).toBe(1);
     expect(scene.selectedUnitId).not.toBeNull();

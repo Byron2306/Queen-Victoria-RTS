@@ -2,6 +2,7 @@ import type {
   BoardProjection,
   ScreenPoint,
 } from '../board/projection';
+import { tileCenter } from '../board/projection';
 import {
   getBattlefieldCameraState,
 } from '../camera/battlefield-camera-store';
@@ -240,16 +241,19 @@ export function createResponsiveBattlefieldLayout(
     ),
   };
 
+  // A short phone viewport otherwise opens with the home army hidden under
+  // the fixed header. Shift the whole world/projection together, before user pan.
+  const opening = tileCenter({ x: 6, y: 16 }, expandedProjection, 'triptych-v2');
+  const openingPanY = landscape && viewportHeight <= 550
+    ? board.y + board.height * .5 - opening.y
+    : 0;
+  const focusedRender = { ...expandedBoardRender, y: expandedBoardRender.y + openingPanY };
+  const focusedProjection = applyCameraToProjection(
+    expandedProjection, { panX: 0, panY: openingPanY, zoom: 1 }, board,
+  );
   const camera = getBattlefieldCameraState();
-  const boardRender = applyCameraToRect(
-    expandedBoardRender,
-    board,
-  );
-  const projection = applyCameraToProjection(
-    expandedProjection,
-    camera,
-    board,
-  );
+  const boardRender = applyCameraToRect(focusedRender, board);
+  const projection = applyCameraToProjection(focusedProjection, camera, board);
 
   return {
     board,

@@ -31,3 +31,17 @@ export function unitVisualHeightForRank(
 
   return input.cellHeight * scale;
 }
+
+/** Bound art to its actual projected tile; square squad sheets must not span adjacent units. */
+export function unitDisplaySize(
+  sourceWidth: number,
+  sourceHeight: number,
+  preferredHeight: number,
+  polygon: readonly {x: number; y: number}[],
+): {width: number; height: number} {
+  const width = Math.max(...polygon.map(p => p.x))-Math.min(...polygon.map(p => p.x));
+  const height = Math.max(...polygon.map(p => p.y))-Math.min(...polygon.map(p => p.y));
+  const aspect = sourceWidth / Math.max(1,sourceHeight);
+  const fittedHeight = Math.min(preferredHeight, height*1.7, width*.88/Math.max(.01,aspect));
+  return {width:fittedHeight*aspect,height:fittedHeight};
+}
